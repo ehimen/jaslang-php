@@ -399,6 +399,12 @@ class DoctrineLexerTest extends TestCase
             ]
         );
     }
+
+    public function testLexerResets()
+    {
+        $this->testNestedFunctions();
+        $this->testNestedFunctions();
+    }
     
     private function performTest($input, ...$tokens)
     {

@@ -12,6 +12,7 @@ interface Lexer
     const TOKEN_QUOTE_DOUBLE = 'double-quote';
     const TOKEN_COMMA = 'comma';
     const TOKEN_WHITESPACE = 'whitespace';
+    const TOKEN_BACKSLASH = 'backslash';
     
     const ESCAPE_CHAR = '\\';
     

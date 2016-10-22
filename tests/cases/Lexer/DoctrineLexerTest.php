@@ -360,6 +360,45 @@ class DoctrineLexerTest extends TestCase
             ]
         );
     }
+
+    public function testNonsenseBackslash()
+    {
+        $this->performTest(
+            '\\\\\\',
+            [
+                'type' => Lexer::TOKEN_UNQUOTED,
+                'value' => '\\',
+                'position' => 1,
+            ],
+            [
+                'type' => Lexer::TOKEN_UNQUOTED,
+                'value' => '\\',
+                'position' => 2,
+            ],
+            [
+                'type' => Lexer::TOKEN_UNQUOTED,
+                'value' => '\\',
+                'position' => 3,
+            ]
+        );
+    }
+
+    public function testNonsenseParens()
+    {
+        $this->performTest(
+            ')(',
+            [
+                'type' => Lexer::TOKEN_RIGHT_PAREN,
+                'value' => ')',
+                'position' => 1,
+            ],
+            [
+                'type' => Lexer::TOKEN_LEFT_PAREN,
+                'value' => '(',
+                'position' => 2,
+            ]
+        );
+    }
     
     private function performTest($input, ...$tokens)
     {

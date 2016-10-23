@@ -195,14 +195,13 @@ class DoctrineLexerTest extends TestCase
     public function testNotRecognisedSymbol()
     {
         $this->performTest(
-            '@~#.#/@',      // TODO: Doctrine lexer doesn't support multibyte :(
+            '@~#.#@',      // TODO: Doctrine lexer doesn't support multibyte :(
             $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 1),
             $this->createToken(Lexer::TOKEN_UNKNOWN, '~', 2),
             $this->createToken(Lexer::TOKEN_UNKNOWN, '#', 3),
             $this->createToken(Lexer::TOKEN_UNKNOWN, '.', 4),
             $this->createToken(Lexer::TOKEN_UNKNOWN, '#', 5),
-            $this->createToken(Lexer::TOKEN_UNKNOWN, '/', 6),
-            $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 7)
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 6)
         );
     }
 
@@ -218,7 +217,7 @@ class DoctrineLexerTest extends TestCase
             "3 + 4",
             $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
-            $this->createToken(Lexer::TOKEN_PLUS, '+', 3),
+            $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
             $this->createToken(Lexer::TOKEN_NUMBER, '4', 5)
         );
@@ -232,10 +231,25 @@ class DoctrineLexerTest extends TestCase
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
-            $this->createToken(Lexer::TOKEN_PLUS, '+', 7),
+            $this->createToken(Lexer::TOKEN_OPERATOR, '+', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 8),
             $this->createToken(Lexer::TOKEN_NUMBER, '4', 9),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10)
+        );
+    }
+
+    public function testArbitraryOperator()
+    {
+        $this->performTest(
+            "foo(3 +=/*!<>-^ 4)",
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+            $this->createToken(Lexer::TOKEN_OPERATOR, '+=/*!<>-^', 7),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 16),
+            $this->createToken(Lexer::TOKEN_NUMBER, '4', 17),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18)
         );
     }
 

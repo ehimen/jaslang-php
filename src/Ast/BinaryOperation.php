@@ -1,21 +1,27 @@
 <?php
 
-namespace Ehimen\Jaslang\Ast\BinaryOperation;
+namespace Ehimen\Jaslang\Ast;
 
-use Ehimen\Jaslang\Ast\Node;
-use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 
-abstract class BinaryOperation implements ParentNode
+class BinaryOperation implements ParentNode
 {
     private $lhs;
     
     private $rhs;
     
-    public function __construct(Node $lhs = null, Node $rhs = null)
+    private $operator;
+    
+    public function __construct($operator, Node $lhs = null, Node $rhs = null)
     {
+        $this->operator = $operator;
         $this->lhs = $lhs;
         $this->rhs = $rhs;
+    }
+
+    public function getOperator()
+    {
+        return $this->operator;
     }
 
     public function addChild(Node $child)
@@ -52,5 +58,10 @@ abstract class BinaryOperation implements ParentNode
     public function getRhs()
     {
         return $this->rhs;
+    }
+
+    public function debug()
+    {
+        return sprintf('%s %s %s', $this->getLhs()->debug(), $this->operator, $this->getRhs()->debug());
     }
 }

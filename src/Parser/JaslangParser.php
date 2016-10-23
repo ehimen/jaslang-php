@@ -3,7 +3,7 @@
 namespace Ehimen\Jaslang\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
-use Ehimen\Jaslang\Ast\BinaryOperation\BinaryOperation;
+use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
@@ -121,7 +121,7 @@ class JaslangParser implements Parser
         $builder
             ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
             ->addRule(0, $literalTokens, 'literal', $createNode)
-            ->addRule('literal', Lexer::TOKEN_PLUS, 'operator', $createNode)
+            ->addRule('literal', Lexer::TOKEN_OPERATOR, 'operator', $createNode)
             ->addRule('operator', Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
             ->addRule('operator', $literalTokens, 'literal', $createAndClose)
             ->addRule('identifier', Lexer::TOKEN_LEFT_PAREN, 'open-paren')
@@ -129,7 +129,7 @@ class JaslangParser implements Parser
             ->addRule('open-paren', $literalTokens, 'paren-literal', $createNode)
             ->addRule('open-paren', Lexer::TOKEN_RIGHT_PAREN, 'close-paren', $closeNode)
             ->addRule('paren-identifier', Lexer::TOKEN_LEFT_PAREN, 'open-paren')
-            ->addRule('paren-literal', Lexer::TOKEN_PLUS, 'paren-operator', $createNode)
+            ->addRule('paren-literal', Lexer::TOKEN_OPERATOR, 'paren-operator', $createNode)
             ->addRule('paren-literal', Lexer::TOKEN_COMMA, 'paren-comma')
             ->addRule('paren-literal', Lexer::TOKEN_RIGHT_PAREN, 'close-paren', $closeNode)
             ->addRule('close-paren', Lexer::TOKEN_COMMA, 'paren-comma')
@@ -155,13 +155,13 @@ class JaslangParser implements Parser
             $node = new NumberLiteral($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken['value'], []);
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_PLUS) {
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
             if (!$this->previousNode) {
                 // TODO: evaluation exception?
                 throw new RuntimeException();
             }
             
-            $node = new AdditionOperation($this->previousNode);
+            $node = new BinaryOperation($this->currentToken['value'], $this->previousNode);
         } else {
             // TODO: evaluation exception?
             throw new RuntimeException();
@@ -169,7 +169,7 @@ class JaslangParser implements Parser
         
         $outerNode = end($this->nodeStack);
         
-        if (($outerNode instanceof ParentNode) && (Lexer::TOKEN_PLUS !== $this->nextToken['type'])) {
+        if (($outerNode instanceof ParentNode) && (Lexer::TOKEN_OPERATOR !== $this->nextToken['type'])) {
             // Add this to the current function, unless it's going to
             // be consumed by a subsequent binary operator.
             $outerNode->addChild($node);

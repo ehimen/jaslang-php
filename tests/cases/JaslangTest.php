@@ -5,9 +5,12 @@ namespace Ehimen\JaslangTests;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
+use Ehimen\Jaslang\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\JaslangFactory;
+use Ehimen\Jaslang\Value\Str;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -137,7 +140,7 @@ JASLANG;
      */
     public function testSubtractNestedInvalidArg()
     {
-        $expected = new InvalidArgumentException(0, 'number');
+        $expected = new InvalidArgumentException(0, 'number', new Str("foo"));
         
         $expected->setInput('sum(sum(1, 3), sum(1 + 3, subtract("foo")))');
         $expected->setEvaluationTrace(new EvaluationTrace([
@@ -148,6 +151,46 @@ JASLANG;
         
         $this->performRuntimeExceptionTest(
             'sum(sum(1, 3), sum(1 + 3, subtract("foo")))',
+            $expected
+        );
+    }
+
+    /**
+     * TODO: ideally move this to a dedicated evaluator test.
+     */
+    public function testUndefinedOperator()
+    {
+        $expected = new UndefinedOperatorException('**^^==');
+        
+        $expected->setInput('sum(sum(1, 3), sum(1 **^^== 3))');
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('sum(sum(1, 3), sum(1 **^^== 3))'),
+            new TraceEntry('sum(1 **^^== 3)'),
+            new TraceEntry('1 **^^== 3'),
+        ]));
+        
+        $this->performRuntimeExceptionTest(
+            'sum(sum(1, 3), sum(1 **^^== 3))',
+            $expected
+        );
+    }
+
+    /**
+     * TODO: ideally move this to a dedicated evaluator test.
+     */
+    public function testUndefinedFunction()
+    {
+        $expected = new UndefinedFunctionException('definitelynotacorefunction');
+        
+        $expected->setInput('sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))');
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))'),
+            new TraceEntry('rand(sum(4, 3), definitelynotacorefunction("100"))'),
+            new TraceEntry('definitelynotacorefunction("100")'),
+        ]));
+        
+        $this->performRuntimeExceptionTest(
+            'sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))',
             $expected
         );
     }

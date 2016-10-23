@@ -2,7 +2,7 @@
 
 namespace Ehimen\JaslangTests\Parser;
 
-use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
+use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
@@ -221,18 +221,19 @@ class JaslangParserTest extends TestCase
         );
     }
 
-    public function testAdditionOperator()
+    public function testBinaryOperator()
     {
         $this->performTest(
             '3 + 4',
             [
                 $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
-                $this->createToken(Lexer::TOKEN_PLUS, '+', 3),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
                 $this->createToken(Lexer::TOKEN_NUMBER, '4', 5)
             ],
-            new AdditionOperation(
+            new BinaryOperation(
+                '+',
                 new NumberLiteral(3),
                 new NumberLiteral(4)
             )

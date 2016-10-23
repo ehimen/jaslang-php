@@ -56,8 +56,21 @@ class ArgDef
             return true;
         }
         
-        $expected = static::TYPES_MAP[$this->type];
-        
-        return is_a($value, $expected);
+        return static::isOfType($this->type, $value);
+    }
+
+    public static function isOfType($type, Value $value = null)
+    {
+        if (null === $value) {
+            return false;
+        }
+
+        $types = ArgDef::TYPES_MAP;
+
+        if (!isset($types[$type])) {
+            throw new InvalidArgumentException('Not recognised type: ', $type);
+        }
+
+        return is_a($value, $types[$type]);
     }
 }

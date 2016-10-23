@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator;
 
+use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
@@ -11,12 +12,13 @@ use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
+use Ehimen\Jaslang\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\FuncDef\ArgList;
-use Ehimen\Jaslang\FuncDef\Repository;
+use Ehimen\Jaslang\Evaluator\CallableRepository;
 use Ehimen\Jaslang\Parser\Parser;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Str;
@@ -29,7 +31,7 @@ class Evaluator
     private $parser;
 
     /**
-     * @var Repository
+     * @var CallableRepository
      */
     private $repository;
 
@@ -43,7 +45,7 @@ class Evaluator
      */
     private $trace;
 
-    public function __construct(Parser $parser, Repository $repository, Invoker $invoker)
+    public function __construct(Parser $parser, CallableRepository $repository, Invoker $invoker)
     {
         $this->parser = $parser;
         $this->repository = $repository;
@@ -97,14 +99,20 @@ class Evaluator
                 throw new UndefinedFunctionException($node->getName());
             }
             
-            $result = $this->invoker->invoke($funcDef, new ArgList($arguments));
+            $result = $this->invoker->invokeFuncDef($funcDef, new ArgList($arguments));
         }
         
-        if ($node instanceof AdditionOperation) {
-            $lhs = $this->evaluateNode($node->getLhs())->getValue();
-            $rhs = $this->evaluateNode($node->getRhs())->getValue();
+        if ($node instanceof BinaryOperation) {
+            try {
+                $operator = $this->repository->getOperator($node->getOperator());
+            } catch (OutOfBoundsException $e) {
+                throw new UndefinedOperatorException($node->getOperator());
+            }
             
-            $result = new Num($lhs + $rhs);
+            $lhs = $this->evaluateNode($node->getLhs());
+            $rhs = $this->evaluateNode($node->getRhs());
+
+            $result = $this->invoker->invokeOperator($operator, new ArgList([$lhs, $rhs]));
         }
         
         if ($node instanceof ParentNode) {

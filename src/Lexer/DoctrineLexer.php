@@ -18,7 +18,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     const DTYPE_BACKSLASH = 5;
     const DTYPE_COMMA = 6;
     const DTYPE_WHITESPACE = 7;
-    const DTYPE_PLUS = 8;
+    const DTYPE_OPERATOR = 8;
     
     private $currentQuote = null;
     private $currentToken = '';
@@ -78,8 +78,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                     $this->token(Lexer::TOKEN_WHITESPACE);
                 } elseif ($type === static::DTYPE_BACKSLASH) {
                     $this->token(Lexer::TOKEN_BACKSLASH);
-                } elseif ($type === static::DTYPE_PLUS) {
-                    $this->token(Lexer::TOKEN_PLUS);
+                } elseif ($type === static::DTYPE_OPERATOR) {
+                    $this->token(Lexer::TOKEN_OPERATOR);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
                     $this->token(Lexer::TOKEN_IDENTIFIER);
                 } elseif (is_numeric($value)) {
@@ -128,9 +128,10 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     protected function getCatchablePatterns()
     {
         return [
-            '\d+\.\d*',  // Decimal representation.
-            '\w+',       // Group all word characters
-            '\s+',       // And group all continuous whitespace
+            '[+-\/\*=!^<>]+', // Operators
+            '\d+\.\d*',   // Decimal representation.
+            '\w+',        // Group all word characters
+            '\s+',        // And group all continuous whitespace
         ];
     }
 
@@ -155,8 +156,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             return static::DTYPE_COMMA;
         } elseif ('' === trim($value)) {
             return static::DTYPE_WHITESPACE;
-        } elseif ('+' === $value) {
-            return static::DTYPE_PLUS;
+        } elseif (str_replace(['+', '/', '-', '*', '!', '^', '=', '<', '>'], '', $value) === '') {
+            return static::DTYPE_OPERATOR;
         }
         
         return static::DTYPE_OTHER;

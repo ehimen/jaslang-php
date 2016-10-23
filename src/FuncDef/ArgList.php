@@ -25,9 +25,17 @@ class ArgList
     /**
      * @return Value|null
      */
-    public function get($index)
+    public function get($index, $type = null, $allowNull = false)
     {
-        return isset($this->args[$index]) ? $this->args[$index] : null;
+        $value = isset($this->args[$index]) ? $this->args[$index] : null;
+        
+        if ($type && ((null !== $value) || !$allowNull)) {
+            if (!ArgDef::isOfType($type, $value)) {
+                throw new InvalidArgumentException($index, $type, $value);
+            }
+        }
+        
+        return $value;
     }
 
     /**
@@ -35,30 +43,14 @@ class ArgList
      */
     public function getNumber($index, $optional = false)
     {
-        $arg = $this->get($index);
-        
-        if (null === $arg && $optional) {
-            return null;
-        }
-        
-        if (!($arg instanceof Num)) {
-            throw new InvalidArgumentException($index, ArgDef::NUMBER, $arg);
-        }
-        
-        return $arg;
+        return $this->get($index, ArgDef::NUMBER, $optional);
     }
 
     /**
-     * @return Str
+     * @return Str|null
      */
-    public function getString($index)
+    public function getString($index, $optional = false)
     {
-        $arg = $this->get($index);
-        
-        if (!($arg instanceof Str)) {
-            throw new InvalidArgumentException($index, ArgDef::STRING, $arg);
-        }
-        
-        return $arg;
+        return $this->get($index, ArgDef::STRING, $optional);
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Parser;
+namespace Ehimen\Jaslang\Parser\Dfa;
+
+use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
 
 class Dfa
 {
@@ -43,7 +45,7 @@ class Dfa
     public function transition($path)
     {
         if (!isset($this->states[$this->current][$path])) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new TransitionImpossibleException(sprintf(
                 'Cannot transition from current state "%s" via path "%s"',
                 $this->current,
                 $path

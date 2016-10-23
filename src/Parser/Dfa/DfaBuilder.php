@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Parser;
+namespace Ehimen\Jaslang\Parser\Dfa;
+
+use Ehimen\Jaslang\Exception\InvalidArgumentException;
 
 class DfaBuilder
 {
@@ -36,7 +38,7 @@ class DfaBuilder
                 foreach ($where as $destination) {
                     if (($destination === $rule[2]) && ($path === $rule[1])) {
                         if (isset($rule[3])) {
-                            throw new \InvalidArgumentException(sprintf(
+                            throw new InvalidArgumentException(sprintf(
                                 'Cannot register callback when arriving at "%s" from "%s", already registered!',
                                 $destination,
                                 $path

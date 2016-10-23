@@ -7,6 +7,8 @@ use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 use Ehimen\Jaslang\Parser\JaslangParser;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
@@ -168,11 +170,89 @@ class JaslangParserTest extends TestCase
             new NumberLiteral(1337)
         );
     }
-    
-    public function performTest($input, $tokens, Node $expected)
+
+    public function testRepeatedString()
+    {
+        $this->performSyntaxErrorTest(
+            '"foo" "bar"',
+            [
+                $this->createToken(Lexer::TOKEN_STRING, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+                $unexpected = $this->createToken(Lexer::TOKEN_STRING, 'bar', 6),
+            ],
+            $this->unexpectedTokenException('"foo" "bar"', $unexpected)
+        );
+    }
+
+    public function testRepeatedLiterals()
+    {
+        $this->performSyntaxErrorTest(
+            '"foo" 1337',
+            [
+                $this->createToken(Lexer::TOKEN_STRING, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+                $unexpected = $this->createToken(Lexer::TOKEN_UNQUOTED, '1337', 6),
+            ],
+            $this->unexpectedTokenException('"foo" 1337', $unexpected)
+        );
+    }
+
+    public function testOpenParen()
+    {
+        $this->performSyntaxErrorTest(
+            '(',
+            [
+                $unexpected = $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 1),
+            ],
+            $this->unexpectedTokenException('(', $unexpected)
+        );
+    }
+
+    public function testCloseParen()
+    {
+        $this->performSyntaxErrorTest(
+            ')',
+            [
+                $unexpected = $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 1),
+            ],
+            $this->unexpectedTokenException(')', $unexpected)
+        );
+    }
+
+    public function testMissingComma()
+    {
+        $this->performSyntaxErrorTest(
+            'foo("foo" "bar")',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $this->createToken(Lexer::TOKEN_STRING, 'foo', 5),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+                $unexpected = $this->createToken(Lexer::TOKEN_STRING, 'bar', 11),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16),
+            ],
+            $this->unexpectedTokenException('foo("foo" "bar")', $unexpected)
+        );
+    }
+
+    private function performSyntaxErrorTest($input, array $tokens, $expected)
+    {
+        $parser = $this->getParser($this->getLexer($input, $tokens));
+            
+        try {
+            $parser->parse($input);
+        } catch (SyntaxErrorException $e) {
+            $this->assertEquals($expected, $e);
+            return;
+        }
+        
+        $this->fail('Test did not raise a syntax error');
+    }
+
+    private function performTest($input, $tokens, Node $expected)
     {
         $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input);
-        
+
         $this->assertEquals($expected, $actual);
     }
 
@@ -185,6 +265,11 @@ class JaslangParserTest extends TestCase
             ->willReturn($tokens);
         
         return $lexer;
+    }
+
+    private function unexpectedTokenException($input, $token)
+    {
+        return new UnexpectedTokenException($input, $token);
     }
 
     private function getParser(Lexer $lexer)

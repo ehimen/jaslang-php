@@ -7,6 +7,9 @@ use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
+use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 
 /**
  */
@@ -39,7 +42,12 @@ class JaslangParser implements Parser
         
         foreach ($this->lexer->tokenize($input) as $token) {
             $this->currentToken = $token;
-            $dfa->transition($token['type']);
+            
+            try {
+                $dfa->transition($token['type']);
+            } catch (TransitionImpossibleException $e) {
+                throw new UnexpectedTokenException($input, $token);
+            }
         }
         
         return $this->ast;
@@ -100,6 +108,7 @@ class JaslangParser implements Parser
             ->addRule('fn-arg-list-start', Lexer::TOKEN_IDENTIFIER, 'fn-start')
             ->addRule('fn-arg-list-start', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
             ->addRule('fn-arg-term', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
+            ->addRule('fn-arg-term', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-term')
             ->addRule('fn-arg-term', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
             ->addRule('fn-arg-list-mid', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')

@@ -128,8 +128,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     protected function getCatchablePatterns()
     {
         return [
+            '[+-]?\d+(?:\.\d*)?',   // Decimal representation.
             '[+-\/\*=!^<>]+', // Operators
-            '\d+\.\d*',   // Decimal representation.
             '\w+',        // Group all word characters
             '\s+',        // And group all continuous whitespace
         ];

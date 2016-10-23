@@ -199,6 +199,16 @@ JASLANG;
             $expected
         );
     }
+
+    public function testSubtractOperator()
+    {
+        $this->performTest('3 - 4', '-1');
+    }
+
+    public function testSignedNumbers()
+    {
+        $this->performTest('-3.5 - +4', '-7.5');
+    }
     
     private function performTest($input, $expected)
     {

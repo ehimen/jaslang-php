@@ -18,3 +18,4 @@ Currently supported language features:
 * Clean up phar/build
 * Return types
 * Operator precedence.
+* Work on string-like type.

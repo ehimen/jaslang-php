@@ -11,6 +11,7 @@ use Ehimen\Jaslang\FuncDef\Core\Subtract;
 use Ehimen\Jaslang\FuncDef\Core\Sum;
 use Ehimen\Jaslang\Evaluator\CallableRepository;
 use Ehimen\Jaslang\Operator\Core\Addition;
+use Ehimen\Jaslang\Operator\Core\Subtraction;
 use Ehimen\Jaslang\Parser\JaslangParser;
 
 /**
@@ -30,6 +31,7 @@ class JaslangFactory
         
         // Operators
         $repository->registerOperator('+', new Addition());
+        $repository->registerOperator('-', new Subtraction());
         
         $invoker = new JaslangInvoker();
         $parser  = JaslangParser::createDefault();

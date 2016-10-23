@@ -238,6 +238,26 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testSignedNumbers()
+    {
+        $this->performTest(
+            '+3.14 - -26',
+            $this->createToken(Lexer::TOKEN_NUMBER, '+3.14', 1),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+            $this->createToken(Lexer::TOKEN_OPERATOR, '-', 7),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 8),
+            $this->createToken(Lexer::TOKEN_NUMBER, '-26', 9)
+        );
+    }
+
+    public function testHangingSigned()
+    {
+        $this->performTest(
+            '+3.',
+            $this->createToken(Lexer::TOKEN_NUMBER, '+3.', 1)
+        );
+    }
+
     public function testArbitraryOperator()
     {
         $this->performTest(

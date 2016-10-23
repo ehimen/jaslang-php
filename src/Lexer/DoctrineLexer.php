@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Lexer;
 
 use Doctrine\Common\Lexer\AbstractLexer;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 
 /**
  * TODO: this should wrap Doctrine lexer, not extend it.
@@ -87,7 +88,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
         
         
         if (!empty($inQuotes)) {
-            // TODO: throw here as unterminated quote?
+            throw new UnexpectedEndOfInputException($input);
         }
         
         return $this->tokens;

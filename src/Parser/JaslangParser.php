@@ -8,7 +8,9 @@ use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
+use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
 use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 
 /**
@@ -26,6 +28,8 @@ class JaslangParser implements Parser
     
     private $ast;
     
+    private $input;
+    
     public function __construct(Lexer $lexer)
     {
         $this->lexer = $lexer;
@@ -38,6 +42,7 @@ class JaslangParser implements Parser
 
     public function parse($input)
     {
+        $this->input = $input;
         $dfa = $this->getDfa();
         
         foreach ($this->lexer->tokenize($input) as $token) {
@@ -48,6 +53,17 @@ class JaslangParser implements Parser
             } catch (TransitionImpossibleException $e) {
                 throw new UnexpectedTokenException($input, $token);
             }
+        }
+        
+        if (!empty($this->functionStack)) {
+            // Not all function calls were terminated.
+            throw new UnexpectedEndOfInputException($input);
+        }
+        
+        try {
+            $dfa->accept();
+        } catch (NotAcceptedException $e) {
+            throw new UnexpectedEndOfInputException($input);
         }
         
         return $this->ast;
@@ -62,8 +78,7 @@ class JaslangParser implements Parser
             $outerFunction   = end($this->functionStack);
 
             if (!($currentFunction instanceof FunctionCall)) {
-                // TODO: better exception.
-                throw new \RuntimeException('Cannot add argument if not in function');
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
             
             if ($outerFunction instanceof FunctionCall) {
@@ -113,8 +128,8 @@ class JaslangParser implements Parser
             ->addRule('fn-arg-list-mid', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_IDENTIFIER, 'fn-start')
-            ->addRule('fn-arg-closed', [Lexer::TOKEN_COMMA, Lexer::TOKEN_RIGHT_PAREN], 'fn-arg-list-mid')
-            ->addRule('fn-arg-closed', Lexer::TOKEN_WHITESPACE, 'fn-arg-closed')
+            ->addRule('fn-arg-closed', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
+            ->addRule('fn-arg-closed', [Lexer::TOKEN_WHITESPACE, Lexer::TOKEN_RIGHT_PAREN], 'fn-arg-closed')
             ->addRule(1, Lexer::TOKEN_WHITESPACE, 1)
             
             ->whenEntering('fn-start', Lexer::TOKEN_IDENTIFIER, $openFunction)
@@ -123,7 +138,8 @@ class JaslangParser implements Parser
             ->whenEntering(1, [Lexer::TOKEN_STRING, Lexer::TOKEN_UNQUOTED], $addLiteral)    // TODO, merge with fn-arg-term?
             
             ->start(0)
-            ->accept(1);
+            ->accept(1)
+            ->accept('fn-arg-closed');
         
         return $builder->build();
     }

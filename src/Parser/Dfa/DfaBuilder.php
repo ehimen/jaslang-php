@@ -8,7 +8,7 @@ class DfaBuilder
 {
     private $rules = [];
     private $start;
-    private $accept;
+    private $accepted = [];
 
     public function addRule($from, $path, $to)
     {
@@ -78,18 +78,18 @@ class DfaBuilder
 
     public function accept($state)
     {
-        $this->accept = $state;
+        $this->accepted[] = $state;
 
         return $this;
     }
 
     public function build()
     {
-        $dfa = new Dfa($this->rules, $this->start, $this->accept);
+        $dfa = new Dfa($this->rules, $this->start, $this->accepted);
         
         $this->rules = [];
         $this->start = null;
-        $this->accept = null;
+        $this->accepted = [];
         
         return $dfa;
     }

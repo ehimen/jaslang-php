@@ -8,6 +8,7 @@ use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 use Ehimen\Jaslang\Parser\JaslangParser;
 use Ehimen\JaslangTests\JaslangTestUtil;
@@ -235,6 +236,32 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testNonTerminatedParens()
+    {
+        $this->performSyntaxErrorTest(
+            'foo(',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            ],
+            $this->unexpectedEndOfInputException('foo(')
+        );
+    }
+
+    public function testOverTerminatingParens()
+    {
+        $this->performSyntaxErrorTest(
+            'foo())',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
+                $unexpected = $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
+            ],
+            $this->unexpectedTokenException('foo())', $unexpected)
+        );
+    }
+
     private function performSyntaxErrorTest($input, array $tokens, $expected)
     {
         $parser = $this->getParser($this->getLexer($input, $tokens));
@@ -270,6 +297,11 @@ class JaslangParserTest extends TestCase
     private function unexpectedTokenException($input, $token)
     {
         return new UnexpectedTokenException($input, $token);
+    }
+
+    private function unexpectedEndOfInputException($input)
+    {
+        return new UnexpectedEndOfInputException($input);
     }
 
     private function getParser(Lexer $lexer)

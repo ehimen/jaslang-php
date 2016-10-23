@@ -4,6 +4,8 @@ namespace Ehimen\JaslangTests\Lexer;
 
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
+use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 
@@ -194,6 +196,26 @@ class DoctrineLexerTest extends TestCase
     {
         $this->testNestedFunctions();
         $this->testNestedFunctions();
+    }
+
+    public function testUnterminatedString()
+    {
+        $this->performSyntaxErrorTest(
+            '"foo',
+            new UnexpectedEndOfInputException('"foo')
+        );
+    }
+
+    private function performSyntaxErrorTest($input, $expected)
+    {
+        try {
+            $this->getLexer()->tokenize($input);
+        } catch (SyntaxErrorException $e) {
+            $this->assertEquals($expected, $e);
+            return;
+        }
+        
+        $this->fail('Expected lexer to throw syntax error, but it did not');
     }
     
     private function performTest($input, ...$tokens)

@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Parser\Dfa;
 
+use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
 use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
 
 class Dfa
@@ -12,7 +13,9 @@ class Dfa
     
     private $current;
     
-    public function __construct(array $rules, $start, $accept)
+    private $accepted = [];
+    
+    public function __construct(array $rules, $start, array $accepted)
     {
         foreach ($rules as $rule) {
             $from  = $rule[0];
@@ -39,7 +42,8 @@ class Dfa
             $this->states[$from][$how] = $to;
         }
         
-        $this->current = $start;
+        $this->current  = $start;
+        $this->accepted = $accepted;
     }
 
     public function transition($path)
@@ -56,6 +60,13 @@ class Dfa
 
         if (isset($this->onEntering[$this->current][$path])) {
             $this->onEntering[$this->current][$path]();
+        }
+    }
+
+    public function accept()
+    {
+        if (!in_array($this->current, $this->accepted, true)) {
+            throw new NotAcceptedException();
         }
     }
 }

@@ -1,12 +1,12 @@
 <?php
 
-namespace Ehimen\Jaslang\Evaluator;
+namespace Ehimen\Jaslang\Evaluator\Trace;
 
 class EvaluationTrace
 {
     private $trace = [];
     
-    public function push($entry)
+    public function push(TraceEntry $entry)
     {
         array_push($this->trace, $entry);
     }

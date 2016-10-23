@@ -21,5 +21,4 @@ class Sum extends FuncDef
     {
         return new Num($args->getNumber(0)->getValue() + $args->getNumber(1)->getValue());
     }
-
 }

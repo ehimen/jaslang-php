@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator\Exception;
 
-use Ehimen\Jaslang\Evaluator\EvaluationTrace;
+use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Exception\EvaluationException;
 
 /**

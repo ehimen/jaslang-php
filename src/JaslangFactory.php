@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang;
 
 use Ehimen\Jaslang\Evaluator\Evaluator;
 use Ehimen\Jaslang\Evaluator\SimpleInvoker;
+use Ehimen\Jaslang\FuncDef\Core\Danny;
 use Ehimen\Jaslang\FuncDef\Core\Random;
 use Ehimen\Jaslang\FuncDef\Core\Substring;
 use Ehimen\Jaslang\FuncDef\Core\Subtract;

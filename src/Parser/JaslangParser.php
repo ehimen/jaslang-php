@@ -97,7 +97,7 @@ class JaslangParser implements Parser
         $addLiteral = function () {
             if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
                 $literal = new StringLiteral($this->currentToken['value']);
-            } elseif (Lexer::TOKEN_UNQUOTED === $this->currentToken['type']) {
+            } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
                 $literal = new NumberLiteral($this->currentToken['value']);
             } else {
                 throw new \RuntimeException('Not supported token type', $this->currentToken['type']);
@@ -115,17 +115,17 @@ class JaslangParser implements Parser
         $builder
             ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'fn-start')
             ->addRule(0, Lexer::TOKEN_WHITESPACE, 0)
-            ->addRule(0, [Lexer::TOKEN_STRING, Lexer::TOKEN_UNQUOTED], 1)
+            ->addRule(0, [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER], 1)
             ->addRule('fn-start', Lexer::TOKEN_LEFT_PAREN, 'fn-arg-list-start')
             ->addRule('fn-start', Lexer::TOKEN_WHITESPACE, 'fn-start')
-            ->addRule('fn-arg-list-start', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
+            ->addRule('fn-arg-list-start', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], 'fn-arg-term')
             ->addRule('fn-arg-list-start', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-start')
             ->addRule('fn-arg-list-start', Lexer::TOKEN_IDENTIFIER, 'fn-start')
             ->addRule('fn-arg-list-start', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
             ->addRule('fn-arg-term', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
             ->addRule('fn-arg-term', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-term')
             ->addRule('fn-arg-term', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
-            ->addRule('fn-arg-list-mid', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
+            ->addRule('fn-arg-list-mid', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], 'fn-arg-term')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_IDENTIFIER, 'fn-start')
             ->addRule('fn-arg-closed', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
@@ -133,9 +133,9 @@ class JaslangParser implements Parser
             ->addRule(1, Lexer::TOKEN_WHITESPACE, 1)
             
             ->whenEntering('fn-start', Lexer::TOKEN_IDENTIFIER, $openFunction)
-            ->whenEntering('fn-arg-term', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], $addLiteral)
+            ->whenEntering('fn-arg-term', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], $addLiteral)
             ->whenEntering(['fn-arg-closed', 'fn-arg-list-mid'], Lexer::TOKEN_RIGHT_PAREN, $closeFunction)
-            ->whenEntering(1, [Lexer::TOKEN_STRING, Lexer::TOKEN_UNQUOTED], $addLiteral)    // TODO, merge with fn-arg-term?
+            ->whenEntering(1, [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER], $addLiteral)    // TODO, merge with fn-arg-term?
             
             ->start(0)
             ->accept(1)

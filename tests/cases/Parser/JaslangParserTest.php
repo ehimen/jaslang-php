@@ -154,7 +154,7 @@ class JaslangParserTest extends TestCase
     {
         $this->performTest(
             '3.14',
-            [$this->createToken(Lexer::TOKEN_UNQUOTED, '3.14', 1)],
+            [$this->createToken(Lexer::TOKEN_NUMBER, '3.14', 1)],
             new NumberLiteral(3.14)
         );
     }
@@ -165,7 +165,7 @@ class JaslangParserTest extends TestCase
             '  1337   ',
             [
                 $this->createToken(Lexer::TOKEN_WHITESPACE, '  ', 1),
-                $this->createToken(Lexer::TOKEN_UNQUOTED, '1337', 3),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1337', 3),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, '   ', 6),
             ],
             new NumberLiteral(1337)
@@ -192,7 +192,7 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_STRING, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
-                $unexpected = $this->createToken(Lexer::TOKEN_UNQUOTED, '1337', 6),
+                $unexpected = $this->createToken(Lexer::TOKEN_NUMBER, '1337', 6),
             ],
             $this->unexpectedTokenException('"foo" 1337', $unexpected)
         );
@@ -259,6 +259,33 @@ class JaslangParserTest extends TestCase
                 $unexpected = $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
             ],
             $this->unexpectedTokenException('foo())', $unexpected)
+        );
+    }
+
+    public function testRogueBackslash()
+    {
+        $this->performSyntaxErrorTest(
+            'foo\bar',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+                $unexpected = $this->createToken(Lexer::TOKEN_BACKSLASH, '\\', 4),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 5),
+            ],
+            $this->unexpectedTokenException('foo\bar', $unexpected)
+        );
+    }
+
+    public function testUnknownToken()
+    {
+        $this->performSyntaxErrorTest(
+            'foo(@)',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $unexpected = $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 5),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
+            ],
+            $this->unexpectedTokenException('foo(@)', $unexpected)
         );
     }
 

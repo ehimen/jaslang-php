@@ -75,10 +75,14 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                     $this->token(Lexer::TOKEN_COMMA);
                 } elseif ($type === static::DTYPE_WHITESPACE) {
                     $this->token(Lexer::TOKEN_WHITESPACE);
+                } elseif ($type === static::DTYPE_BACKSLASH) {
+                    $this->token(Lexer::TOKEN_BACKSLASH);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
                     $this->token(Lexer::TOKEN_IDENTIFIER);
+                } elseif (is_numeric($value)) {
+                    $this->token(Lexer::TOKEN_NUMBER);
                 } else {
-                    $this->token(Lexer::TOKEN_UNQUOTED);
+                    $this->token(Lexer::TOKEN_UNKNOWN);
                 }
             } else {
                 // We're continuing a token, so leave the position marker where it was.

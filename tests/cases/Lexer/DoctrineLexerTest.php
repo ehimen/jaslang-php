@@ -141,7 +141,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '1337',
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '1337', 1)
+            $this->createToken(Lexer::TOKEN_NUMBER, '1337', 1)
         );
     }
 
@@ -149,7 +149,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '1.3',
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '1.3', 1)
+            $this->createToken(Lexer::TOKEN_NUMBER, '1.3', 1)
         );
     }
 
@@ -164,10 +164,10 @@ class DoctrineLexerTest extends TestCase
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 12),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 15),
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '1', 16),
+            $this->createToken(Lexer::TOKEN_NUMBER, '1', 16),
             $this->createToken(Lexer::TOKEN_COMMA, ',', 17),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 18),
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '3.14', 19),
+            $this->createToken(Lexer::TOKEN_NUMBER, '3.14', 19),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 23),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
         );
@@ -177,9 +177,9 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '\\\\\\',
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 1),
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 2),
-            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 3)
+            $this->createToken(Lexer::TOKEN_BACKSLASH, '\\', 1),
+            $this->createToken(Lexer::TOKEN_BACKSLASH, '\\', 2),
+            $this->createToken(Lexer::TOKEN_BACKSLASH, '\\', 3)
         );
     }
 
@@ -189,6 +189,20 @@ class DoctrineLexerTest extends TestCase
             ')(',
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 2)
+        );
+    }
+
+    public function testNotRecognisedSymbol()
+    {
+        $this->performTest(
+            '@~#.#/@',      // TODO: Doctrine lexer doesn't support multibyte :(
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 1),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '~', 2),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '#', 3),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '.', 4),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '#', 5),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '/', 6),
+            $this->createToken(Lexer::TOKEN_UNKNOWN, '@', 7)
         );
     }
 

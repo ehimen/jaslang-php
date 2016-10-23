@@ -240,6 +240,84 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testChainedBinaryOperator()
+    {
+        $this->performTest(
+            '3 + 4 + 5',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 5),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 7),
+                $this->createToken(Lexer::TOKEN_NUMBER, '5', 8)
+            ],
+            new BinaryOperation(
+                '+',
+                new NumberLiteral(3),
+                new BinaryOperation(
+                    '+',
+                    new NumberLiteral(4),
+                    new NumberLiteral(5)
+                )
+            )
+        );
+    }
+
+    public function testComplexChainedBinaryOperator()
+    {
+        $this->performTest(
+            'sum(3+4-5,6+7-8+9)',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 6),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 7),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 8),
+                $this->createToken(Lexer::TOKEN_NUMBER, '5', 9),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 10),
+                $this->createToken(Lexer::TOKEN_NUMBER, '6', 11),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
+                $this->createToken(Lexer::TOKEN_NUMBER, '7', 13),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 14),
+                $this->createToken(Lexer::TOKEN_NUMBER, '8', 15),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 16),
+                $this->createToken(Lexer::TOKEN_NUMBER, '9', 17),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18),
+            ],
+            new FunctionCall(
+                'sum',
+                [
+                    new BinaryOperation(
+                        '+',
+                        new NumberLiteral(3),
+                        new BinaryOperation(
+                            '-',
+                            new NumberLiteral(4),
+                            new NumberLiteral(5)
+                        )
+                    ),
+                    new BinaryOperation(
+                        '+',
+                        new NumberLiteral(6),
+                        new BinaryOperation(
+                            '-',
+                            new NumberLiteral(7),
+                            new BinaryOperation(
+                                '+',
+                                new NumberLiteral(8),
+                                new NumberLiteral(9)
+                            )
+                        )
+                    )
+                ]
+            )
+        );
+    }
+
     public function testMissingComma()
     {
         $this->performSyntaxErrorTest(

@@ -109,6 +109,14 @@ class Evaluator
                 throw new UndefinedOperatorException($node->getOperator());
             }
             
+            if (!$node->getLhs()) {
+                throw new InvalidArgumentException('Cannot evaluate binary operator as its left operand is missing!');
+            }
+            
+            if (!$node->getRhs()) {
+                throw new InvalidArgumentException('Cannot evaluate binary operator as its right operand is missing!');
+            }
+            
             $lhs = $this->evaluateNode($node->getLhs());
             $rhs = $this->evaluateNode($node->getRhs());
 

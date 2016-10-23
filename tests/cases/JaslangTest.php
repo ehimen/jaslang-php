@@ -99,6 +99,11 @@ JASLANG;
         $this->performTest('subtract(13 + 24, 7 + 5)', '25');
     }
 
+    public function testChainedAddition()
+    {
+        $this->performTest('1 + 2 + 3', '6');
+    }
+
     /**
      * TODO: ideally move this to a dedicated evaluator test.
      */

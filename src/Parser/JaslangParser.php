@@ -111,11 +111,6 @@ class JaslangParser implements Parser
             
             array_pop($this->nodeStack);
         };
-        
-        $createAndClose = function () use ($createNode, $closeNode) {
-            $createNode();
-            $closeNode();
-        };
 
         $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER];
         $builder
@@ -123,7 +118,7 @@ class JaslangParser implements Parser
             ->addRule(0, $literalTokens, 'literal', $createNode)
             ->addRule('literal', Lexer::TOKEN_OPERATOR, 'operator', $createNode)
             ->addRule('operator', Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
-            ->addRule('operator', $literalTokens, 'literal', $createAndClose)
+            ->addRule('operator', $literalTokens, 'literal', $createNode)
             ->addRule('identifier', Lexer::TOKEN_LEFT_PAREN, 'open-paren')
             ->addRule('open-paren', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
             ->addRule('open-paren', $literalTokens, 'paren-literal', $createNode)
@@ -137,7 +132,7 @@ class JaslangParser implements Parser
             ->addRule('paren-comma', $literalTokens, 'paren-literal', $createNode)
             ->addRule('paren-comma', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
             ->addRule('paren-operator', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
-            ->addRule('paren-operator', $literalTokens, 'paren-literal', $createAndClose)
+            ->addRule('paren-operator', $literalTokens, 'paren-literal', $createNode)
             
             ->start(0)
             ->accept('literal')
@@ -173,6 +168,10 @@ class JaslangParser implements Parser
             // Add this to the current function, unless it's going to
             // be consumed by a subsequent binary operator.
             $outerNode->addChild($node);
+            
+            if ($outerNode instanceof BinaryOperation) {
+                array_pop($this->nodeStack);
+            }
         }
         
         if ($node instanceof ParentNode) {

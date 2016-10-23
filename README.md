@@ -3,7 +3,7 @@
 A language capable of parsing and evaluating simple expressions. Written in PHP.
 
 The output of a Jaslang expression is a single string. Jaslang supports expressions of arbitrary complexity.
-Current supported language features:
+Currently supported language features:
 
 * Functions, including support for register user-defined functions.
 * Binary operators, including support for registering user-defined operators.

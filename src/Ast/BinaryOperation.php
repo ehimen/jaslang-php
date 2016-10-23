@@ -45,7 +45,7 @@ class BinaryOperation implements ParentNode
     }
 
     /**
-     * @return Node
+     * @return Node|null
      */
     public function getLhs()
     {
@@ -53,15 +53,23 @@ class BinaryOperation implements ParentNode
     }
 
     /**
-     * @return Node
+     * @return Node|null
      */
     public function getRhs()
     {
         return $this->rhs;
     }
 
+    public function hasOperands()
+    {
+        return ($this->lhs && $this->rhs);
+    }
+
     public function debug()
     {
-        return sprintf('%s %s %s', $this->getLhs()->debug(), $this->operator, $this->getRhs()->debug());
+        $lhs = $this->getLhs() ? $this->getLhs()->debug() : '[empty]';
+        $rhs = $this->getRhs() ? $this->getRhs()->debug() : '[empty]';
+        
+        return sprintf('%s %s %s', $lhs, $this->operator, $rhs);
     }
 }

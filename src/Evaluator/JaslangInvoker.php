@@ -14,7 +14,7 @@ class JaslangInvoker implements Invoker
 {
     public function invokeFuncDef(FuncDef $function, ArgList $args)
     {
-        $this->validateArgs($function, $args);
+        $this->validateArgs($function->getArgDefs(), $args);
         
         return $function->invoke($args, $this->getContext($function, $args));
         
@@ -31,10 +31,10 @@ class JaslangInvoker implements Invoker
         return [];
     }
 
-    private function validateArgs(FuncDef $function, ArgList $args)
+    private function validateArgs(array $argDefs, ArgList $args)
     {
         // TODO: validate not too many!
-        foreach ($function->getArgDefs() as $i => $def) {
+        foreach ($argDefs as $i => $def) {
             if (!$def->isSatisfiedBy($args->get($i))) {
                 throw new InvalidArgumentException($i, $def->getType(), $args->get($i));
             }

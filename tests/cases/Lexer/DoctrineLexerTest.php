@@ -4,20 +4,18 @@ namespace Ehimen\JaslangTests\Lexer;
 
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 
 class DoctrineLexerTest extends TestCase
 {
+    use JaslangTestUtil;
 
     public function testUnquoted()
     {
         $this->performTest(
             'foo',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1)
         );
     }
 
@@ -25,11 +23,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"foo"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'foo',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, 'foo', 1)
         );
     }
 
@@ -37,11 +31,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '" "',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => ' ',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, ' ', 1)
         );
     }
 
@@ -49,11 +39,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"foo and bar"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'foo and bar',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, 'foo and bar', 1)
         );
     }
 
@@ -61,11 +47,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"(foo and bar)"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => '(foo and bar)',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, '(foo and bar)', 1)
         );
     }
 
@@ -73,11 +55,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"foo \'and\' bar"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'foo \'and\' bar',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, 'foo \'and\' bar', 1)
         );
     }
 
@@ -85,11 +63,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"foo \"and\" bar"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'foo "and" bar',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, 'foo "and" bar', 1)
         );
     }
 
@@ -97,11 +71,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '"foo \\\\"',
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'foo \\',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_STRING, 'foo \\', 1)
         );
     }
 
@@ -109,21 +79,9 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo()',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 5,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5)
         );
     }
 
@@ -131,26 +89,10 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo("bar")',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'bar',
-                'position' => 5,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 10,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_STRING, 'bar', 5),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10)
         );
     }
 
@@ -158,36 +100,12 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo(    "bar"    )',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => '    ',
-                'position' => 5,
-            ],
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'bar',
-                'position' => 9,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => '    ',
-                'position' => 14,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 18,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, '    ', 5),
+            $this->createToken(Lexer::TOKEN_STRING, 'bar', 9),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, '    ', 14),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18)
         );
     }
 
@@ -195,31 +113,11 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo and    bar',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => ' ',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'and',
-                'position' => 5,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => '    ',
-                'position' => 8,
-            ],
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'bar',
-                'position' => 12,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'and', 5),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, '    ', 8),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 12)
         );
     }
 
@@ -227,41 +125,13 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo("bar", "baz")',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'bar',
-                'position' => 5,
-            ],
-            [
-                'type' => Lexer::TOKEN_COMMA,
-                'value' => ',',
-                'position' => 10,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => ' ',
-                'position' => 11,
-            ],
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'baz',
-                'position' => 12,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 17,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_STRING, 'bar', 5),
+            $this->createToken(Lexer::TOKEN_COMMA, ',', 10),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
+            $this->createToken(Lexer::TOKEN_STRING, 'baz', 12),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 17)
         );
     }
 
@@ -269,11 +139,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '1337',
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '1337',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '1337', 1)
         );
     }
 
@@ -281,11 +147,7 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '1.3',
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '1.3',
-                'position' => 1,
-            ]
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '1.3', 1)
         );
     }
 
@@ -293,71 +155,19 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             'foo("bar", bar(1, 3.14))',
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'foo',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 4,
-            ],
-            [
-                'type' => Lexer::TOKEN_STRING,
-                'value' => 'bar',
-                'position' => 5,
-            ],
-            [
-                'type' => Lexer::TOKEN_COMMA,
-                'value' => ',',
-                'position' => 10,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => ' ',
-                'position' => 11,
-            ],
-            [
-                'type' => Lexer::TOKEN_IDENTIFIER,
-                'value' => 'bar',
-                'position' => 12,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 15,
-            ],
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '1',
-                'position' => 16,
-            ],
-            [
-                'type' => Lexer::TOKEN_COMMA,
-                'value' => ',',
-                'position' => 17,
-            ],
-            [
-                'type' => Lexer::TOKEN_WHITESPACE,
-                'value' => ' ',
-                'position' => 18,
-            ],
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '3.14',
-                'position' => 19,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 23,
-            ],
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 24,
-            ]
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_STRING, 'bar', 5),
+            $this->createToken(Lexer::TOKEN_COMMA, ',', 10),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 12),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 15),
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '1', 16),
+            $this->createToken(Lexer::TOKEN_COMMA, ',', 17),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 18),
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '3.14', 19),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 23),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
         );
     }
 
@@ -365,21 +175,9 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             '\\\\\\',
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '\\',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '\\',
-                'position' => 2,
-            ],
-            [
-                'type' => Lexer::TOKEN_UNQUOTED,
-                'value' => '\\',
-                'position' => 3,
-            ]
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 1),
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 2),
+            $this->createToken(Lexer::TOKEN_UNQUOTED, '\\', 3)
         );
     }
 
@@ -387,16 +185,8 @@ class DoctrineLexerTest extends TestCase
     {
         $this->performTest(
             ')(',
-            [
-                'type' => Lexer::TOKEN_RIGHT_PAREN,
-                'value' => ')',
-                'position' => 1,
-            ],
-            [
-                'type' => Lexer::TOKEN_LEFT_PAREN,
-                'value' => '(',
-                'position' => 2,
-            ]
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 2)
         );
     }
 

@@ -1,0 +1,121 @@
+<?php
+
+namespace Ehimen\Jaslang\Parser;
+
+use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Ast\NumberLiteral;
+use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Lexer\DoctrineLexer;
+use Ehimen\Jaslang\Lexer\Lexer;
+
+/**
+ */
+class JaslangParser implements Parser
+{
+    /**
+     * @var Lexer
+     */
+    private $lexer;
+    
+    private $functionStack = [];
+    
+    private $currentToken;
+    
+    private $ast;
+    
+    public function __construct(Lexer $lexer)
+    {
+        $this->lexer = $lexer;
+    }
+
+    public static function createDefault()
+    {
+        return new static(new DoctrineLexer());
+    }
+
+    public function parse($input)
+    {
+        $dfa = $this->getDfa();
+        
+        foreach ($this->lexer->tokenize($input) as $token) {
+            $this->currentToken = $token;
+            $dfa->transition($token['type']);
+        }
+        
+        return $this->ast;
+    }
+
+    private function getDfa()
+    {
+        $builder = new DfaBuilder();
+        
+        $closeFunction = function () {
+            $currentFunction = array_pop($this->functionStack);
+            $outerFunction   = end($this->functionStack);
+
+            if (!($currentFunction instanceof FunctionCall)) {
+                // TODO: better exception.
+                throw new \RuntimeException('Cannot add argument if not in function');
+            }
+            
+            if ($outerFunction instanceof FunctionCall) {
+                $outerFunction->addArgument($currentFunction);
+            }
+            
+            if (empty($this->functionStack)) {
+                $this->ast = $currentFunction;
+            }
+        };
+        
+        $openFunction = function () {
+            $this->functionStack[] = $currentFunction = new FunctionCall($this->currentToken['value'], []);
+        };
+        
+        $addLiteral = function () {
+            if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
+                $literal = new StringLiteral($this->currentToken['value']);
+            } elseif (Lexer::TOKEN_UNQUOTED === $this->currentToken['type']) {
+                $literal = new NumberLiteral($this->currentToken['value']);
+            } else {
+                throw new \RuntimeException('Not supported token type', $this->currentToken['type']);
+            }
+            
+            $currentFunction = end($this->functionStack);
+            
+            if ($currentFunction instanceof FunctionCall) {
+                $currentFunction->addArgument($literal);
+            } else {
+                $this->ast = $literal;
+            }
+        };
+        
+        $builder
+            ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'fn-start')
+            ->addRule(0, Lexer::TOKEN_WHITESPACE, 0)
+            ->addRule(0, [Lexer::TOKEN_STRING, Lexer::TOKEN_UNQUOTED], 1)
+            ->addRule('fn-start', Lexer::TOKEN_LEFT_PAREN, 'fn-arg-list-start')
+            ->addRule('fn-start', Lexer::TOKEN_WHITESPACE, 'fn-start')
+            ->addRule('fn-arg-list-start', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
+            ->addRule('fn-arg-list-start', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-start')
+            ->addRule('fn-arg-list-start', Lexer::TOKEN_IDENTIFIER, 'fn-start')
+            ->addRule('fn-arg-list-start', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
+            ->addRule('fn-arg-term', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
+            ->addRule('fn-arg-term', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
+            ->addRule('fn-arg-list-mid', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], 'fn-arg-term')
+            ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')
+            ->addRule('fn-arg-list-mid', Lexer::TOKEN_IDENTIFIER, 'fn-start')
+            ->addRule('fn-arg-closed', [Lexer::TOKEN_COMMA, Lexer::TOKEN_RIGHT_PAREN], 'fn-arg-list-mid')
+            ->addRule('fn-arg-closed', Lexer::TOKEN_WHITESPACE, 'fn-arg-closed')
+            ->addRule(1, Lexer::TOKEN_WHITESPACE, 1)
+            
+            ->whenEntering('fn-start', Lexer::TOKEN_IDENTIFIER, $openFunction)
+            ->whenEntering('fn-arg-term', [Lexer::TOKEN_UNQUOTED, Lexer::TOKEN_STRING], $addLiteral)
+            ->whenEntering(['fn-arg-closed', 'fn-arg-list-mid'], Lexer::TOKEN_RIGHT_PAREN, $closeFunction)
+            ->whenEntering(1, [Lexer::TOKEN_STRING, Lexer::TOKEN_UNQUOTED], $addLiteral)    // TODO, merge with fn-arg-term?
+            
+            ->start(0)
+            ->accept(1);
+        
+        return $builder->build();
+    }
+}

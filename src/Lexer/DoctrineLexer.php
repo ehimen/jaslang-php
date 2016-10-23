@@ -53,7 +53,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             }
 
             if ($this->currentQuote === $value) {
-                $this->token(Lexer::TOKEN_QUOTED);
+                $this->token(Lexer::TOKEN_STRING);
                 continue;
             }
 
@@ -74,6 +74,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                     $this->token(Lexer::TOKEN_COMMA);
                 } elseif ($type === static::DTYPE_WHITESPACE) {
                     $this->token(Lexer::TOKEN_WHITESPACE);
+                } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
+                    $this->token(Lexer::TOKEN_IDENTIFIER);
                 } else {
                     $this->token(Lexer::TOKEN_UNQUOTED);
                 }
@@ -85,7 +87,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
         
         
         if (!empty($inQuotes)) {
-            // TODO: throw here as unterminated quote.
+            // TODO: throw here as unterminated quote?
         }
         
         return $this->tokens;

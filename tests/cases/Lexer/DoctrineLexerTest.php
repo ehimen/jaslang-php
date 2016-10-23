@@ -14,7 +14,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ]
@@ -26,7 +26,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"foo"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'foo',
                 'position' => 1,
             ]
@@ -38,7 +38,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '" "',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => ' ',
                 'position' => 1,
             ]
@@ -50,7 +50,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"foo and bar"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'foo and bar',
                 'position' => 1,
             ]
@@ -62,7 +62,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"(foo and bar)"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => '(foo and bar)',
                 'position' => 1,
             ]
@@ -74,7 +74,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"foo \'and\' bar"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'foo \'and\' bar',
                 'position' => 1,
             ]
@@ -86,7 +86,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"foo \"and\" bar"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'foo "and" bar',
                 'position' => 1,
             ]
@@ -98,7 +98,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             '"foo \\\\"',
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'foo \\',
                 'position' => 1,
             ]
@@ -110,7 +110,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo()',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -132,7 +132,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo("bar")',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -142,7 +142,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 4,
             ],
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'bar',
                 'position' => 5,
             ],
@@ -159,7 +159,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo(    "bar"    )',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -174,7 +174,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 5,
             ],
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'bar',
                 'position' => 9,
             ],
@@ -196,7 +196,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo and    bar',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -206,7 +206,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 4,
             ],
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'and',
                 'position' => 5,
             ],
@@ -216,7 +216,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 8,
             ],
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'bar',
                 'position' => 12,
             ]
@@ -228,7 +228,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo("bar", "baz")',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -238,7 +238,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 4,
             ],
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'bar',
                 'position' => 5,
             ],
@@ -253,7 +253,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 11,
             ],
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'baz',
                 'position' => 12,
             ],
@@ -294,7 +294,7 @@ class DoctrineLexerTest extends TestCase
         $this->performTest(
             'foo("bar", bar(1, 3.14))',
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'foo',
                 'position' => 1,
             ],
@@ -304,7 +304,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 4,
             ],
             [
-                'type' => Lexer::TOKEN_QUOTED,
+                'type' => Lexer::TOKEN_STRING,
                 'value' => 'bar',
                 'position' => 5,
             ],
@@ -319,7 +319,7 @@ class DoctrineLexerTest extends TestCase
                 'position' => 11,
             ],
             [
-                'type' => Lexer::TOKEN_UNQUOTED,
+                'type' => Lexer::TOKEN_IDENTIFIER,
                 'value' => 'bar',
                 'position' => 12,
             ],

@@ -85,6 +85,11 @@ JASLANG;
         
         $this->assertGreaterThan(0, (int)$actual);
     }
+
+    public function testAddition()
+    {
+        $this->performTest('subtract(13 + 24, 7 + 5)', '25');
+    }
     
     private function performTest($input, $expected)
     {

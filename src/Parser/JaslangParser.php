@@ -2,14 +2,21 @@
 
 namespace Ehimen\Jaslang\Parser;
 
+use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
+use Ehimen\Jaslang\Ast\BinaryOperation\BinaryOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Ast\Literal;
+use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
+use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Exception\RuntimeException;
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
 use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
 use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
+use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 
@@ -21,8 +28,13 @@ class JaslangParser implements Parser
      * @var Lexer
      */
     private $lexer;
+
+    /**
+     * @var Node[]
+     */
+    private $nodeStack = [];
     
-    private $functionStack = [];
+    private $previousNode;
     
     private $currentToken;
     
@@ -30,6 +42,8 @@ class JaslangParser implements Parser
     
     private $input;
     
+    private $nextToken;
+
     public function __construct(Lexer $lexer)
     {
         $this->lexer = $lexer;
@@ -44,9 +58,17 @@ class JaslangParser implements Parser
     {
         $this->input = $input;
         $dfa = $this->getDfa();
+
+        $tokens = array_values(array_filter(
+            $this->lexer->tokenize($input),
+            function ($token) {
+                return ($token['type'] !== Lexer::TOKEN_WHITESPACE);
+            }
+        ));
         
-        foreach ($this->lexer->tokenize($input) as $token) {
+        foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
+            $this->nextToken    = isset($tokens[$i + 1]) ? $tokens[$i + 1] : null;
             
             try {
                 $dfa->transition($token['type']);
@@ -55,7 +77,9 @@ class JaslangParser implements Parser
             }
         }
         
-        if (!empty($this->functionStack)) {
+        $this->previousNode = null;
+        
+        if (!empty($this->nodeStack)) {
             // Not all function calls were terminated.
             throw new UnexpectedEndOfInputException($input);
         }
@@ -72,75 +96,97 @@ class JaslangParser implements Parser
     private function getDfa()
     {
         $builder = new DfaBuilder();
+         
+        $createNode = function () {
+            $this->createNode();
+        };
         
-        $closeFunction = function () {
-            $currentFunction = array_pop($this->functionStack);
-            $outerFunction   = end($this->functionStack);
-
-            if (!($currentFunction instanceof FunctionCall)) {
+        $closeNode = function() {
+            if (empty($this->nodeStack)) {
+                // We've been asked to close a node that doesn't exist.
+                // This means we're closing too many functions, e.g.
+                // foo())
                 throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
             
-            if ($outerFunction instanceof FunctionCall) {
-                $outerFunction->addArgument($currentFunction);
-            }
-            
-            if (empty($this->functionStack)) {
-                $this->ast = $currentFunction;
-            }
+            array_pop($this->nodeStack);
         };
         
-        $openFunction = function () {
-            $this->functionStack[] = $currentFunction = new FunctionCall($this->currentToken['value'], []);
+        $createAndClose = function () use ($createNode, $closeNode) {
+            $createNode();
+            $closeNode();
         };
-        
-        $addLiteral = function () {
-            if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
-                $literal = new StringLiteral($this->currentToken['value']);
-            } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
-                $literal = new NumberLiteral($this->currentToken['value']);
-            } else {
-                throw new \RuntimeException('Not supported token type', $this->currentToken['type']);
-            }
-            
-            $currentFunction = end($this->functionStack);
-            
-            if ($currentFunction instanceof FunctionCall) {
-                $currentFunction->addArgument($literal);
-            } else {
-                $this->ast = $literal;
-            }
-        };
-        
+
+        $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER];
         $builder
-            ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'fn-start')
-            ->addRule(0, Lexer::TOKEN_WHITESPACE, 0)
-            ->addRule(0, [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER], 1)
-            ->addRule('fn-start', Lexer::TOKEN_LEFT_PAREN, 'fn-arg-list-start')
-            ->addRule('fn-start', Lexer::TOKEN_WHITESPACE, 'fn-start')
-            ->addRule('fn-arg-list-start', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], 'fn-arg-term')
-            ->addRule('fn-arg-list-start', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-start')
-            ->addRule('fn-arg-list-start', Lexer::TOKEN_IDENTIFIER, 'fn-start')
-            ->addRule('fn-arg-list-start', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
-            ->addRule('fn-arg-term', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
-            ->addRule('fn-arg-term', Lexer::TOKEN_WHITESPACE, 'fn-arg-term')
-            ->addRule('fn-arg-term', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
-            ->addRule('fn-arg-list-mid', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], 'fn-arg-term')
-            ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')
-            ->addRule('fn-arg-list-mid', Lexer::TOKEN_IDENTIFIER, 'fn-start')
-            ->addRule('fn-arg-closed', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
-            ->addRule('fn-arg-closed', [Lexer::TOKEN_WHITESPACE, Lexer::TOKEN_RIGHT_PAREN], 'fn-arg-closed')
-            ->addRule(1, Lexer::TOKEN_WHITESPACE, 1)
-            
-            ->whenEntering('fn-start', Lexer::TOKEN_IDENTIFIER, $openFunction)
-            ->whenEntering('fn-arg-term', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], $addLiteral)
-            ->whenEntering(['fn-arg-closed', 'fn-arg-list-mid'], Lexer::TOKEN_RIGHT_PAREN, $closeFunction)
-            ->whenEntering(1, [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER], $addLiteral)    // TODO, merge with fn-arg-term?
+            ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
+            ->addRule(0, $literalTokens, 'literal', $createNode)
+            ->addRule('literal', Lexer::TOKEN_PLUS, 'operator', $createNode)
+            ->addRule('operator', Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
+            ->addRule('operator', $literalTokens, 'literal', $createAndClose)
+            ->addRule('identifier', Lexer::TOKEN_LEFT_PAREN, 'open-paren')
+            ->addRule('open-paren', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
+            ->addRule('open-paren', $literalTokens, 'paren-literal', $createNode)
+            ->addRule('open-paren', Lexer::TOKEN_RIGHT_PAREN, 'close-paren', $closeNode)
+            ->addRule('paren-identifier', Lexer::TOKEN_LEFT_PAREN, 'open-paren')
+            ->addRule('paren-literal', Lexer::TOKEN_PLUS, 'paren-operator', $createNode)
+            ->addRule('paren-literal', Lexer::TOKEN_COMMA, 'paren-comma')
+            ->addRule('paren-literal', Lexer::TOKEN_RIGHT_PAREN, 'close-paren', $closeNode)
+            ->addRule('close-paren', Lexer::TOKEN_COMMA, 'paren-comma')
+            ->addRule('close-paren', Lexer::TOKEN_RIGHT_PAREN, 'close-paren', $closeNode)
+            ->addRule('paren-comma', $literalTokens, 'paren-literal', $createNode)
+            ->addRule('paren-comma', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
+            ->addRule('paren-operator', Lexer::TOKEN_IDENTIFIER, 'paren-identifier', $createNode)
+            ->addRule('paren-operator', $literalTokens, 'paren-literal', $createAndClose)
             
             ->start(0)
-            ->accept(1)
-            ->accept('fn-arg-closed');
+            ->accept('literal')
+            ->accept('close-paren')
+        ;
         
         return $builder->build();
+    }
+
+    private function createNode()
+    {
+        if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
+            $node = new StringLiteral($this->currentToken['value']);
+        } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
+            $node = new NumberLiteral($this->currentToken['value']);
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
+            $node = new FunctionCall($this->currentToken['value'], []);
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_PLUS) {
+            if (!$this->previousNode) {
+                // TODO: evaluation exception?
+                throw new RuntimeException();
+            }
+            
+            $node = new AdditionOperation($this->previousNode);
+        } else {
+            // TODO: evaluation exception?
+            throw new RuntimeException();
+        }
+        
+        $outerNode = end($this->nodeStack);
+        
+        if (($outerNode instanceof ParentNode) && (Lexer::TOKEN_PLUS !== $this->nextToken['type'])) {
+            // Add this to the current function, unless it's going to
+            // be consumed by a subsequent binary operator.
+            $outerNode->addChild($node);
+        }
+        
+        if ($node instanceof ParentNode) {
+            array_push($this->nodeStack, $node);
+        }
+        
+        // Mark the tree we return.
+        // If nothing set, use the first thing we've built.
+        // If it is set and is a literal, and we've just built a binary
+        // operator, take that place as infix operators are a pain :(
+        if (!$this->ast || (($this->ast instanceof Literal) && ($node instanceof BinaryOperation))) {
+            $this->ast = $node;
+        }
+        
+        $this->previousNode = $node;
     }
 }

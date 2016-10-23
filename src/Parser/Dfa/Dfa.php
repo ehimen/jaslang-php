@@ -32,11 +32,11 @@ class Dfa
             }
             
             if ($onEnter instanceof \Closure) {
-                if (!isset($this->onEntering[$to][$how])) {
-                    $this->onEntering[$to][$how] = [];
+                if (!isset($this->onEntering[$to][$how][$from])) {
+                    $this->onEntering[$to][$how][$from] = [];
                 }
                 
-                $this->onEntering[$to][$how] = $onEnter;
+                $this->onEntering[$to][$how][$from] = $onEnter;
             }
             
             $this->states[$from][$how] = $to;
@@ -55,11 +55,13 @@ class Dfa
                 $path
             ));
         }
+        
+        $old = $this->current;
 
         $this->current = $this->states[$this->current][$path];
 
-        if (isset($this->onEntering[$this->current][$path])) {
-            $this->onEntering[$this->current][$path]();
+        if (isset($this->onEntering[$this->current][$path][$old])) {
+            $this->onEntering[$this->current][$path][$old]();
         }
     }
 

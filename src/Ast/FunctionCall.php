@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Ast;
 
-class FunctionCall implements Node 
+class FunctionCall implements ParentNode  
 {
     /**
      * @var string
@@ -20,9 +20,9 @@ class FunctionCall implements Node
         $this->arguments = $arguments;
     }
 
-    public function addArgument(Node $node)
+    public function addChild(Node $child)
     {
-        $this->arguments[] = $node;
+        $this->arguments[] = $child;
     }
 
     public function getName()

@@ -212,6 +212,33 @@ class DoctrineLexerTest extends TestCase
         $this->testNestedFunctions();
     }
 
+    public function testAdditionOperator()
+    {
+        $this->performTest(
+            "3 + 4",
+            $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
+            $this->createToken(Lexer::TOKEN_PLUS, '+', 3),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
+            $this->createToken(Lexer::TOKEN_NUMBER, '4', 5)
+        );
+    }
+
+    public function testAdditionOperatorInFunction()
+    {
+        $this->performTest(
+            "foo(3 + 4)",
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+            $this->createToken(Lexer::TOKEN_PLUS, '+', 7),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 8),
+            $this->createToken(Lexer::TOKEN_NUMBER, '4', 9),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10)
+        );
+    }
+
     public function testUnterminatedString()
     {
         $this->performSyntaxErrorTest(

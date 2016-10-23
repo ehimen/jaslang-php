@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator;
 
+use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
@@ -53,7 +54,7 @@ class Evaluator
 
     private function evaluateNode(Node $node)
     {
-        if (($node instanceof StringLiteral)) {
+        if ($node instanceof StringLiteral) {
             return new Str($node->getValue());
         }
         
@@ -75,6 +76,13 @@ class Evaluator
             }
             
             return $this->invoker->invoke($funcDef, new ArgList($arguments));
+        }
+        
+        if ($node instanceof AdditionOperation) {
+            $lhs = $this->evaluateNode($node->getLhs())->getValue();
+            $rhs = $this->evaluateNode($node->getRhs())->getValue();
+            
+            return new Num($lhs + $rhs);
         }
         
         throw new InvalidArgumentException(sprintf(

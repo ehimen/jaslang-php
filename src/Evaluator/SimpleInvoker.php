@@ -25,9 +25,10 @@ class SimpleInvoker implements Invoker
 
     private function validateArgs(FuncDef $function, ArgList $args)
     {
+        // TODO: validate not too many!
         foreach ($function->getArgDefs() as $i => $def) {
             if (!$def->isSatisfiedBy($args->get($i))) {
-                throw new InvalidArgumentException($i, $def->getType(), $args->get($args));
+                throw new InvalidArgumentException($i, $def->getType(), $args->get($index));
             }
         }
     }

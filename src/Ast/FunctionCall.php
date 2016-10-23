@@ -25,6 +25,11 @@ class FunctionCall implements ParentNode
         $this->arguments[] = $child;
     }
 
+    public function getChildren()
+    {
+        return $this->arguments;
+    }
+
     public function getName()
     {
         return $this->name;
@@ -33,5 +38,22 @@ class FunctionCall implements ParentNode
     public function getArguments()
     {
         return $this->arguments;
+    }
+
+    public function debug()
+    {
+        return sprintf(
+            '%s(%s)',
+            $this->name,
+            implode(
+                ', ',
+                array_map(
+                    function (Node $node) {
+                        return $node->debug();
+                    },
+                    $this->getChildren()
+                )
+            )
+        ); 
     }
 }

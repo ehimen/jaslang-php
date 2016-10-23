@@ -30,6 +30,14 @@ abstract class BinaryOperation implements ParentNode
         }
     }
 
+    public function getChildren()
+    {
+        return array_filter([
+            $this->lhs,
+            $this->rhs,
+        ]);
+    }
+
     /**
      * @return Node
      */

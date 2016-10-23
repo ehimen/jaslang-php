@@ -4,10 +4,15 @@ namespace Ehimen\Jaslang\Evaluator;
 
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
+use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
+use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
+use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\FuncDef\ArgList;
@@ -33,6 +38,11 @@ class Evaluator
      */
     private $invoker;
 
+    /**
+     * @var EvaluationTrace
+     */
+    private $trace;
+
     public function __construct(Parser $parser, Repository $repository, Invoker $invoker)
     {
         $this->parser = $parser;
@@ -49,17 +59,29 @@ class Evaluator
     {
         $ast = $this->parser->parse($input);
         
-        return $this->evaluateNode($ast)->toString();
+        $this->trace = new EvaluationTrace();
+        
+        try {
+            return $this->evaluateNode($ast)->toString();
+        } catch (RuntimeException $e) {
+            $e->setEvaluationTrace($this->trace);
+            $e->setInput($input);
+            throw $e;
+        }
     }
 
     private function evaluateNode(Node $node)
     {
+        if ($node instanceof ParentNode) {
+            $this->trace->push(new TraceEntry($node->debug()));
+        }
+        
         if ($node instanceof StringLiteral) {
-            return new Str($node->getValue());
+            $result = new Str($node->getValue());
         }
         
         if ($node instanceof NumberLiteral) {
-            return new Num($node->getValue());
+            $result = new Num($node->getValue());
         }
         
         if ($node instanceof FunctionCall) {
@@ -75,14 +97,22 @@ class Evaluator
                 throw new UndefinedFunctionException($node->getName());
             }
             
-            return $this->invoker->invoke($funcDef, new ArgList($arguments));
+            $result = $this->invoker->invoke($funcDef, new ArgList($arguments));
         }
         
         if ($node instanceof AdditionOperation) {
             $lhs = $this->evaluateNode($node->getLhs())->getValue();
             $rhs = $this->evaluateNode($node->getRhs())->getValue();
             
-            return new Num($lhs + $rhs);
+            $result = new Num($lhs + $rhs);
+        }
+        
+        if ($node instanceof ParentNode) {
+            $this->trace->pop();
+        }
+        
+        if (isset($result)) {
+            return $result;
         }
         
         throw new InvalidArgumentException(sprintf(

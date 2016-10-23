@@ -8,4 +8,9 @@ namespace Ehimen\Jaslang\Ast;
 interface ParentNode extends Node 
 {
     public function addChild(Node $child);
+
+    /**
+     * @return Node[]
+     */
+    public function getChildren();
 }

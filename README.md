@@ -8,3 +8,5 @@ A language capable of parsing and evaluating simple expressions. Written in PHP.
 * Configurable operator support
 * Booleans
 * Ternary operator
+* Clean up phar/build
+* Return types

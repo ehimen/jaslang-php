@@ -7,5 +7,10 @@ namespace Ehimen\Jaslang\Ast;
  */
 interface Node
 {
-
+    /**
+     * Gets the a description of the node as a string for debugging purposes.
+     *
+     * @return string
+     */
+    public function debug();
 }

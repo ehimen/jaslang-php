@@ -10,7 +10,7 @@ use Ehimen\Jaslang\Exception\EvaluationException;
  */
 class RuntimeException extends EvaluationException 
 {
-    private $trace;
+    protected $evaluationTrace;
 
     public function __construct($message)
     {
@@ -18,9 +18,9 @@ class RuntimeException extends EvaluationException
         parent::__construct(null, 'Jaslang runtime exception! ' . $message);
     }
     
-    public function setStackTrace(EvaluationTrace $trace)
+    public function setEvaluationTrace(EvaluationTrace $trace)
     {
-        $this->trace = $trace;
+        $this->evaluationTrace = $trace;
     }
 
     public function setInput($input)

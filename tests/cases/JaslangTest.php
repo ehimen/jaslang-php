@@ -2,6 +2,11 @@
 
 namespace Ehimen\JaslangTests;
 
+use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
+use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
+use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\JaslangFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -90,12 +95,80 @@ JASLANG;
     {
         $this->performTest('subtract(13 + 24, 7 + 5)', '25');
     }
+
+    /**
+     * TODO: ideally move this to a dedicated evaluator test.
+     */
+    public function testSubtractNoArgs()
+    {
+        $expected = new InvalidArgumentException(0, 'number');
+        
+        $expected->setInput('subtract()');
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('subtract()')
+        ]));
+        
+        $this->performRuntimeExceptionTest(
+            'subtract()',
+            $expected
+        );
+    }
+
+    /**
+     * TODO: ideally move this to a dedicated evaluator test.
+     */
+    public function testSubtractOneArg()
+    {
+        $expected = new InvalidArgumentException(1, 'number');
+        
+        $expected->setInput('subtract(100)');
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('subtract(100)')
+        ]));
+        
+        $this->performRuntimeExceptionTest(
+            'subtract(100)',
+            $expected
+        );
+    }
+
+    /**
+     * TODO: ideally move this to a dedicated evaluator test.
+     */
+    public function testSubtractNestedInvalidArg()
+    {
+        $expected = new InvalidArgumentException(0, 'number');
+        
+        $expected->setInput('sum(sum(1, 3), sum(1 + 3, subtract("foo")))');
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('sum(sum(1, 3), sum(1 + 3, subtract("foo")))'),
+            new TraceEntry('sum(1 + 3, subtract("foo"))'),
+            new TraceEntry('subtract("foo")'),
+        ]));
+        
+        $this->performRuntimeExceptionTest(
+            'sum(sum(1, 3), sum(1 + 3, subtract("foo")))',
+            $expected
+        );
+    }
     
     private function performTest($input, $expected)
     {
         $actual = $this->getEvaluator()->evaluate($input);
         
         $this->assertSame($expected, $actual);
+    }
+
+    private function performRuntimeExceptionTest($input, RuntimeException $expected)
+    {
+        try {
+            $this->getEvaluator()->evaluate($input);
+        } catch (RuntimeException $actual) {
+            $this->assertEquals($expected, $actual);
+            return;
+        }
+        
+        $this->fail('A runtime exception was not thrown');
     }
     
     private function getEvaluator()

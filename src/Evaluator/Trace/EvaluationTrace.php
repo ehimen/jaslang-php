@@ -5,6 +5,11 @@ namespace Ehimen\Jaslang\Evaluator\Trace;
 class EvaluationTrace
 {
     private $trace = [];
+
+    public function __construct(array $trace = [])
+    {
+        $this->trace = $trace;
+    }
     
     public function push(TraceEntry $entry)
     {

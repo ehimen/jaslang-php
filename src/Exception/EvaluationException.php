@@ -10,10 +10,11 @@ namespace Ehimen\Jaslang\Exception;
  */
 class EvaluationException extends \Exception
 {
-    private $input;
+    protected $input;
     
-    public function __construct($input)
+    public function __construct($input, $message = '')
     {
-        $this->input = $input;
+        $this->message = $message;
+        $this->input   = $input;
     }
 }

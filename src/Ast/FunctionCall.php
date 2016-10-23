@@ -24,4 +24,14 @@ class FunctionCall implements Node
     {
         $this->arguments[] = $node;
     }
+
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    public function getArguments()
+    {
+        return $this->arguments;
+    }
 }

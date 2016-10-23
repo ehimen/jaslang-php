@@ -8,7 +8,7 @@ class UnexpectedTokenException extends SyntaxErrorException
     
     public function __construct($input, $token)
     {
-        parent::__construct($input);
+        parent::__construct($input, 'Unexpected token: ' . $token['value'] . ' @' . $token['position']);
         
         $this->token = $token;
     }

@@ -10,4 +10,9 @@ abstract class Literal implements Node
     {
         $this->value = $value;
     }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
 }

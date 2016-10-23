@@ -123,7 +123,7 @@ class JaslangParser implements Parser
             ->addRule('fn-arg-list-start', Lexer::TOKEN_IDENTIFIER, 'fn-start')
             ->addRule('fn-arg-list-start', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
             ->addRule('fn-arg-term', Lexer::TOKEN_COMMA, 'fn-arg-list-mid')
-            ->addRule('fn-arg-term', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-term')
+            ->addRule('fn-arg-term', Lexer::TOKEN_WHITESPACE, 'fn-arg-term')
             ->addRule('fn-arg-term', Lexer::TOKEN_RIGHT_PAREN, 'fn-arg-closed')
             ->addRule('fn-arg-list-mid', [Lexer::TOKEN_NUMBER, Lexer::TOKEN_STRING], 'fn-arg-term')
             ->addRule('fn-arg-list-mid', Lexer::TOKEN_WHITESPACE, 'fn-arg-list-mid')

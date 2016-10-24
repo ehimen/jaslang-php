@@ -31,6 +31,7 @@ The list of core functions is currently very limited due to focus on the engire.
 
 * Parentheses to control evaluation precedence.
 * Implement some decent core functions.
+* Unary operators (bool negation)
 * Ternary operator?
 * Clean up phar/build
 * Return types
@@ -38,3 +39,5 @@ The list of core functions is currently very limited due to focus on the engire.
 * Work on string-like type.
 * Doc-generation tool.
 * Multiple expressions? (Chained?)
+* AST dumps, allowing Jaslang (or other) interpreters to be written in other languages. PHP does the "compile" phase
+* More generic solution to lexer/parser, allowing creation of arbitrary languages

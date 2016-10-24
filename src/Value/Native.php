@@ -21,6 +21,16 @@ abstract class Native implements Value
         return $this->value;
     }
 
+    public function identicalTo(Value $other)
+    {
+        if (!is_a($other, self::class)) {
+            return false;
+        }
+        
+        return ($this->value === $other->value);
+    }
+
+
     public function toString()
     {
         return (string)$this->value;

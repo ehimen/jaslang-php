@@ -18,7 +18,8 @@
   "autoload": {
     "psr-4": {
       "Ehimen\\Jaslang\\": "src/",
-      "Ehimen\\JaslangTests\\": "tests/cases"
+      "Ehimen\\JaslangTests\\": "tests/cases",
+      "Ehimen\\JaslangTestResources\\": "tests/resources/php"
     }
   }
 }

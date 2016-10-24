@@ -11,6 +11,8 @@ use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\JaslangFactory;
 use Ehimen\Jaslang\Value\Str;
+use Ehimen\JaslangTestResources\FooFuncDef;
+use Ehimen\JaslangTestResources\FooOperator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -209,6 +211,30 @@ JASLANG;
     {
         $this->performTest('-3.5 - +4', '-7.5');
     }
+
+    public function getIdentityIdentical()
+    {
+        $this->performTest('1 === 1', 'true');
+        $this->performTest('"foo" === "foo"', 'true');
+        $this->performTest('false === false', 'true');
+    }
+
+    public function testIdentityDifferent()
+    {
+        $this->performTest('1 === "1"', 'false');
+        $this->performTest('"foo" === "bar"', 'false');
+        $this->performTest('false === true', 'false');
+    }
+
+    public function testFunctionOperatorHooks()
+    {
+        $factory = new JaslangFactory();
+        $factory->registerFunction('foo', new FooFuncDef());
+        $factory->registerOperator('+-+-+-+-+', new FooOperator());
+        
+        $result = $factory->create()->evaluate('"foo" +-+-+-+-+ foo()');
+        $this->assertSame('true', $result);
+    }
     
     private function performTest($input, $expected)
     {
@@ -231,6 +257,6 @@ JASLANG;
     
     private function getEvaluator()
     {
-        return (new JaslangFactory())->createDefault();
+        return (new JaslangFactory())->create();
     }
 }

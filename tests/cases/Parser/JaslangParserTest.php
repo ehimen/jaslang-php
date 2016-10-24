@@ -3,6 +3,7 @@
 namespace Ehimen\JaslangTests\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation;
+use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
@@ -315,6 +316,24 @@ class JaslangParserTest extends TestCase
                     )
                 ]
             )
+        );
+    }
+
+    public function testBooleanTrue()
+    {
+        $this->performTest(
+            'true',
+            [$this->createToken(Lexer::TOKEN_BOOLEAN, 'true', 1)],
+            new BooleanLiteral('true')
+        );
+    }
+
+    public function testBooleanFalse()
+    {
+        $this->performTest(
+            'false',
+            [$this->createToken(Lexer::TOKEN_BOOLEAN, 'false', 1)],
+            new BooleanLiteral('false')
         );
     }
 

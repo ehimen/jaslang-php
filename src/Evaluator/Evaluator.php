@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang\Evaluator;
 
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
+use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
@@ -20,6 +21,7 @@ use Ehimen\Jaslang\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\Evaluator\CallableRepository;
 use Ehimen\Jaslang\Parser\Parser;
+use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Str;
 
@@ -84,6 +86,10 @@ class Evaluator
         
         if ($node instanceof NumberLiteral) {
             $result = new Num($node->getValue());
+        }
+        
+        if ($node instanceof BooleanLiteral) {
+            $result = new Boolean($node->getValue());
         }
         
         if ($node instanceof FunctionCall) {

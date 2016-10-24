@@ -81,6 +81,13 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                 } elseif ($type === static::DTYPE_OPERATOR) {
                     $this->token(Lexer::TOKEN_OPERATOR);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
+                    $lower = strtolower($value);
+                    
+                    // Our doctrine lexer doesn't distinguish between bool/identifier, check now.
+                    if (('false' === $lower) || ('true' === $value)) {
+                        $this->token(Lexer::TOKEN_BOOLEAN);
+                    }
+                    
                     $this->token(Lexer::TOKEN_IDENTIFIER);
                 } elseif (is_numeric($value)) {
                     $this->token(Lexer::TOKEN_NUMBER);

@@ -12,6 +12,7 @@ class ArgDef
 {
     const STRING = 'string';
     const NUMBER = 'number';
+    const ANY    = '*';         // Note this does not permit no value.
     const STRING_LIKE = 'string-like';
     
     const TYPES_MAP = [
@@ -64,11 +65,15 @@ class ArgDef
         if (null === $value) {
             return false;
         }
+        
+        if ($type === ArgDef::ANY) {
+            return true;
+        }
 
         $types = ArgDef::TYPES_MAP;
 
         if (!isset($types[$type])) {
-            throw new InvalidArgumentException('Not recognised type: ', $type);
+            throw new InvalidArgumentException('Not recognised type: ' . $type);
         }
 
         return is_a($value, $types[$type]);

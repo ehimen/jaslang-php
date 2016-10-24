@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\BinaryOperation;
+use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
@@ -112,7 +113,8 @@ class JaslangParser implements Parser
             array_pop($this->nodeStack);
         };
 
-        $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER];
+        $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER, Lexer::TOKEN_BOOLEAN];
+        
         $builder
             ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
             ->addRule(0, $literalTokens, 'literal', $createNode)
@@ -148,6 +150,8 @@ class JaslangParser implements Parser
             $node = new StringLiteral($this->currentToken['value']);
         } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
             $node = new NumberLiteral($this->currentToken['value']);
+        } elseif (Lexer::TOKEN_BOOLEAN === $this->currentToken['type']) {
+            $node = new BooleanLiteral($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken['value'], []);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
@@ -158,8 +162,7 @@ class JaslangParser implements Parser
             
             $node = new BinaryOperation($this->currentToken['value'], $this->previousNode);
         } else {
-            // TODO: evaluation exception?
-            throw new RuntimeException();
+            throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
         }
         
         $outerNode = end($this->nodeStack);

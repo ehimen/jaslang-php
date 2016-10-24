@@ -13,8 +13,7 @@ Currently supported language features:
 
 ## TODO
 
-* Booleans
-* Ternary operator
+* Ternary operator?
 * Clean up phar/build
 * Return types
 * Operator precedence.

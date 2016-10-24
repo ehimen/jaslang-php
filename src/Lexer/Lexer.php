@@ -8,6 +8,7 @@ interface Lexer
     const TOKEN_IDENTIFIER = 'identifier';
     const TOKEN_OPERATOR = 'operator';
     const TOKEN_NUMBER = 'number';
+    const TOKEN_BOOLEAN = 'boolean';
     const TOKEN_LEFT_PAREN = 'left-paren';
     const TOKEN_RIGHT_PAREN = 'right-paren';
     const TOKEN_COMMA = 'comma';

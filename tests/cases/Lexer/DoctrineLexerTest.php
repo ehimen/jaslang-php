@@ -250,6 +250,20 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testBoolean()
+    {
+        $this->performTest(
+            'foo(true, false)',
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_BOOLEAN, 'true', 5),
+            $this->createToken(Lexer::TOKEN_COMMA, ',', 9),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+            $this->createToken(Lexer::TOKEN_BOOLEAN, 'false', 11),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16)
+        );
+    }
+
     public function testHangingSigned()
     {
         $this->performTest(

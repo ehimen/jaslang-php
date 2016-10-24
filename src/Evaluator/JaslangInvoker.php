@@ -18,7 +18,7 @@ class JaslangInvoker implements Invoker
         
         return $function->invoke($args, $this->getContext($function, $args));
         
-        // TODO: return type.
+        // TODO: return type. Really need to validate this. Keep not returning wrapped values!
     }
 
     public function invokeOperator(Operator $operator, ArgList $args)

@@ -27,7 +27,7 @@ if (strlen($jaslang) === 0) {
     exit(0);
 }
 
-echo (new Ehimen\Jaslang\JaslangFactory())->createDefault()->evaluate($jaslang);
+echo (new Ehimen\Jaslang\JaslangFactory())->create()->evaluate($jaslang);
 
 echo PHP_EOL;
 

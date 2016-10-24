@@ -29,5 +29,4 @@ class FooOperator extends Binary
         /** @var Str $right */
         return new Boolean($left->getValue() === 'foo' && $right->getValue() === 'foo');
     }
-
 }

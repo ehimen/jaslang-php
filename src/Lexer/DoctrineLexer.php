@@ -23,7 +23,13 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     private $currentQuote = null;
     private $currentToken = '';
     private $currentPosition = 0;
-    private $tokens = [];
+    private $jaslangTokens = [];
+    private $operators = [];
+
+    public function __construct(array $operators = [])
+    {
+        $this->operators = $operators;
+    }
 
     public function tokenize($input)
     {
@@ -105,7 +111,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             throw new UnexpectedEndOfInputException($input);
         }
         
-        return $this->tokens;
+        return $this->jaslangTokens;
     }
 
     private function resetState()
@@ -113,7 +119,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
         $this->currentQuote = null;
         $this->currentToken = '';
         $this->currentPosition = 0;
-        $this->tokens = [];
+        $this->jaslangTokens = [];
     }
 
     private function token($type)
@@ -122,7 +128,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             return;
         }
         
-        $this->tokens[] = [
+        $this->jaslangTokens[] = [
             'type'     => $type,
             'value'    => $this->currentToken,
             'position' => $this->currentPosition + 1, // Doctrine position is 0-indexed, we want first char to be at 1.
@@ -132,14 +138,65 @@ class DoctrineLexer extends AbstractLexer implements Lexer
         $this->currentQuote = null;
     }
 
+    /**
+     * {@inheritdoc}
+     * 
+     * Copy & paste doctrine lexer impl, but removing static variable.
+     * TODO: Something better. Less reflection. 
+     */
+    protected function scan($input)
+    {
+        $hack = (new \ReflectionClass($this));
+        $parentTokens = $hack->getParentClass()->getProperty('tokens');
+        $parentTokens->setAccessible(true);
+        
+        $tokens = $parentTokens->getValue($this);
+        
+        $regex = sprintf(
+            '/(%s)|%s/%s',
+            implode(')|(', $this->getCatchablePatterns()),
+            implode('|', $this->getNonCatchablePatterns()),
+            $this->getModifiers()
+        );
+
+        $flags = PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_OFFSET_CAPTURE;
+        $matches = preg_split($regex, $input, -1, $flags);
+
+        foreach ($matches as $match) {
+            // Must remain before 'value' assignment since it can change content
+            $type = $this->getType($match[0]);
+
+            $tokens[] = array(
+                'value' => $match[0],
+                'type'  => $type,
+                'position' => $match[1],
+            );
+        }
+
+        $parentTokens->setValue($this, $tokens);
+    }
+
     protected function getCatchablePatterns()
     {
-        return [
-            '[+-]?\d+(?:\.\d*)?',   // Decimal representation.
-            '[+-\/\*=!^<>]+', // Operators
-            '\w+',        // Group all word characters
-            '\s+',        // And group all continuous whitespace
-        ];
+        $patterns = array_merge(
+            // Fixed patterns. Must be matched first.
+            [       
+                '[+-]?\d+(?:\.\d*)?',   // Decimal representation.
+            ],
+            // User defined operators.
+            array_map(
+                function ($operator) {
+                    return preg_quote($operator, '/');
+                },
+                $this->operators
+            ),
+            [
+                '\w+',        // Group all word characters
+                '\s+',        // And group all continuous whitespace
+            ]
+        );
+        
+        return $patterns;
     }
 
     protected function getNonCatchablePatterns()
@@ -163,7 +220,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             return static::DTYPE_COMMA;
         } elseif ('' === trim($value)) {
             return static::DTYPE_WHITESPACE;
-        } elseif (str_replace(['+', '/', '-', '*', '!', '^', '=', '<', '>'], '', $value) === '') {
+        } elseif (in_array($value, $this->operators, true)) {
             return static::DTYPE_OPERATOR;
         }
         

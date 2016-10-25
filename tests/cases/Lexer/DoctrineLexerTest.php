@@ -213,8 +213,9 @@ class DoctrineLexerTest extends TestCase
 
     public function testAdditionOperator()
     {
-        $this->performTest(
+        $this->performTestWithOperators(
             "3 + 4",
+            ['+'],
             $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
             $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
@@ -225,8 +226,9 @@ class DoctrineLexerTest extends TestCase
 
     public function testAdditionOperatorInFunction()
     {
-        $this->performTest(
+        $this->performTestWithOperators(
             "foo(3 + 4)",
+            ['+'],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
@@ -240,8 +242,9 @@ class DoctrineLexerTest extends TestCase
 
     public function testSignedNumbers()
     {
-        $this->performTest(
+        $this->performTestWithOperators(
             '+3.14 - -26',
+            ['-'],
             $this->createToken(Lexer::TOKEN_NUMBER, '+3.14', 1),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
             $this->createToken(Lexer::TOKEN_OPERATOR, '-', 7),
@@ -274,8 +277,9 @@ class DoctrineLexerTest extends TestCase
 
     public function testArbitraryOperator()
     {
-        $this->performTest(
+        $this->performTestWithOperators(
             "foo(3 +=/*!<>-^ 4)",
+            ['+=/*!<>-^'],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
@@ -284,6 +288,64 @@ class DoctrineLexerTest extends TestCase
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 16),
             $this->createToken(Lexer::TOKEN_NUMBER, '4', 17),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18)
+        );
+    }
+
+    public function testLoneCustomOperator()
+    {
+        $this->performTestWithOperators(
+            'OR',
+            ['OR'],
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'OR', 1)
+        );
+    }
+
+    public function testCustomOperator()
+    {
+        $this->performTestWithOperators(
+            'foo() AND 3.14',
+            ['AND'],
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'AND', 7),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+            $this->createToken(Lexer::TOKEN_NUMBER, '3.14', 11)
+        );
+    }
+
+    public function testCustomOperators()
+    {
+        $this->performTestWithOperators(
+            'foo() OR (3.14 bar true)',
+            ['OR', 'bar'],
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'OR', 7),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 9),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 10),
+            $this->createToken(Lexer::TOKEN_NUMBER, '3.14', 11),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 15),
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'bar', 16),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 19),
+            $this->createToken(Lexer::TOKEN_BOOLEAN, 'true', 20),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
+        );
+    }
+
+    public function testOperatorInString()
+    {
+        $this->performTestWithOperators(
+            '"fooANDbar" AND "bar"',
+            ['AND'],
+            $this->createToken(Lexer::TOKEN_STRING, 'fooANDbar', 1),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 12),
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'AND', 13),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 16),
+            $this->createToken(Lexer::TOKEN_STRING, 'bar', 17)
         );
     }
 
@@ -312,8 +374,13 @@ class DoctrineLexerTest extends TestCase
         $this->assertEquals($tokens, $this->getLexer()->tokenize($input));
     }
 
-    private function getLexer()
+    private function performTestWithOperators($input, $operators, ...$tokens)
     {
-        return new DoctrineLexer();
+        $this->assertEquals($tokens, $this->getLexer($operators)->tokenize($input));
+    }
+
+    private function getLexer($operators = [])
+    {
+        return new DoctrineLexer($operators);
     }
 }

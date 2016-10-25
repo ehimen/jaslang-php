@@ -29,7 +29,6 @@ The list of core functions is currently very limited due to focus on the engire.
 
 ## TODO
 
-* CallableRepository registrations passed to Lexer to allow configuration of what operators/functions exist, thus not tied to +-/*^<> operator characters.
 * Parentheses to control evaluation precedence.
 * Implement some decent core functions.
 * Unary operators (bool negation)

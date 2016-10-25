@@ -3,6 +3,7 @@
 namespace Ehimen\JaslangTests;
 
 use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Evaluator\Evaluator;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
@@ -11,6 +12,7 @@ use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\JaslangFactory;
 use Ehimen\Jaslang\Value\Str;
+use Ehimen\JaslangTestResources\AndOperator;
 use Ehimen\JaslangTestResources\FooFuncDef;
 use Ehimen\JaslangTestResources\FooOperator;
 use PHPUnit\Framework\TestCase;
@@ -165,26 +167,6 @@ JASLANG;
     /**
      * TODO: ideally move this to a dedicated evaluator test.
      */
-    public function testUndefinedOperator()
-    {
-        $expected = new UndefinedOperatorException('**^^==');
-        
-        $expected->setInput('sum(sum(1, 3), sum(1 **^^== 3))');
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('sum(sum(1, 3), sum(1 **^^== 3))'),
-            new TraceEntry('sum(1 **^^== 3)'),
-            new TraceEntry('1 **^^== 3'),
-        ]));
-        
-        $this->performRuntimeExceptionTest(
-            'sum(sum(1, 3), sum(1 **^^== 3))',
-            $expected
-        );
-    }
-
-    /**
-     * TODO: ideally move this to a dedicated evaluator test.
-     */
     public function testUndefinedFunction()
     {
         $expected = new UndefinedFunctionException('definitelynotacorefunction');
@@ -233,6 +215,18 @@ JASLANG;
         $factory->registerOperator('+-+-+-+-+', new FooOperator());
         
         $result = $factory->create()->evaluate('"foo" +-+-+-+-+ foo()');
+        $this->assertSame('true', $result);
+    }
+
+    public function testAlphabeticOperator()
+    {
+        $factory = new JaslangFactory();
+        $factory->registerOperator('AND', new AndOperator());
+        
+        $result = $factory->create()->evaluate('false AND true');
+        $this->assertSame('false', $result);
+        
+        $result = $factory->create()->evaluate('true AND true');
         $this->assertSame('true', $result);
     }
     

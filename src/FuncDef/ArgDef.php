@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
+use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Str;
 use Ehimen\Jaslang\Value\StringLike;
@@ -12,6 +13,7 @@ class ArgDef
 {
     const STRING = 'string';
     const NUMBER = 'number';
+    const BOOLEAN = 'bool';
     const ANY    = '*';         // Note this does not permit no value.
     const STRING_LIKE = 'string-like';
     
@@ -19,6 +21,7 @@ class ArgDef
         self::STRING => Str::class,
         self::NUMBER => Num::class,
         self::STRING_LIKE => StringLike::class,
+        self::BOOLEAN => Boolean::class,
     ];
     
     /**

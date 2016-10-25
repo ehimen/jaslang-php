@@ -11,6 +11,7 @@ use Ehimen\Jaslang\FuncDef\Core\Subtract;
 use Ehimen\Jaslang\FuncDef\Core\Sum;
 use Ehimen\Jaslang\Evaluator\CallableRepository;
 use Ehimen\Jaslang\FuncDef\FuncDef;
+use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Operator\Core\Addition;
 use Ehimen\Jaslang\Operator\Core\Identity;
 use Ehimen\Jaslang\Operator\Core\Subtraction;
@@ -43,15 +44,15 @@ class JaslangFactory
         $repository = new CallableRepository();
         
         // Core functions.
-        $repository->registerFuncDef('sum', new Sum());
-        $repository->registerFuncDef('subtract', new Subtract());
-        $repository->registerFuncDef('substring', new Substring());
-        $repository->registerFuncDef('random', new Random());
+        $this->functions['sum']       = new Sum();
+        $this->functions['subtract']  = new Subtract();
+        $this->functions['substring'] = new Substring();
+        $this->functions['random']    = new Random();
         
         // Core operators
-        $repository->registerOperator('+', new Addition());
-        $repository->registerOperator('-', new Subtraction());
-        $repository->registerOperator('===', new Identity());
+        $this->operators['+']    = new Addition();
+        $this->operators['-']    = new Subtraction();
+        $this->operators['===']  = new Identity();
         
         // User defined functions/operators.
         foreach ($this->operators as $identifier => $operator) {
@@ -62,7 +63,7 @@ class JaslangFactory
         }
         
         $invoker = new JaslangInvoker();
-        $parser  = JaslangParser::createDefault();
+        $parser  = new JaslangParser(new DoctrineLexer(array_keys($this->operators)));
         
         return new Evaluator($parser, $repository, $invoker);
     }

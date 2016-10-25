@@ -2,7 +2,6 @@
 
 namespace Ehimen\Jaslang\Parser;
 
-use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\FunctionCall;
@@ -17,7 +16,6 @@ use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
 use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
 use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
-use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 
@@ -48,11 +46,6 @@ class JaslangParser implements Parser
     public function __construct(Lexer $lexer)
     {
         $this->lexer = $lexer;
-    }
-
-    public static function createDefault()
-    {
-        return new static(new DoctrineLexer());
     }
 
     public function parse($input)

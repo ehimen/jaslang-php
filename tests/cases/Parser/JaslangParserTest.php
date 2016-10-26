@@ -337,6 +337,37 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testFunctionOperator()
+    {
+        $this->performTest(
+            'sum(1, 1) + 2',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 6),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 8),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 9),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 11),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 12),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 13),
+            ],
+            new BinaryOperation(
+                '+',
+                new FunctionCall(
+                    'sum',
+                    [
+                        new NumberLiteral(1),
+                        new NumberLiteral(1),
+                    ]
+                ),
+                new NumberLiteral(2)
+            )
+        );
+    }
+
     public function testMissingComma()
     {
         $this->performSyntaxErrorTest(

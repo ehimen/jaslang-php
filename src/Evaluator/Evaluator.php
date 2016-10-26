@@ -61,7 +61,7 @@ class Evaluator
      */
     public function evaluate($input)
     {
-        $ast = $this->parser->parse($input);
+        $ast = $this->parser->parse($input)->getFirstChild();
         
         $this->trace = new EvaluationTrace();
         

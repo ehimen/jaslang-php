@@ -257,12 +257,12 @@ class JaslangParserTest extends TestCase
             ],
             new BinaryOperation(
                 '+',
-                new NumberLiteral(3),
                 new BinaryOperation(
                     '+',
-                    new NumberLiteral(4),
-                    new NumberLiteral(5)
-                )
+                    new NumberLiteral(3),
+                    new NumberLiteral(4)
+                ),
+                new NumberLiteral(5)
             )
         );
     }
@@ -293,26 +293,26 @@ class JaslangParserTest extends TestCase
                 'sum',
                 [
                     new BinaryOperation(
-                        '+',
-                        new NumberLiteral(3),
+                        '-',
                         new BinaryOperation(
-                            '-',
-                            new NumberLiteral(4),
-                            new NumberLiteral(5)
-                        )
+                            '+',
+                            new NumberLiteral(3),
+                            new NumberLiteral(4)
+                        ),
+                        new NumberLiteral(5)
                     ),
                     new BinaryOperation(
                         '+',
-                        new NumberLiteral(6),
                         new BinaryOperation(
                             '-',
-                            new NumberLiteral(7),
                             new BinaryOperation(
                                 '+',
-                                new NumberLiteral(8),
-                                new NumberLiteral(9)
-                            )
-                        )
+                                new NumberLiteral(6),
+                                new NumberLiteral(7)
+                            ),
+                            new NumberLiteral(8)
+                        ),
+                        new NumberLiteral(9)
                     )
                 ]
             )
@@ -359,11 +359,56 @@ class JaslangParserTest extends TestCase
                 new FunctionCall(
                     'sum',
                     [
-                        new NumberLiteral(1),
-                        new NumberLiteral(1),
+                        new NumberLiteral('1'),
+                        new NumberLiteral('1'),
                     ]
                 ),
-                new NumberLiteral(2)
+                new NumberLiteral('2')
+            )
+        );
+    }
+
+    public function testFunctionOperatorFunction()
+    {
+        $this->performTest(
+            'sum(1,2+sum(3,4)+5)',
+            [
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 6),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 8),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 9),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 12),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 13),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 14),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 15),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 17),
+                $this->createToken(Lexer::TOKEN_NUMBER, '5', 18),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 19),
+            ],
+            new FunctionCall(
+                'sum',
+                [
+                    new NumberLiteral('1'),
+                    new BinaryOperation(
+                        '+',
+                        new BinaryOperation(
+                            '+',
+                            new NumberLiteral('2'),
+                            new FunctionCall(
+                                'sum',
+                                [
+                                    new NumberLiteral('3'),
+                                    new NumberLiteral('4'),
+                                ]
+                            )
+                        ),
+                        new NumberLiteral('5')
+                    ),
+                ]
             )
         );
     }
@@ -455,7 +500,7 @@ class JaslangParserTest extends TestCase
 
     private function performTest($input, $tokens, Node $expected)
     {
-        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input);
+        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input)->getFirstChild();
 
         $this->assertEquals($expected, $actual);
     }

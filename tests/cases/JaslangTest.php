@@ -229,6 +229,14 @@ JASLANG;
         $result = $factory->create()->evaluate('true AND true');
         $this->assertSame('true', $result);
     }
+
+    public function testComplexFunctionOperatorNesting()
+    {
+        $this->performTest(
+            '1 - 2 + sum(sum(3, 4) + 5, 6 + 7 - sum(8, 9) + sum(10, 11)) + 12 + 13',
+            '53'
+        );
+    }
     
     private function performTest($input, $expected)
     {

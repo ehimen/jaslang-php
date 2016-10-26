@@ -7,10 +7,12 @@ namespace Ehimen\Jaslang\Ast;
  */
 interface ParentNode extends Node 
 {
-    public function addChild(Node $child);
+    public function addChild(Node $child, $replacePrevious = false);
 
     /**
      * @return Node[]
      */
     public function getChildren();
+
+    public function getLastChild();
 }

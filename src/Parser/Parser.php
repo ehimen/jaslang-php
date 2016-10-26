@@ -2,14 +2,14 @@
 
 namespace Ehimen\Jaslang\Parser;
 
-use Ehimen\Jaslang\Ast\Node;
+use Ehimen\Jaslang\Ast\Root;
 
 interface Parser
 {
     /**
      * @param string
      * 
-     * @return Node
+     * @return Root
      */
     public function parse($input);
 }

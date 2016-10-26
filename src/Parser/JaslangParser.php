@@ -5,13 +5,11 @@ namespace Ehimen\Jaslang\Parser;
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\FunctionCall;
-use Ehimen\Jaslang\Ast\Literal;
-use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
+use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Exception\RuntimeException;
-use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
 use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
@@ -29,11 +27,9 @@ class JaslangParser implements Parser
     private $lexer;
 
     /**
-     * @var Node[]
+     * @var ParentNode[]
      */
     private $nodeStack = [];
-    
-    private $previousNode;
     
     private $currentToken;
     
@@ -59,6 +55,9 @@ class JaslangParser implements Parser
                 return ($token['type'] !== Lexer::TOKEN_WHITESPACE);
             }
         ));
+
+        $this->ast = new Root();
+        $this->nodeStack = [$this->ast];
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
@@ -70,10 +69,8 @@ class JaslangParser implements Parser
                 throw new UnexpectedTokenException($input, $token);
             }
         }
-        
-        $this->previousNode = null;
-        
-        if (!empty($this->nodeStack)) {
+
+        if (count($this->nodeStack) !== 1) {
             // Not all function calls were terminated.
             throw new UnexpectedEndOfInputException($input);
         }
@@ -96,13 +93,13 @@ class JaslangParser implements Parser
         };
         
         $closeNode = function() {
-            if (empty($this->nodeStack)) {
+            if (count($this->nodeStack) <= 1) {
                 // We've been asked to close a node that doesn't exist.
                 // This means we're closing too many functions, e.g.
                 // foo())
                 throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
-            
+
             array_pop($this->nodeStack);
         };
 
@@ -124,7 +121,7 @@ class JaslangParser implements Parser
             ->addRule('fn-literal', Lexer::TOKEN_RIGHT_PAREN, 'fn-close', $closeNode)
             ->addRule('fn-close', Lexer::TOKEN_COMMA, 'fn-comma')
             ->addRule('fn-close', Lexer::TOKEN_RIGHT_PAREN, 'fn-close', $closeNode)
-            ->addRule('fn-close', Lexer::TOKEN_OPERATOR, 'operator')
+            ->addRule('fn-close', Lexer::TOKEN_OPERATOR, 'fn-operator', $createNode)
             ->addRule('fn-comma', $literalTokens, 'fn-literal', $createNode)
             ->addRule('fn-comma', Lexer::TOKEN_IDENTIFIER, 'fn-identifier', $createNode)
             ->addRule('fn-operator', Lexer::TOKEN_IDENTIFIER, 'fn-identifier', $createNode)
@@ -132,6 +129,7 @@ class JaslangParser implements Parser
             
             ->start(0)
             ->accept('literal')
+            ->accept('fn-literal')
             ->accept('fn-close')
         ;
         
@@ -140,6 +138,9 @@ class JaslangParser implements Parser
 
     private function createNode()
     {
+        // Context is the parent node we want to add to.
+        $context = end($this->nodeStack);
+
         if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
             $node = new StringLiteral($this->currentToken['value']);
         } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
@@ -147,42 +148,34 @@ class JaslangParser implements Parser
         } elseif (Lexer::TOKEN_BOOLEAN === $this->currentToken['type']) {
             $node = new BooleanLiteral($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
-            $node = new FunctionCall($this->currentToken['value'], []);
+            $node = new FunctionCall($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
-            if (!$this->previousNode) {
-                // TODO: evaluation exception?
-                throw new RuntimeException();
-            }
-            
-            $node = new BinaryOperation($this->currentToken['value'], $this->previousNode);
+            $node = new BinaryOperation($this->currentToken['value'], $context->getLastChild());
         } else {
             throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
         }
         
-        $outerNode = end($this->nodeStack);
-        
-        if (($outerNode instanceof ParentNode) && (Lexer::TOKEN_OPERATOR !== $this->nextToken['type'])) {
-            // Add this to the current function, unless it's going to
-            // be consumed by a subsequent binary operator.
-            $outerNode->addChild($node);
-            
-            if ($outerNode instanceof BinaryOperation) {
+        if ($context instanceof ParentNode) {
+            // If we're creating a binary node, its infix nature
+            // means we need to shift the AST a bit.
+            // We take the place of the most recently added
+            // node in our context. We ensure our operator takes
+            // what we're replacing as its LHS (done on construction
+            // above). If it's not a binary operation, we simply add
+            // it to the end of the parent's children.
+            $context->addChild($node, ($node instanceof BinaryOperation));
+
+            if ($context instanceof BinaryOperation) {
+                // If we're in a binary operator, this is the second argument so we
+                // are closing it.
                 array_pop($this->nodeStack);
             }
         }
-        
+
         if ($node instanceof ParentNode) {
+            // If we've created a node that accepts children,
+            // push us on to the stack for future iterations.
             array_push($this->nodeStack, $node);
         }
-        
-        // Mark the tree we return.
-        // If nothing set, use the first thing we've built.
-        // If it is set and is a literal, and we've just built a binary
-        // operator, take that place as infix operators are a pain :(
-        if (!$this->ast || (($this->ast instanceof Literal) && ($node instanceof BinaryOperation))) {
-            $this->ast = $node;
-        }
-        
-        $this->previousNode = $node;
     }
 }

@@ -24,8 +24,25 @@ class BinaryOperation implements ParentNode
         return $this->operator;
     }
 
-    public function addChild(Node $child)
+    public function getLastChild()
     {
+        if ($this->rhs) {
+            return $this->rhs;
+        } else {
+            return $this->lhs;
+        }
+    }
+
+    public function addChild(Node $child, $replacePrevious = false)
+    {
+        if ($replacePrevious) {
+            if ($this->rhs) {
+                $this->rhs = null;
+            } elseif ($this->lhs) {
+                $this->lhs = null;
+            }
+        }
+
         if (!$this->lhs) {
             $this->lhs = $child;
         } elseif (!$this->rhs) {

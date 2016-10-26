@@ -2,32 +2,17 @@
 
 namespace Ehimen\Jaslang\Ast;
 
-class FunctionCall implements ParentNode  
+class FunctionCall extends UnlimitedChildrenParentNode
 {
     /**
      * @var string
      */
     private $name;
 
-    /**
-     * @var Node[]
-     */
-    private $arguments;
-
-    public function __construct($name, array $arguments)
+    public function __construct($name, array $children = [])
     {
+        parent::__construct($children);
         $this->name = $name;
-        $this->arguments = $arguments;
-    }
-
-    public function addChild(Node $child)
-    {
-        $this->arguments[] = $child;
-    }
-
-    public function getChildren()
-    {
-        return $this->arguments;
     }
 
     public function getName()
@@ -37,23 +22,11 @@ class FunctionCall implements ParentNode
 
     public function getArguments()
     {
-        return $this->arguments;
+        return $this->getChildren();
     }
 
     public function debug()
     {
-        return sprintf(
-            '%s(%s)',
-            $this->name,
-            implode(
-                ', ',
-                array_map(
-                    function (Node $node) {
-                        return $node->debug();
-                    },
-                    $this->getChildren()
-                )
-            )
-        ); 
+        return $this->name . parent::debug();
     }
 }

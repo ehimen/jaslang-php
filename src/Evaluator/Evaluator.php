@@ -21,7 +21,7 @@ use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\FuncDef\ArgList;
-use Ehimen\Jaslang\Evaluator\CallableRepository;
+use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\Parser\Parser;
 use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Num;
@@ -35,7 +35,7 @@ class Evaluator
     private $parser;
 
     /**
-     * @var CallableRepository
+     * @var FunctionRepository
      */
     private $repository;
 
@@ -51,7 +51,7 @@ class Evaluator
 
     private $evaluationContext;
 
-    public function __construct(Parser $parser, CallableRepository $repository, Invoker $invoker)
+    public function __construct(Parser $parser, FunctionRepository $repository, Invoker $invoker)
     {
         $this->parser = $parser;
         $this->repository = $repository;
@@ -120,12 +120,12 @@ class Evaluator
             }
             
             try {
-                $funcDef = $this->repository->getFuncDef($node->getName());
+                $funcDef = $this->repository->getFunction($node->getName());
             } catch (OutOfBoundsException $e) {
                 throw new UndefinedFunctionException($node->getName());
             }
             
-            $result = $this->invoker->invokeFuncDef($funcDef, new ArgList($arguments), $this->evaluationContext);
+            $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $this->evaluationContext);
         }
         
         if ($node instanceof BinaryOperation) {
@@ -146,7 +146,7 @@ class Evaluator
             $lhs = $this->evaluateNode($node->getLhs());
             $rhs = $this->evaluateNode($node->getRhs());
 
-            $result = $this->invoker->invokeOperator($operator, new ArgList([$lhs, $rhs]), $this->evaluationContext);
+            $result = $this->invoker->invokeFunction($operator, new ArgList([$lhs, $rhs]), $this->evaluationContext);
         }
         
         if ($node instanceof ParentNode) {

@@ -2,24 +2,27 @@
 
 namespace Ehimen\Jaslang\FuncDef\Core;
 
-use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
-use Ehimen\Jaslang\FuncDef\FuncDef;
+use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Value\Num;
+use Ehimen\Jaslang\Value\Value;
 
-class Subtract extends FuncDef
+class Subtract extends BinaryFunction
 {
-    public function getArgDefs()
+    protected function getLeftArgType()
     {
-        return [
-            new ArgDef(ArgDef::NUMBER, false),
-            new ArgDef(ArgDef::NUMBER, false),
-        ];
+        return ArgDef::NUMBER;
     }
 
-    public function invoke(ArgList $args, EvaluationContext $context)
+    protected function getRightArgType()
     {
-        return new Num($args->getNumber(0)->getValue() - $args->getNumber(1)->getValue());
+        return ArgDef::NUMBER;
+    }
+
+    protected function performOperation(Value $left, Value $right)
+    {
+        /** @var Num $left */
+        /** @var Num $right */
+        return new Num($left->getValue() - $right->getValue());
     }
 }

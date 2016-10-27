@@ -1,8 +1,9 @@
 <?php
 
-namespace Ehimen\Jaslang\Operator\Core;
+namespace Ehimen\Jaslang\FuncDef\Core;
 
 use Ehimen\Jaslang\FuncDef\ArgDef;
+use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Operator\Binary;
 use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Value;
@@ -12,7 +13,7 @@ use Ehimen\Jaslang\Value\Value;
  * 
  * This is the === operator in PHP.
  */
-class Identity extends Binary
+class Identity extends BinaryFunction
 {
     protected function getLeftArgType()
     {

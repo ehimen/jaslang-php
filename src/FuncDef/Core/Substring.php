@@ -8,7 +8,7 @@ use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Value\Str;
 
-class Substring extends FuncDef
+class Substring implements FuncDef
 {
     public function getArgDefs()
     {

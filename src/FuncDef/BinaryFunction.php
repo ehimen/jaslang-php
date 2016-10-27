@@ -1,16 +1,18 @@
 <?php
 
-namespace Ehimen\Jaslang\Operator;
+namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\Value\Value;
 
 /**
- * An operation with a left and right-hand side.
+ * A function that takes exactly two arguments.
+ *
+ * This can be used when implementing binary operators, though there is nothing
+ * forcing this to be registered as an operator; you can register this as a
+ * normal function.
  */
-abstract class Binary implements Operator
+abstract class BinaryFunction implements FuncDef
 {
     public function getArgDefs()
     {
@@ -29,7 +31,7 @@ abstract class Binary implements Operator
     }
 
     abstract protected function getLeftArgType();
-    
+
     abstract protected function getRightArgType();
 
     abstract protected function performOperation(Value $left, Value $right);

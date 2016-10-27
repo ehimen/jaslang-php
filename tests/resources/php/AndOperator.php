@@ -3,10 +3,10 @@
 namespace Ehimen\JaslangTestResources;
 
 use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\Operator\Binary;
+use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Value;
 
-class AndOperator extends Binary
+class AndOperator extends BinaryFunction
 {
     protected function getLeftArgType()
     {

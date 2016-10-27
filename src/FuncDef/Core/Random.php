@@ -9,7 +9,7 @@ use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Value\Num;
 
-class Random extends FuncDef
+class Random implements FuncDef
 {
     public function getArgDefs()
     {

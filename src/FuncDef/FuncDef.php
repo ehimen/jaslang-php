@@ -4,14 +4,14 @@ namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 
-abstract class FuncDef
+interface FuncDef
 {
     /**
      * @return ArgDef[]
      */
-    abstract public function getArgDefs();
+    public function getArgDefs();
     
-    abstract public function invoke(ArgList $args, EvaluationContext $context);
+    public function invoke(ArgList $args, EvaluationContext $context);
     
     // TODO: return values!
 }

@@ -3,7 +3,7 @@
 namespace Ehimen\JaslangTestResources;
 
 use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\Operator\Binary;
+use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Str;
 use Ehimen\Jaslang\Value\Value;
@@ -11,7 +11,7 @@ use Ehimen\Jaslang\Value\Value;
 /**
  * Returns true if both operands are the string foo.
  */
-class FooOperator extends Binary 
+class FooOperator extends BinaryFunction
 {
     protected function getLeftArgType()
     {

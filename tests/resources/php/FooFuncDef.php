@@ -10,7 +10,7 @@ use Ehimen\Jaslang\Value\Str;
 /**
  * Returns the string "foo".
  */
-class FooFuncDef extends FuncDef 
+class FooFuncDef implements FuncDef
 {
     public function getArgDefs()
     {

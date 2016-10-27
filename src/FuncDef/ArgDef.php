@@ -36,8 +36,8 @@ class ArgDef
 
     public function __construct($type, $optional)
     {
-        if (empty(static::TYPES_MAP[$type])) {
-            throw new InvalidArgumentException(sprintf('Unknown type %s',$type));
+        if (empty(static::TYPES_MAP[$type]) && (static::ANY !== $type)) {
+            throw new InvalidArgumentException(sprintf('Unknown type %s', $type));
         }
         
         $this->type     = $type;

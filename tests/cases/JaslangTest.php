@@ -222,11 +222,12 @@ JASLANG;
     {
         $factory = new JaslangFactory();
         $factory->registerOperator('AND', new AndOperator());
-        
-        $result = $factory->create()->evaluate('false AND true');
+        $evaluator = $factory->create();
+
+        $result = $evaluator->evaluate('false AND true');
         $this->assertSame('false', $result);
-        
-        $result = $factory->create()->evaluate('true AND true');
+
+        $result = $evaluator->evaluate('true AND true');
         $this->assertSame('true', $result);
     }
 

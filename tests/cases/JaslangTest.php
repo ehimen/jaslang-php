@@ -15,6 +15,7 @@ use Ehimen\Jaslang\Value\Str;
 use Ehimen\JaslangTestResources\AndOperator;
 use Ehimen\JaslangTestResources\FooFuncDef;
 use Ehimen\JaslangTestResources\FooOperator;
+use Ehimen\JaslangTestResources\Multiplication;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -245,6 +246,22 @@ JASLANG;
         $this->performTest('3 - ((1 + 2) + sum(7 - (2 + 10), 5))', '0');
     }
 
+    public function testOperatorPrecedence()
+    {
+        $input = '3 + 5 * 2';
+
+        $this->performMultiplicationTest($input, 10, '13');
+        $this->performMultiplicationTest($input, -10, '16');
+    }
+
+    public function testOperatorPrecedenceComplex()
+    {
+        $input = '3 + sum(3 + 5 * 2, 2 + 3 * sum(1, 2)) * 10';
+
+        $this->performMultiplicationTest($input, 10, '243');
+        $this->performMultiplicationTest($input, -10, '340');
+    }
+
     public function testMultiStatement()
     {
         $this->performTest("sum(1, 2); sum(4, 5)", '9');
@@ -253,8 +270,15 @@ JASLANG;
     private function performTest($input, $expected)
     {
         $actual = $this->getEvaluator()->evaluate($input);
-        
+
         $this->assertSame($expected, $actual);
+    }
+
+    private function performMultiplicationTest($input, $multiplicationPrecedence, $expected)
+    {
+        $factory = new JaslangFactory();
+        $factory->registerOperator('*', new Multiplication(), $multiplicationPrecedence);
+        $this->assertSame($expected, $factory->create()->evaluate($input));
     }
 
     private function performRuntimeExceptionTest($input, RuntimeException $expected)

@@ -10,6 +10,7 @@ use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
@@ -577,6 +578,101 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testOperatorPrecedence()
+    {
+        $this->performTestWithOperatorPrecedence(
+            '1+3-1',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 3),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+            ],
+            new BinaryOperation(
+                '+',
+                new NumberLiteral('1'),
+                new BinaryOperation(
+                    '-',
+                    new NumberLiteral('3'),
+                    new NumberLiteral('1')
+                )
+            ),
+            [
+                ['+', 0],
+                ['-', 10],      // Subtract is higher precedence than sum.
+            ]
+        );
+    }
+
+    public function testOperatorPrecedenceFunction()
+    {
+        $this->performTestWithOperatorPrecedence(
+            '1-3+1-sum(5+9-1+4,1+2)',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 2),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 3),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 6),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 7),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 10),
+                $this->createToken(Lexer::TOKEN_NUMBER, '5', 11),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
+                $this->createToken(Lexer::TOKEN_NUMBER, '9', 13),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '-', 14),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 15),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 16),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 17),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 18),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 19),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 20),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 21),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 22),
+            ],
+            new BinaryOperation(
+                '-',
+                new BinaryOperation(
+                    '-',
+                    new NumberLiteral('1'),
+                    new BinaryOperation(
+                        '+',
+                        new NumberLiteral('3'),
+                        new NumberLiteral('1')
+                    )
+                ),
+                new FunctionCall(
+                    'sum',
+                    [
+                        new BinaryOperation(
+                            '-',
+                            new BinaryOperation(
+                                '+',
+                                new NumberLiteral('5'),
+                                new NumberLiteral('9')
+                            ),
+                            new BinaryOperation(
+                                '+',
+                                new NumberLiteral('1'),
+                                new NumberLiteral('4')
+                            )
+                        ),
+                        new BinaryOperation(
+                            '+',
+                            new NumberLiteral('1'),
+                            new NumberLiteral('2')
+                        )
+                    ]
+                )
+            ),
+            [
+                ['-', 0],
+                ['+', 10],      // Subtract is higher precedence than sum.
+            ]
+        );
+    }
+
     public function testMissingComma()
     {
         $this->performSyntaxErrorTest(
@@ -678,6 +774,14 @@ class JaslangParserTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    private function performTestWithOperatorPrecedence($input, $tokens, Node $expected, $precedence)
+    {
+        $parser = $this->getParser($this->getLexer($input, $tokens), $this->getRepository($precedence));
+        $actual = $parser->parse($input)->getFirstChild();
+
+        $this->assertEquals($expected, $actual);
+    }
+
     private function getLexer($input, array $tokens)
     {
         $lexer = $this->createMock(Lexer::class);
@@ -687,6 +791,16 @@ class JaslangParserTest extends TestCase
             ->willReturn($tokens);
         
         return $lexer;
+    }
+
+    private function getRepository(array $operatorPrecedence = [])
+    {
+        $repo = $this->createMock(FunctionRepository::class);
+
+        $repo->method('getOperatorPrecedence')
+            ->willReturnMap($operatorPrecedence);
+
+        return $repo;
     }
 
     private function unexpectedTokenException($input, $token)
@@ -699,8 +813,10 @@ class JaslangParserTest extends TestCase
         return new UnexpectedEndOfInputException($input);
     }
 
-    private function getParser(Lexer $lexer)
+    private function getParser(Lexer $lexer, FunctionRepository $repository = null)
     {
-        return new JaslangParser($lexer);
+        $repository = $repository ?: $this->getRepository();
+
+        return new JaslangParser($lexer, $repository);
     }
 }

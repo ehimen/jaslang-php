@@ -86,6 +86,11 @@ class FunctionRepository
         return $this->operators[$identifier];
     }
 
+    /**
+     * @param $identifier
+     *
+     * @return int
+     */
     public function getOperatorPrecedence($identifier)
     {
         if (isset($this->operatorPrecedence[$identifier])) {

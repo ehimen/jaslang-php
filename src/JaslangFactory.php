@@ -62,7 +62,10 @@ class JaslangFactory
         $repository->registerOperator('===', new Identity());
         
         $invoker = new JaslangInvoker();
-        $parser  = new JaslangParser(new DoctrineLexer($repository->getRegisteredOperatorIdentifiers()));
+        $parser  = new JaslangParser(
+            new DoctrineLexer($repository->getRegisteredOperatorIdentifiers()),
+            $repository
+        );
 
         $evaluator = new Evaluator($parser, $repository, $invoker);
 

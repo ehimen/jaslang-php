@@ -10,6 +10,7 @@ use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\Exception\RuntimeException;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
@@ -40,9 +41,15 @@ class JaslangParser implements Parser
     
     private $nextToken;
 
-    public function __construct(Lexer $lexer)
+    /**
+     * @var FunctionRepository
+     */
+    private $functionRepository;
+
+    public function __construct(Lexer $lexer, FunctionRepository $repository)
     {
-        $this->lexer = $lexer;
+        $this->lexer              = $lexer;
+        $this->functionRepository = $repository;
     }
 
     public function parse($input)
@@ -154,6 +161,7 @@ class JaslangParser implements Parser
     {
         // Context is the parent node we want to add to.
         $context = end($this->nodeStack);
+        $replace = false;
 
         if (!($context instanceof ParentNode)) {
             throw new RuntimeException('Cannot create node as no context is present');
@@ -168,13 +176,26 @@ class JaslangParser implements Parser
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
-            $node = new BinaryOperation($this->currentToken['value'], $context->getLastChild());
+            $lastChild = $context->getLastChild();
+
+            if ($lastChild instanceof BinaryOperation) {
+                $previousPrecedence = $this->functionRepository->getOperatorPrecedence($lastChild->getOperator());
+                $thisPrecedence     = $this->functionRepository->getOperatorPrecedence($this->currentToken['value']);
+
+                if ($thisPrecedence > $previousPrecedence) {
+                    $context = $lastChild;
+                    array_push($this->nodeStack, $lastChild);
+                    $lastChild = $lastChild->getRhs();
+                }
+            }
+
+            $node = new BinaryOperation($this->currentToken['value'], $lastChild);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
         } else {
             throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
         }
-        
+
         // If we're creating a binary node, its infix nature
         // means we need to shift the AST a bit.
         // We take the place of the most recently added

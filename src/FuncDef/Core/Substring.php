@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\FuncDef\Core;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
@@ -18,7 +19,7 @@ class Substring extends FuncDef
         ];
     }
 
-    public function invoke(ArgList $args, $context = null)
+    public function invoke(ArgList $args, EvaluationContext $context)
     {
         return new Str(substr(
             $args->getString(0)->getValue(),

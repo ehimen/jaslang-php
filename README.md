@@ -43,6 +43,10 @@ The list of core functions is currently very limited due to focus on the engire.
 
 ## TODO
 
+* Multiple expressions? (Chained?)
+* Evaluation context: program output, pure functions?
+* Variables
+* Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
 * Implement some decent core functions.
 * Unary operators (bool negation)
 * Ternary operator?
@@ -51,6 +55,5 @@ The list of core functions is currently very limited due to focus on the engire.
 * Default operator precedence.
 * Work on string-like type.
 * Doc-generation tool.
-* Multiple expressions? (Chained?)
 * AST dumps, allowing Jaslang (or other) interpreters to be written in other languages. PHP does the "compile" phase
 * More generic solution to lexer/parser, allowing creation of arbitrary languages

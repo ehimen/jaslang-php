@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
@@ -12,23 +13,18 @@ use Ehimen\Jaslang\Operator\Operator;
  */
 class JaslangInvoker implements Invoker
 {
-    public function invokeFuncDef(FuncDef $function, ArgList $args)
+    public function invokeFuncDef(FuncDef $function, ArgList $args, EvaluationContext $context)
     {
         $this->validateArgs($function->getArgDefs(), $args);
         
-        return $function->invoke($args, $this->getContext($function, $args));
+        return $function->invoke($args, $context);
         
         // TODO: return type. Really need to validate this. Keep not returning wrapped values!
     }
 
-    public function invokeOperator(Operator $operator, ArgList $args)
+    public function invokeOperator(Operator $operator, ArgList $args, EvaluationContext $context)
     {
-        return $operator->invoke($args);
-    }
-
-    protected function getContext(FuncDef $function, ArgList $args)
-    {
-        return [];
+        return $operator->invoke($args, $context);
     }
 
     private function validateArgs(array $argDefs, ArgList $args)

@@ -12,6 +12,7 @@ use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\StringLiteral;
+use Ehimen\Jaslang\Evaluator\Context\NullContext;
 use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedOperatorException;
@@ -48,11 +49,14 @@ class Evaluator
      */
     private $trace;
 
+    private $evaluationContext;
+
     public function __construct(Parser $parser, CallableRepository $repository, Invoker $invoker)
     {
         $this->parser = $parser;
         $this->repository = $repository;
         $this->invoker = $invoker;
+        $this->evaluationContext = new NullContext();
     }
 
     /**
@@ -115,7 +119,7 @@ class Evaluator
                 throw new UndefinedFunctionException($node->getName());
             }
             
-            $result = $this->invoker->invokeFuncDef($funcDef, new ArgList($arguments));
+            $result = $this->invoker->invokeFuncDef($funcDef, new ArgList($arguments), $this->evaluationContext);
         }
         
         if ($node instanceof BinaryOperation) {
@@ -136,7 +140,7 @@ class Evaluator
             $lhs = $this->evaluateNode($node->getLhs());
             $rhs = $this->evaluateNode($node->getRhs());
 
-            $result = $this->invoker->invokeOperator($operator, new ArgList([$lhs, $rhs]));
+            $result = $this->invoker->invokeOperator($operator, new ArgList([$lhs, $rhs]), $this->evaluationContext);
         }
         
         if ($node instanceof ParentNode) {

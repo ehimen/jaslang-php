@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Operator;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\Value\Value;
@@ -19,7 +20,7 @@ abstract class Binary implements Operator
         ];
     }
 
-    public function invoke(ArgList $operands)
+    public function invoke(ArgList $operands, EvaluationContext $context)
     {
         return $this->performOperation(
             $operands->get(0, $this->getLeftArgType()),

@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\FuncDef\Core;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
@@ -18,7 +19,7 @@ class Random extends FuncDef
         ];
     }
 
-    public function invoke(ArgList $args, $context = null)
+    public function invoke(ArgList $args, EvaluationContext $context)
     {
         if ($min = $args->getNumber(0, true)) {
             if (!($max = $args->getNumber(1))) {

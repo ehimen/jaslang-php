@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Operator\Operator;
@@ -17,10 +18,10 @@ interface Invoker
     /**
      * @return Value
      */
-    public function invokeFuncDef(FuncDef $function, ArgList $args);
+    public function invokeFuncDef(FuncDef $function, ArgList $args, EvaluationContext $context);
 
     /**
      * @return Value
      */
-    public function invokeOperator(Operator $operator, ArgList $args);
+    public function invokeOperator(Operator $operator, ArgList $args, EvaluationContext $context);
 }

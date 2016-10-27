@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Operator;
 
+use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
 
@@ -12,5 +13,5 @@ interface Operator
      */
     public function getArgDefs();
 
-    public function invoke(ArgList $operands);
+    public function invoke(ArgList $operands, EvaluationContext $context);
 }

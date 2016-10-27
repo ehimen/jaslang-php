@@ -9,19 +9,18 @@ class Dfa
 {
     private $states = [];
     
-    private $onEntering = [];
+    private $whenEntering = [];
     
     private $current;
     
     private $accepted = [];
     
-    public function __construct(array $rules, $start, array $accepted)
+    public function __construct(array $rules, $start, array $accepted, array $whenEntering)
     {
         foreach ($rules as $rule) {
             $from  = $rule[0];
             $how   = $rule[1];
             $to    = $rule[2];
-            $onEnter = isset($rule[3]) ? $rule[3] : null;
             
             if (!isset($this->states[$from])) {
                 $this->states[$from] = [];
@@ -31,19 +30,12 @@ class Dfa
                 $this->states[$to] = [];
             }
             
-            if ($onEnter instanceof \Closure) {
-                if (!isset($this->onEntering[$to][$how][$from])) {
-                    $this->onEntering[$to][$how][$from] = [];
-                }
-                
-                $this->onEntering[$to][$how][$from] = $onEnter;
-            }
-            
             $this->states[$from][$how] = $to;
         }
         
-        $this->current  = $start;
-        $this->accepted = $accepted;
+        $this->whenEntering = $whenEntering;
+        $this->current     = $start;
+        $this->accepted    = $accepted;
     }
 
     public function transition($path)
@@ -55,13 +47,11 @@ class Dfa
                 $path
             ));
         }
-        
-        $old = $this->current;
 
         $this->current = $this->states[$this->current][$path];
 
-        if (isset($this->onEntering[$this->current][$path][$old])) {
-            $this->onEntering[$this->current][$path][$old]();
+        if (isset($this->whenEntering[$this->current])) {
+            $this->whenEntering[$this->current]();
         }
     }
 

@@ -456,6 +456,8 @@ class JaslangParserTest extends TestCase
     }
     
     // TODO: test + on strings?
+    
+    // TODO: possible uncaught syntax errors with commas, e.g. foo("bar"),,,
 
     public function testRogueBackslash()
     {

@@ -93,44 +93,46 @@ class JaslangParser implements Parser
         };
         
         $closeNode = function() {
-            if (count($this->nodeStack) <= 1) {
-                // We've been asked to close a node that doesn't exist.
-                // This means we're closing too many functions, e.g.
-                // foo())
-                throw new UnexpectedTokenException($this->input, $this->currentToken);
-            }
-
-            array_pop($this->nodeStack);
+            $this->closeNode();
         };
 
         $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER, Lexer::TOKEN_BOOLEAN];
-        
+
+        $literal = 'literal';
+        $operator = 'operator';
+        $identifier = 'identifier';
+        $parenOpen = 'paren-open';
+        $parenClose = 'paren-close';
+        $comma = 'comma';
         $builder
-            ->addRule(0, Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
-            ->addRule(0, $literalTokens, 'literal', $createNode)
-            ->addRule('literal', Lexer::TOKEN_OPERATOR, 'operator', $createNode)
-            ->addRule('operator', Lexer::TOKEN_IDENTIFIER, 'identifier', $createNode)
-            ->addRule('operator', $literalTokens, 'literal', $createNode)
-            ->addRule('identifier', Lexer::TOKEN_LEFT_PAREN, 'fn-open')
-            ->addRule('fn-open', Lexer::TOKEN_IDENTIFIER, 'fn-identifier', $createNode)
-            ->addRule('fn-open', $literalTokens, 'fn-literal', $createNode)
-            ->addRule('fn-open', Lexer::TOKEN_RIGHT_PAREN, 'fn-close', $closeNode)
-            ->addRule('fn-identifier', Lexer::TOKEN_LEFT_PAREN, 'fn-open')
-            ->addRule('fn-literal', Lexer::TOKEN_OPERATOR, 'fn-operator', $createNode)
-            ->addRule('fn-literal', Lexer::TOKEN_COMMA, 'fn-comma')
-            ->addRule('fn-literal', Lexer::TOKEN_RIGHT_PAREN, 'fn-close', $closeNode)
-            ->addRule('fn-close', Lexer::TOKEN_COMMA, 'fn-comma')
-            ->addRule('fn-close', Lexer::TOKEN_RIGHT_PAREN, 'fn-close', $closeNode)
-            ->addRule('fn-close', Lexer::TOKEN_OPERATOR, 'fn-operator', $createNode)
-            ->addRule('fn-comma', $literalTokens, 'fn-literal', $createNode)
-            ->addRule('fn-comma', Lexer::TOKEN_IDENTIFIER, 'fn-identifier', $createNode)
-            ->addRule('fn-operator', Lexer::TOKEN_IDENTIFIER, 'fn-identifier', $createNode)
-            ->addRule('fn-operator', $literalTokens, 'fn-literal', $createNode)
+            ->addRule(0,           Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule(0,           $literalTokens,           $literal)
+            ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
+            ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
+            ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($operator,   $literalTokens,           $literal)
+            ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
+            ->addRule($parenOpen,  Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($parenOpen,  $literalTokens,           $literal)
+            ->addRule($parenOpen,  Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
+            ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
+            ->addRule($comma,      $literalTokens,           $literal)
+            ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($operator,   $literalTokens,           $literal)
+            
+            ->whenEntering($identifier, $createNode)
+            ->whenEntering($literal, $createNode)
+            ->whenEntering($operator, $createNode)
+            ->whenEntering($operator, $createNode)
+            ->whenEntering($parenClose, $closeNode)
             
             ->start(0)
-            ->accept('literal')
-            ->accept('fn-literal')
-            ->accept('fn-close')
+            ->accept($literal)
+            ->accept($parenClose)
         ;
         
         return $builder->build();
@@ -140,6 +142,10 @@ class JaslangParser implements Parser
     {
         // Context is the parent node we want to add to.
         $context = end($this->nodeStack);
+
+        if (!($context instanceof ParentNode)) {
+            throw new RuntimeException('Cannot create node as no context is present');
+        }
 
         if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
             $node = new StringLiteral($this->currentToken['value']);
@@ -155,27 +161,35 @@ class JaslangParser implements Parser
             throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
         }
         
-        if ($context instanceof ParentNode) {
-            // If we're creating a binary node, its infix nature
-            // means we need to shift the AST a bit.
-            // We take the place of the most recently added
-            // node in our context. We ensure our operator takes
-            // what we're replacing as its LHS (done on construction
-            // above). If it's not a binary operation, we simply add
-            // it to the end of the parent's children.
-            $context->addChild($node, ($node instanceof BinaryOperation));
+        // If we're creating a binary node, its infix nature
+        // means we need to shift the AST a bit.
+        // We take the place of the most recently added
+        // node in our context. We ensure our operator takes
+        // what we're replacing as its LHS (done on construction
+        // above). If it's not a binary operation, we simply add
+        // it to the end of the parent's children.
+        $context->addChild($node, ($node instanceof BinaryOperation));
 
-            if ($context instanceof BinaryOperation) {
-                // If we're in a binary operator, this is the second argument so we
-                // are closing it.
-                array_pop($this->nodeStack);
-            }
+        if ($context instanceof BinaryOperation) {
+            // If we're in a binary operator, this is the second argument so we
+            // are closing it.
+            array_pop($this->nodeStack);
         }
-
+        
         if ($node instanceof ParentNode) {
-            // If we've created a node that accepts children,
-            // push us on to the stack for future iterations.
             array_push($this->nodeStack, $node);
         }
+    }
+
+    private function closeNode()
+    {
+        if (count($this->nodeStack) <= 1) {
+            // We've been asked to close a node that doesn't exist.
+            // This means we're closing too many functions, e.g.
+            // foo())
+            throw new UnexpectedTokenException($this->input, $this->currentToken);
+        }
+
+        array_pop($this->nodeStack);
     }
 }

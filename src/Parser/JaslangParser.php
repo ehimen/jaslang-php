@@ -113,7 +113,6 @@ class JaslangParser implements Parser
         $parenOpen = 'paren-open';
         $parenClose = 'paren-close';
         $comma = 'comma';
-        $stateTerm = 'comma';
         $builder
             ->addRule(0,           Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule(0,           $literalTokens,           $literal)
@@ -121,7 +120,7 @@ class JaslangParser implements Parser
             ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
             ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
             ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($literal,    Lexer::TOKEN_STATETERM,   $stateTerm)
+            ->addRule($literal,    Lexer::TOKEN_STATETERM,   0)
             ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($operator,   $literalTokens,           $literal)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $fnOpen)
@@ -131,7 +130,7 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
-            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   $stateTerm)
+            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   0)
             ->addRule($comma,      $literalTokens,           $literal)
             ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($comma,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
@@ -161,7 +160,6 @@ class JaslangParser implements Parser
     {
         // Context is the parent node we want to add to.
         $context = end($this->nodeStack);
-        $replace = false;
 
         if (!($context instanceof ParentNode)) {
             throw new RuntimeException('Cannot create node as no context is present');

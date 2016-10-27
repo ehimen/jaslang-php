@@ -87,12 +87,14 @@ class Evaluator
 
     private function evaluateNode(Node $node)
     {
+
+
         if ($node instanceof Container) {
             // Special case for a contained node, evaluate the wrapped
             // node, skipping any stack trace handling etc.
             // A contained node only exists to greatly simplify
             // parsing grouping parentheses.
-            // TODO: ideally it shouldn't be in the parsed AST.
+            // TODO: ideally it shouldn't be in the parsed AST?
             return $this->evaluateNode($node->getLastChild());
         }
         

@@ -17,4 +17,12 @@ class EvaluationException extends \Exception
         $this->message = $message;
         $this->input   = $input;
     }
+
+    /**
+     * @return string
+     */
+    public function getInput()
+    {
+        return $this->input;
+    }
 }

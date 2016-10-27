@@ -27,4 +27,12 @@ class RuntimeException extends EvaluationException
     {
         $this->input = $input;
     }
+
+    /**
+     * @return EvaluationTrace
+     */
+    public function getEvaluationTrace()
+    {
+        return $this->evaluationTrace;
+    }
 }

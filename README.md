@@ -32,8 +32,11 @@ sum(1, sum(2, sum(3, 4))                // "Jaslang syntax error! Input: sum(1, 
 foo bar                                 // "Jaslang syntax error! Input: foo bar 
                                         //  Unexpected token: bar @5"
 
-# Runtime validation on types, and full stack traces for debugging.
-random("hello world")                   // "Jaslang runtime exception! Invalid argument at position 0. Expected "number", got hello world"
+# Type validation & stack traces
+random("hello world")                   // Jaslang runtime exception! Invalid argument at position 0. Expected "number", got hello world
+                                        // #0 > random(sum(1, random("hello world")))
+                                        // #1 > sum(1, random("hello world"))
+                                        // #2 > random("hello world")
 ```
 
 The list of core functions is currently very limited due to focus on the engire.

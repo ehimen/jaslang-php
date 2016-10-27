@@ -27,7 +27,15 @@ if (strlen($jaslang) === 0) {
     exit(0);
 }
 
-echo (new Ehimen\Jaslang\JaslangFactory())->create()->evaluate($jaslang);
+try {
+    echo (new Ehimen\Jaslang\JaslangFactory())->create()->evaluate($jaslang);
+} catch (\Ehimen\Jaslang\Evaluator\Exception\RuntimeException $e) {
+    echo $e->getMessage();
+    echo PHP_EOL;
+    echo $e->getEvaluationTrace()->getAsString();
+} catch (\Ehimen\Jaslang\Parser\Exception\SyntaxErrorException $e) {
+    echo $e->getMessage();
+}
 
 echo PHP_EOL;
 

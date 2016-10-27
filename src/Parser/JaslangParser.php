@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
+use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
@@ -101,34 +102,42 @@ class JaslangParser implements Parser
         $literal = 'literal';
         $operator = 'operator';
         $identifier = 'identifier';
+        $fnOpen = 'fn-open';
         $parenOpen = 'paren-open';
         $parenClose = 'paren-close';
         $comma = 'comma';
         $builder
             ->addRule(0,           Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule(0,           $literalTokens,           $literal)
+            ->addRule(0,           Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
             ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
             ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
             ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($operator,   $literalTokens,           $literal)
-            ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
-            ->addRule($parenOpen,  Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($parenOpen,  $literalTokens,           $literal)
-            ->addRule($parenOpen,  Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $fnOpen)
+            ->addRule($fnOpen,     Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($fnOpen,     $literalTokens,           $literal)
+            ->addRule($fnOpen,     Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
             ->addRule($comma,      $literalTokens,           $literal)
             ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($comma,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
             ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($operator,   $literalTokens,           $literal)
+            ->addRule($operator,   Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
+            ->addRule($parenOpen,  Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
+            ->addRule($parenOpen,  Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($parenOpen,  $literalTokens,           $literal)
+            ->addRule($parenOpen,  Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
             ->whenEntering($operator, $createNode)
-            ->whenEntering($operator, $createNode)
             ->whenEntering($parenClose, $closeNode)
+            ->whenEntering($parenOpen, $createNode)
             
             ->start(0)
             ->accept($literal)
@@ -147,16 +156,18 @@ class JaslangParser implements Parser
             throw new RuntimeException('Cannot create node as no context is present');
         }
 
-        if (Lexer::TOKEN_STRING === $this->currentToken['type']) {
+        if ($this->currentToken['type'] === Lexer::TOKEN_STRING) {
             $node = new StringLiteral($this->currentToken['value']);
-        } elseif (Lexer::TOKEN_NUMBER === $this->currentToken['type']) {
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_NUMBER) {
             $node = new NumberLiteral($this->currentToken['value']);
-        } elseif (Lexer::TOKEN_BOOLEAN === $this->currentToken['type']) {
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_BOOLEAN) {
             $node = new BooleanLiteral($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
             $node = new BinaryOperation($this->currentToken['value'], $context->getLastChild());
+        } elseif ($this->currentToken['type'] === Lexer::TOKEN_LEFT_PAREN) {
+            $node = new Container();
         } else {
             throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
         }

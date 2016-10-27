@@ -237,6 +237,12 @@ JASLANG;
             '53'
         );
     }
+
+    public function testParenGroupPrecedence()
+    {
+        $this->performTest('3 - 1 + 2 + sum(7 - 2 + 10, 5)', '24');
+        $this->performTest('3 - ((1 + 2) + sum(7 - (2 + 10), 5))', '0');
+    }
     
     private function performTest($input, $expected)
     {

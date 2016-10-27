@@ -4,6 +4,7 @@ namespace Ehimen\JaslangTests\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
+use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
@@ -207,7 +208,7 @@ class JaslangParserTest extends TestCase
             [
                 $unexpected = $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 1),
             ],
-            $this->unexpectedTokenException('(', $unexpected)
+            $this->unexpectedEndOfInputException('(')
         );
     }
 
@@ -409,6 +410,56 @@ class JaslangParserTest extends TestCase
                         new NumberLiteral('5')
                     ),
                 ]
+            )
+        );
+    }
+
+    public function testParenGrouping()
+    {
+        $this->performTest(
+            '1+(2+3)',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 3),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 4),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 5),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 6),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
+            ],
+            new BinaryOperation(
+                '+',
+                new NumberLiteral('1'),
+                new Container(
+                    new BinaryOperation(
+                        '+',
+                        new NumberLiteral('2'),
+                        new NumberLiteral('3')
+                    )
+                )
+            )
+        );
+    }
+
+    public function testConsecutiveParen()
+    {
+        $this->performTest(
+            '(((3)))',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 1),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 2),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 3),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 4),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
+            ],
+            new Container(
+                new Container(
+                    new Container(
+                        new NumberLiteral('3')
+                    )
+                )
             )
         );
     }

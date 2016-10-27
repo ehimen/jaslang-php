@@ -5,6 +5,7 @@ namespace Ehimen\Jaslang\Evaluator;
 use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
+use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
@@ -76,6 +77,15 @@ class Evaluator
 
     private function evaluateNode(Node $node)
     {
+        if ($node instanceof Container) {
+            // Special case for a contained node, evaluate the wrapped
+            // node, skipping any stack trace handling etc.
+            // A contained node only exists to greatly simplify
+            // parsing grouping parentheses.
+            // TODO: ideally it shouldn't be in the parsed AST.
+            return $this->evaluateNode($node->getLastChild());
+        }
+        
         if ($node instanceof ParentNode) {
             $this->trace->push(new TraceEntry($node->debug()));
         }

@@ -14,14 +14,25 @@ Currently supported language features:
 ## Examples
 
 ```
+# Numbers, functions and operators.
 sum(1, 3)                               // "4"
 subtract(-4.5, -3)                      // "-1.5"
 1 + 3 + 2 + 5 - 2                       // "9"
+
+# Boolean & strings
 "ello" === substring("hello", 1, 4)     // "true"
+
+# Controlling precendence
+3 - 3 + 1                               // "1"
+3 - (3 + 1)                             // "-1"
+
+# Syntax checking
 sum(1, sum(2, sum(3, 4))                // "Jaslang syntax error! Input: sum(1, sum(2, sum(3, 4))
                                         //  Unexpected end of input"
 foo bar                                 // "Jaslang syntax error! Input: foo bar 
                                         //  Unexpected token: bar @5"
+
+# Runtime validation on types, and full stack traces for debugging.
 random("hello world")                   // "Jaslang runtime exception! Invalid argument at position 0. Expected "number", got hello world"
 ```
 
@@ -29,7 +40,6 @@ The list of core functions is currently very limited due to focus on the engire.
 
 ## TODO
 
-* Parentheses to control evaluation precedence.
 * Implement some decent core functions.
 * Unary operators (bool negation)
 * Ternary operator?

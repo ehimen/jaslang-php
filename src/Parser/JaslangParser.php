@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\Root;
+use Ehimen\Jaslang\Ast\Statement;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\Exception\RuntimeException;
@@ -64,8 +65,8 @@ class JaslangParser implements Parser
             }
         ));
 
-        $this->ast = new Root();
-        $this->nodeStack = [$this->ast];
+        $this->ast = new Root([$statement = new Statement()]);
+        $this->nodeStack = [$this->ast, $statement];
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
@@ -76,6 +77,10 @@ class JaslangParser implements Parser
             } catch (TransitionImpossibleException $e) {
                 throw new UnexpectedTokenException($input, $token);
             }
+        }
+
+        if (($finalStatement = end($this->nodeStack)) instanceof Statement) {
+            array_pop($this->nodeStack);
         }
 
         if (count($this->nodeStack) !== 1) {

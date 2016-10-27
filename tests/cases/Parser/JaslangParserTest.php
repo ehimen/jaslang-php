@@ -762,7 +762,7 @@ class JaslangParserTest extends TestCase
 
     private function performTest($input, $tokens, Node $expected)
     {
-        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input)->getFirstChild();
+        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input)->getFirstStatement();
 
         $this->assertEquals($expected, $actual);
     }
@@ -777,7 +777,7 @@ class JaslangParserTest extends TestCase
     private function performTestWithOperatorPrecedence($input, $tokens, Node $expected, $precedence)
     {
         $parser = $this->getParser($this->getLexer($input, $tokens), $this->getRepository($precedence));
-        $actual = $parser->parse($input)->getFirstChild();
+        $actual = $parser->parse($input)->getFirstStatement();
 
         $this->assertEquals($expected, $actual);
     }

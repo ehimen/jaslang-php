@@ -11,6 +11,7 @@ use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
+use Ehimen\Jaslang\Ast\Statement;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\Context\NullContext;
 use Ehimen\Jaslang\Evaluator\Exception\RuntimeException;
@@ -73,7 +74,7 @@ class Evaluator
         $result = '';
         
         try {
-            foreach ($ast->getChildren() as $statement) {
+            foreach ($ast->getStatements() as $statement) {
                 $result = $this->evaluateNode($statement)->toString();
             }
         } catch (RuntimeException $e) {

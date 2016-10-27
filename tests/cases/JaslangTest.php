@@ -243,6 +243,11 @@ JASLANG;
         $this->performTest('3 - 1 + 2 + sum(7 - 2 + 10, 5)', '24');
         $this->performTest('3 - ((1 + 2) + sum(7 - (2 + 10), 5))', '0');
     }
+
+    public function testMultiStatement()
+    {
+        $this->performTest("sum(1, 2); sum(4, 5)", '9');
+    }
     
     private function performTest($input, $expected)
     {

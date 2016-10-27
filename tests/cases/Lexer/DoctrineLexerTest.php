@@ -349,6 +349,20 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testMultiStatements()
+    {
+        $this->performTest(
+            'foo; bar; baz',
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
+            $this->createToken(Lexer::TOKEN_STATETERM, ';', 4),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 6),
+            $this->createToken(Lexer::TOKEN_STATETERM, ';', 9),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'baz', 11)
+        );
+    }
+
     public function testUnterminatedString()
     {
         $this->performSyntaxErrorTest(

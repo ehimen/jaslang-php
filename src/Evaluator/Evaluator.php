@@ -66,17 +66,23 @@ class Evaluator
      */
     public function evaluate($input)
     {
-        $ast = $this->parser->parse($input)->getFirstChild();
+        $ast = $this->parser->parse($input);
         
         $this->trace = new EvaluationTrace();
+
+        $result = '';
         
         try {
-            return $this->evaluateNode($ast)->toString();
+            foreach ($ast->getChildren() as $statement) {
+                $result = $this->evaluateNode($statement)->toString();
+            }
         } catch (RuntimeException $e) {
             $e->setEvaluationTrace($this->trace);
             $e->setInput($input);
             throw $e;
         }
+
+        return $result;
     }
 
     private function evaluateNode(Node $node)

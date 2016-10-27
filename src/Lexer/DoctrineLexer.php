@@ -19,6 +19,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     const DTYPE_COMMA = 6;
     const DTYPE_WHITESPACE = 7;
     const DTYPE_OPERATOR = 8;
+    const DTYPE_SEMICOLON = 9;
     
     private $currentQuote = null;
     private $currentToken = '';
@@ -84,6 +85,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                     $this->token(Lexer::TOKEN_WHITESPACE);
                 } elseif ($type === static::DTYPE_BACKSLASH) {
                     $this->token(Lexer::TOKEN_BACKSLASH);
+                } elseif ($type === static::DTYPE_SEMICOLON) {
+                    $this->token(Lexer::TOKEN_STATETERM);
                 } elseif ($type === static::DTYPE_OPERATOR) {
                     $this->token(Lexer::TOKEN_OPERATOR);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
@@ -218,6 +221,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             return static::DTYPE_QUOTE_DOUBLE;
         } elseif (',' === $value) {
             return static::DTYPE_COMMA;
+        } elseif (';' === $value) {
+            return static::DTYPE_SEMICOLON;
         } elseif ('' === trim($value)) {
             return static::DTYPE_WHITESPACE;
         } elseif (in_array($value, $this->operators, true)) {

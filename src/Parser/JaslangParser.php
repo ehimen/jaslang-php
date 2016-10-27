@@ -106,6 +106,7 @@ class JaslangParser implements Parser
         $parenOpen = 'paren-open';
         $parenClose = 'paren-close';
         $comma = 'comma';
+        $stateTerm = 'comma';
         $builder
             ->addRule(0,           Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule(0,           $literalTokens,           $literal)
@@ -113,6 +114,7 @@ class JaslangParser implements Parser
             ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
             ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
             ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($literal,    Lexer::TOKEN_STATETERM,   $stateTerm)
             ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($operator,   $literalTokens,           $literal)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $fnOpen)
@@ -122,6 +124,7 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
+            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   $stateTerm)
             ->addRule($comma,      $literalTokens,           $literal)
             ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($comma,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
@@ -184,7 +187,7 @@ class JaslangParser implements Parser
         if ($context instanceof BinaryOperation) {
             // If we're in a binary operator, this is the second argument so we
             // are closing it.
-            array_pop($this->nodeStack);
+            $this->closeNode();
         }
         
         if ($node instanceof ParentNode) {

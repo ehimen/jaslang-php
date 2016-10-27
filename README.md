@@ -43,7 +43,6 @@ The list of core functions is currently very limited due to focus on the engire.
 
 ## TODO
 
-* Multiple expressions? (Chained?)
 * Evaluation context: program output, pure functions?
 * Variables
 * Passing references to functions would allow for non-engine implementation of increment operator, for e.g.

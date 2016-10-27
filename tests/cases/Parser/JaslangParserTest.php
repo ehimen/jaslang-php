@@ -8,6 +8,7 @@ use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\NumberLiteral;
+use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
@@ -464,6 +465,118 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testMultiStatement()
+    {
+        $this->performMultiStatementTest(
+            '1;2;3;4',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 2),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 3),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 6),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 7),
+            ],
+            new Root([
+                new NumberLiteral('1'),
+                new NumberLiteral('2'),
+                new NumberLiteral('3'),
+                new NumberLiteral('4'),
+            ])
+        );
+    }
+
+    public function testMultiStatementOperator()
+    {
+        $this->performMultiStatementTest(
+            '1+1;2+2+2;3+3',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 3),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 4),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 5),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 6),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 8),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 9),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 10),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 11),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 13),
+            ],
+            new Root([
+                new BinaryOperation(
+                    '+',
+                    new NumberLiteral('1'),
+                    new NumberLiteral('1')
+                ),
+                new BinaryOperation(
+                    '+',
+                    new BinaryOperation(
+                        '+',
+                        new NumberLiteral('2'),
+                        new NumberLiteral('2')
+                    ),
+                    new NumberLiteral('2')
+                ),
+                new BinaryOperation(
+                    '+',
+                    new NumberLiteral('3'),
+                    new NumberLiteral('3')
+                ),
+            ])
+        );
+    }
+
+    public function testMultiStatementFunction()
+    {
+        $this->performMultiStatementTest(
+            '1;sum(2,3+4);sum(5,6)',
+            [
+                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 2),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 3),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 6),
+                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 8),
+                $this->createToken(Lexer::TOKEN_NUMBER, '3', 9),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 10),
+                $this->createToken(Lexer::TOKEN_NUMBER, '4', 11),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 12),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 13),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 14),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 17),
+                $this->createToken(Lexer::TOKEN_NUMBER, '5', 18),
+                $this->createToken(Lexer::TOKEN_COMMA, ',', 19),
+                $this->createToken(Lexer::TOKEN_NUMBER, '6', 20),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, '6', 21),
+            ],
+            new Root([
+                new NumberLiteral('1'),
+                new FunctionCall(
+                    'sum',
+                    [
+                        new NumberLiteral('2'),
+                        new BinaryOperation(
+                            '+',
+                            new NumberLiteral('3'),
+                            new NumberLiteral('4')
+                        ),
+                    ]
+                ),
+                new FunctionCall(
+                    'sum',
+                    [
+                        new NumberLiteral('5'),
+                        new NumberLiteral('6'),
+                    ]
+                ),
+            ])
+        );
+    }
+
     public function testMissingComma()
     {
         $this->performSyntaxErrorTest(
@@ -554,6 +667,13 @@ class JaslangParserTest extends TestCase
     private function performTest($input, $tokens, Node $expected)
     {
         $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input)->getFirstChild();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    private function performMultiStatementTest($input, $tokens, Node $expected)
+    {
+        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input);
 
         $this->assertEquals($expected, $actual);
     }

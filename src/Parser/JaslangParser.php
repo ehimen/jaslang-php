@@ -106,21 +106,24 @@ class JaslangParser implements Parser
 
         $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER, Lexer::TOKEN_BOOLEAN];
 
-        $literal = 'literal';
-        $operator = 'operator';
+        $start      = 0;
+        $literal    = 'literal';
+        $operator   = 'operator';
         $identifier = 'identifier';
-        $fnOpen = 'fn-open';
-        $parenOpen = 'paren-open';
+        $fnOpen     = 'fn-open';
+        $parenOpen  = 'paren-open';
         $parenClose = 'paren-close';
-        $comma = 'comma';
+        $comma      = 'comma';
+        $stateTerm  = 'state-term';
+
         $builder
-            ->addRule(0,           Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule(0,           $literalTokens,           $literal)
-            ->addRule(0,           Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
+            ->addRule($start,      Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($start,      $literalTokens,           $literal)
+            ->addRule($start,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
             ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
             ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
             ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($literal,    Lexer::TOKEN_STATETERM,   0)
+            ->addRule($literal,    Lexer::TOKEN_STATETERM,   $stateTerm)
             ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($operator,   $literalTokens,           $literal)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $fnOpen)
@@ -130,7 +133,7 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
-            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   0)
+            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   $stateTerm)
             ->addRule($comma,      $literalTokens,           $literal)
             ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($comma,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
@@ -141,6 +144,9 @@ class JaslangParser implements Parser
             ->addRule($parenOpen,  Lexer::TOKEN_IDENTIFIER,  $identifier)
             ->addRule($parenOpen,  $literalTokens,           $literal)
             ->addRule($parenOpen,  Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($stateTerm,  Lexer::TOKEN_IDENTIFIER,  $identifier)
+            ->addRule($stateTerm,  $literalTokens,           $literal)
+            ->addRule($stateTerm,  Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -148,7 +154,7 @@ class JaslangParser implements Parser
             ->whenEntering($parenClose, $closeNode)
             ->whenEntering($parenOpen, $createNode)
             
-            ->start(0)
+            ->start($start)
             ->accept($literal)
             ->accept($parenClose)
         ;

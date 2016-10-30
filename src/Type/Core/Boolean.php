@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Value\Value;
 
 class Boolean implements ConcreteType 
 {
-    const LITERAL_PATTERN = '^true|false$';
+    const LITERAL_PATTERN = '^[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]$';      // Insensitive, regardless regex modifiers.
 
     public function createValue($value)
     {

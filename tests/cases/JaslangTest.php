@@ -295,6 +295,16 @@ JASLANG;
         );
     }
 
+    public function testBooleanCaseSensitivity()
+    {
+        $this->performTest('True', 'true');
+        $this->performTest('TRUE', 'true');
+        $this->performTest('true', 'true');
+        $this->performTest('False', 'false');
+        $this->performTest('FALSE', 'false');
+        $this->performTest('True', 'true');
+    }
+
     private function getEvaluatorWithCustomType()
     {
         $factory = new JaslangFactory();

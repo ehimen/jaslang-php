@@ -2,21 +2,21 @@
 
 namespace Ehimen\Jaslang\FuncDef\Core;
 
-use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Value;
+use Ehimen\Jaslang\Type;
 
 class Subtract extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return ArgDef::NUMBER;
+        return new Type\Num();
     }
 
     protected function getRightArgType()
     {
-        return ArgDef::NUMBER;
+        return new Type\Num();
     }
 
     protected function performOperation(Value $left, Value $right)

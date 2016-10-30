@@ -2,9 +2,8 @@
 
 namespace Ehimen\Jaslang\FuncDef\Core;
 
-use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
-use Ehimen\Jaslang\Operator\Binary;
+use Ehimen\Jaslang\Type;
 use Ehimen\Jaslang\Value\Boolean;
 use Ehimen\Jaslang\Value\Value;
 
@@ -17,16 +16,16 @@ class Identity extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return ArgDef::ANY;
+        return new Type\Any();
     }
 
     protected function getRightArgType()
     {
-        return ArgDef::ANY;
+        return new Type\Any();
     }
 
     protected function performOperation(Value $left, Value $right)
     {
-        return new Boolean($left->identicalTo($right));
+        return new Boolean($left->isIdenticalTo($right));
     }
 }

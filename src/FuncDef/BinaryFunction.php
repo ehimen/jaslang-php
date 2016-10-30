@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Value\Value;
 
 /**
@@ -25,13 +26,19 @@ abstract class BinaryFunction implements FuncDef
     public function invoke(ArgList $operands, EvaluationContext $context)
     {
         return $this->performOperation(
-            $operands->get(0, $this->getLeftArgType()),
-            $operands->get(1, $this->getRightArgType())
+            $operands->get(0),
+            $operands->get(1)
         );
     }
 
+    /**
+     * @return ConcreteType
+     */
     abstract protected function getLeftArgType();
 
+    /**
+     * @return ConcreteType
+     */
     abstract protected function getRightArgType();
 
     abstract protected function performOperation(Value $left, Value $right);

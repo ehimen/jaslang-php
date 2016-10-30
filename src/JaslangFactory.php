@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang;
 
 use Ehimen\Jaslang\Evaluator\Evaluator;
 use Ehimen\Jaslang\Evaluator\JaslangInvoker;
+use Ehimen\Jaslang\Evaluator\TypeRepository;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\FuncDef\Core\Identity;
 use Ehimen\Jaslang\FuncDef\Core\Random;
@@ -14,6 +15,11 @@ use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Parser\JaslangParser;
+use Ehimen\Jaslang\Type\Any;
+use Ehimen\Jaslang\Type\Boolean;
+use Ehimen\Jaslang\Type\Num;
+use Ehimen\Jaslang\Type\Str;
+use Ehimen\Jaslang\Type\Type;
 
 /**
  * Initialises a Jaslang expression evaluator.
@@ -29,12 +35,17 @@ class JaslangFactory
     /**
      * @var FunctionRepository
      */
-    private $repository;
+    private $functionRepository;
+
+    /**
+     * @var TypeRepository
+     */
+    private $typeRepository;
     
     public function registerFunction($identifier, FuncDef $function)
     {
         // TODO: validate identifier against language.
-        $this->getRepository()->registerFunction($identifier, $function);
+        $this->getFunctionRepository()->registerFunction($identifier, $function);
     }
 
     public function registerOperator(
@@ -43,44 +54,68 @@ class JaslangFactory
         $precedence = FunctionRepository::OPERATOR_PRECEDENCE_DEFAULT
     ) {
         // TODO: validate identifier against language.
-        $this->getRepository()->registerOperator($identifier, $operator, $precedence);
+        $this->getFunctionRepository()->registerOperator($identifier, $operator, $precedence);
+    }
+
+    public function registerType($name, Type $type)
+    {
+        $this->getTypeRepository()->registerType($name, $type);
     }
     
     public function create()
     {
-        $repository = $this->getRepository();
+        $fnRepo = $this->getFunctionRepository();
+        $typeRepo = $this->getTypeRepository();
 
         // Core functions.
-        $repository->registerFunction('sum', $sum = new Sum());
-        $repository->registerFunction('subtract', $sub = new Subtract());
-        $repository->registerFunction('substring', new Substring());
-        $repository->registerFunction('random', new Random());
+        $fnRepo->registerFunction('sum', $sum = new Sum());
+        $fnRepo->registerFunction('subtract', $sub = new Subtract());
+        $fnRepo->registerFunction('substring', new Substring());
+        $fnRepo->registerFunction('random', new Random());
 
         // Core operators.
-        $repository->registerOperator('+', $sum);
-        $repository->registerOperator('-', $sub);
-        $repository->registerOperator('===', new Identity());
+        $fnRepo->registerOperator('+', $sum);
+        $fnRepo->registerOperator('-', $sub);
+        $fnRepo->registerOperator('===', new Identity());
         
-        $invoker = new JaslangInvoker();
+        $typeRepo->registerType('any', new Any());
+        $typeRepo->registerType('string', new Str());
+        $typeRepo->registerType('number', new Num());
+        $typeRepo->registerType('boolean', new Boolean());
+        
+        $invoker = new JaslangInvoker($typeRepo);
         $parser  = new JaslangParser(
-            new DoctrineLexer($repository->getRegisteredOperatorIdentifiers()),
-            $repository
+            new DoctrineLexer(
+                $fnRepo->getRegisteredOperatorIdentifiers(),
+                $typeRepo->getConcreteTypeLiteralPatterns()
+            ),
+            $fnRepo,
+            $typeRepo
         );
 
-        $evaluator = new Evaluator($parser, $repository, $invoker);
+        $evaluator = new Evaluator($parser, $fnRepo, $invoker);
 
         // Reset our repository for subsequent create() calls.
-        $this->repository = null;
+        $this->functionRepository = null;
 
         return $evaluator;
     }
 
-    private function getRepository()
+    private function getFunctionRepository()
     {
-        if (!$this->repository) {
-            $this->repository = new FunctionRepository();
+        if (!$this->functionRepository) {
+            $this->functionRepository = new FunctionRepository();
         }
 
-        return $this->repository;
+        return $this->functionRepository;
+    }
+
+    private function getTypeRepository()
+    {
+        if (!$this->typeRepository) {
+            $this->typeRepository = new TypeRepository();
+        }
+        
+        return $this->typeRepository;
     }
 }

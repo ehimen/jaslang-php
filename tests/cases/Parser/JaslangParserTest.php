@@ -3,14 +3,13 @@
 namespace Ehimen\JaslangTests\Parser;
 
 use Ehimen\Jaslang\Ast\BinaryOperation;
-use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
-use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\Root;
-use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\FunctionRepository;
+use Ehimen\Jaslang\Evaluator\TypeRepository;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
@@ -18,6 +17,7 @@ use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 use Ehimen\Jaslang\Parser\JaslangParser;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
+use Ehimen\Jaslang\Type;
 
 class JaslangParserTest extends TestCase 
 {
@@ -43,12 +43,12 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_STRING, 'bar', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 5),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10),
             ],
             new FunctionCall(
                 'foo',
-                [new StringLiteral('bar')]
+                [$this->stringLiteral('bar')]
             )
         );
     }
@@ -60,15 +60,15 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_STRING, 'bar', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 5),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 10),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
-                $this->createToken(Lexer::TOKEN_STRING, 'baz', 12),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'baz', 12),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 17),
             ],
             new FunctionCall(
                 'foo',
-                [new StringLiteral('bar'), new StringLiteral('baz')]
+                [$this->stringLiteral('bar'), $this->stringLiteral('baz')]
             )
         );
     }
@@ -150,8 +150,8 @@ class JaslangParserTest extends TestCase
     {
         $this->performTest(
             '"foo"',
-            [$this->createToken(Lexer::TOKEN_STRING, 'foo', 1)],
-            new StringLiteral('foo')
+            [$this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 1)],
+            $this->stringLiteral('foo')
         );
     }
 
@@ -159,8 +159,8 @@ class JaslangParserTest extends TestCase
     {
         $this->performTest(
             '3.14',
-            [$this->createToken(Lexer::TOKEN_NUMBER, '3.14', 1)],
-            new NumberLiteral(3.14)
+            [$this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3.14', 1)],
+            $this->numberLiteral(3.14)
         );
     }
 
@@ -170,10 +170,10 @@ class JaslangParserTest extends TestCase
             '  1337   ',
             [
                 $this->createToken(Lexer::TOKEN_WHITESPACE, '  ', 1),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1337', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1337', 3),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, '   ', 6),
             ],
-            new NumberLiteral(1337)
+            $this->numberLiteral(1337)
         );
     }
 
@@ -182,9 +182,9 @@ class JaslangParserTest extends TestCase
         $this->performSyntaxErrorTest(
             '"foo" "bar"',
             [
-                $this->createToken(Lexer::TOKEN_STRING, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
-                $unexpected = $this->createToken(Lexer::TOKEN_STRING, 'bar', 6),
+                $unexpected = $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 6),
             ],
             $this->unexpectedTokenException('"foo" "bar"', $unexpected)
         );
@@ -195,9 +195,9 @@ class JaslangParserTest extends TestCase
         $this->performSyntaxErrorTest(
             '"foo" 1337',
             [
-                $this->createToken(Lexer::TOKEN_STRING, 'foo', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
-                $unexpected = $this->createToken(Lexer::TOKEN_NUMBER, '1337', 6),
+                $unexpected = $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1337', 6),
             ],
             $this->unexpectedTokenException('"foo" 1337', $unexpected)
         );
@@ -230,16 +230,16 @@ class JaslangParserTest extends TestCase
         $this->performTest(
             '3 + 4',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 5)
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 5)
             ],
             new BinaryOperation(
                 '+',
-                new NumberLiteral(3),
-                new NumberLiteral(4)
+                $this->numberLiteral(3),
+                $this->numberLiteral(4)
             )
         );
     }
@@ -249,23 +249,23 @@ class JaslangParserTest extends TestCase
         $this->performTest(
             '3 + 4 + 5',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 1),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 5),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 7),
-                $this->createToken(Lexer::TOKEN_NUMBER, '5', 8)
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '5', 8)
             ],
             new BinaryOperation(
                 '+',
                 new BinaryOperation(
                     '+',
-                    new NumberLiteral(3),
-                    new NumberLiteral(4)
+                    $this->numberLiteral(3),
+                    $this->numberLiteral(4)
                 ),
-                new NumberLiteral(5)
+                $this->numberLiteral(5)
             )
         );
     }
@@ -277,19 +277,19 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 5),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 6),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 7),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 8),
-                $this->createToken(Lexer::TOKEN_NUMBER, '5', 9),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '5', 9),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 10),
-                $this->createToken(Lexer::TOKEN_NUMBER, '6', 11),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '6', 11),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
-                $this->createToken(Lexer::TOKEN_NUMBER, '7', 13),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '7', 13),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 14),
-                $this->createToken(Lexer::TOKEN_NUMBER, '8', 15),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '8', 15),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 16),
-                $this->createToken(Lexer::TOKEN_NUMBER, '9', 17),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '9', 17),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18),
             ],
             new FunctionCall(
@@ -299,10 +299,10 @@ class JaslangParserTest extends TestCase
                         '-',
                         new BinaryOperation(
                             '+',
-                            new NumberLiteral(3),
-                            new NumberLiteral(4)
+                            $this->numberLiteral(3),
+                            $this->numberLiteral(4)
                         ),
-                        new NumberLiteral(5)
+                        $this->numberLiteral(5)
                     ),
                     new BinaryOperation(
                         '+',
@@ -310,12 +310,12 @@ class JaslangParserTest extends TestCase
                             '-',
                             new BinaryOperation(
                                 '+',
-                                new NumberLiteral(6),
-                                new NumberLiteral(7)
+                                $this->numberLiteral(6),
+                                $this->numberLiteral(7)
                             ),
-                            new NumberLiteral(8)
+                            $this->numberLiteral(8)
                         ),
-                        new NumberLiteral(9)
+                        $this->numberLiteral(9)
                     )
                 ]
             )
@@ -326,8 +326,8 @@ class JaslangParserTest extends TestCase
     {
         $this->performTest(
             'true',
-            [$this->createToken(Lexer::TOKEN_BOOLEAN, 'true', 1)],
-            new BooleanLiteral('true')
+            [$this->createToken(Lexer::TOKEN_LITERAL_BOOLEAN, 'true', 1)],
+            $this->booleanLiteral('true')
         );
     }
 
@@ -335,8 +335,8 @@ class JaslangParserTest extends TestCase
     {
         $this->performTest(
             'false',
-            [$this->createToken(Lexer::TOKEN_BOOLEAN, 'false', 1)],
-            new BooleanLiteral('false')
+            [$this->createToken(Lexer::TOKEN_LITERAL_BOOLEAN, 'false', 1)],
+            $this->booleanLiteral('false')
         );
     }
 
@@ -347,26 +347,26 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 5),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 6),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 8),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 8),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 9),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 11),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 12),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 13),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 13),
             ],
             new BinaryOperation(
                 '+',
                 new FunctionCall(
                     'sum',
                     [
-                        new NumberLiteral('1'),
-                        new NumberLiteral('1'),
+                        $this->numberLiteral('1'),
+                        $this->numberLiteral('1'),
                     ]
                 ),
-                new NumberLiteral('2')
+                $this->numberLiteral('2')
             )
         );
     }
@@ -378,38 +378,38 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 5),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 6),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 7),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 8),
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 9),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 12),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 13),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 13),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 14),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 15),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 15),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 17),
-                $this->createToken(Lexer::TOKEN_NUMBER, '5', 18),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '5', 18),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 19),
             ],
             new FunctionCall(
                 'sum',
                 [
-                    new NumberLiteral('1'),
+                    $this->numberLiteral('1'),
                     new BinaryOperation(
                         '+',
                         new BinaryOperation(
                             '+',
-                            new NumberLiteral('2'),
+                            $this->numberLiteral('2'),
                             new FunctionCall(
                                 'sum',
                                 [
-                                    new NumberLiteral('3'),
-                                    new NumberLiteral('4'),
+                                    $this->numberLiteral('3'),
+                                    $this->numberLiteral('4'),
                                 ]
                             )
                         ),
-                        new NumberLiteral('5')
+                        $this->numberLiteral('5')
                     ),
                 ]
             )
@@ -421,22 +421,22 @@ class JaslangParserTest extends TestCase
         $this->performTest(
             '1+(2+3)',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 3),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 4),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 4),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 5),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 6),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 6),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
             ],
             new BinaryOperation(
                 '+',
-                new NumberLiteral('1'),
+                $this->numberLiteral('1'),
                 new Container(
                     new BinaryOperation(
                         '+',
-                        new NumberLiteral('2'),
-                        new NumberLiteral('3')
+                        $this->numberLiteral('2'),
+                        $this->numberLiteral('3')
                     )
                 )
             )
@@ -451,7 +451,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 2),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 3),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 4),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 4),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
@@ -459,7 +459,7 @@ class JaslangParserTest extends TestCase
             new Container(
                 new Container(
                     new Container(
-                        new NumberLiteral('3')
+                        $this->numberLiteral('3')
                     )
                 )
             )
@@ -471,19 +471,19 @@ class JaslangParserTest extends TestCase
         $this->performMultiStatementTest(
             '1;2;3;4',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 2),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 3),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 5),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 6),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 7),
             ],
             new Root([
-                new NumberLiteral('1'),
-                new NumberLiteral('2'),
-                new NumberLiteral('3'),
-                new NumberLiteral('4'),
+                $this->numberLiteral('1'),
+                $this->numberLiteral('2'),
+                $this->numberLiteral('3'),
+                $this->numberLiteral('4'),
             ])
         );
     }
@@ -493,39 +493,39 @@ class JaslangParserTest extends TestCase
         $this->performMultiStatementTest(
             '1+1;2+2+2;3+3',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 3),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 5),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 6),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 7),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 8),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 9),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 9),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 10),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 11),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 11),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 13),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 13),
             ],
             new Root([
                 new BinaryOperation(
                     '+',
-                    new NumberLiteral('1'),
-                    new NumberLiteral('1')
+                    $this->numberLiteral('1'),
+                    $this->numberLiteral('1')
                 ),
                 new BinaryOperation(
                     '+',
                     new BinaryOperation(
                         '+',
-                        new NumberLiteral('2'),
-                        new NumberLiteral('2')
+                        $this->numberLiteral('2'),
+                        $this->numberLiteral('2')
                     ),
-                    new NumberLiteral('2')
+                    $this->numberLiteral('2')
                 ),
                 new BinaryOperation(
                     '+',
-                    new NumberLiteral('3'),
-                    new NumberLiteral('3')
+                    $this->numberLiteral('3'),
+                    $this->numberLiteral('3')
                 ),
             ])
         );
@@ -536,42 +536,42 @@ class JaslangParserTest extends TestCase
         $this->performMultiStatementTest(
             '1;sum(2,3+4);sum(5,6)',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 2),
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 3),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 6),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 7),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 8),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 9),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 9),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 10),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 11),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 11),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 12),
                 $this->createToken(Lexer::TOKEN_STATETERM, ';', 13),
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 14),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 17),
-                $this->createToken(Lexer::TOKEN_NUMBER, '5', 18),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '5', 18),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 19),
-                $this->createToken(Lexer::TOKEN_NUMBER, '6', 20),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '6', 20),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, '6', 21),
             ],
             new Root([
-                new NumberLiteral('1'),
+                $this->numberLiteral('1'),
                 new FunctionCall(
                     'sum',
                     [
-                        new NumberLiteral('2'),
+                        $this->numberLiteral('2'),
                         new BinaryOperation(
                             '+',
-                            new NumberLiteral('3'),
-                            new NumberLiteral('4')
+                            $this->numberLiteral('3'),
+                            $this->numberLiteral('4')
                         ),
                     ]
                 ),
                 new FunctionCall(
                     'sum',
                     [
-                        new NumberLiteral('5'),
-                        new NumberLiteral('6'),
+                        $this->numberLiteral('5'),
+                        $this->numberLiteral('6'),
                     ]
                 ),
             ])
@@ -583,19 +583,19 @@ class JaslangParserTest extends TestCase
         $this->performTestWithOperatorPrecedence(
             '1+3-1',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 2),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 3),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 5),
             ],
             new BinaryOperation(
                 '+',
-                new NumberLiteral('1'),
+                $this->numberLiteral('1'),
                 new BinaryOperation(
                     '-',
-                    new NumberLiteral('3'),
-                    new NumberLiteral('1')
+                    $this->numberLiteral('3'),
+                    $this->numberLiteral('1')
                 )
             ),
             [
@@ -610,36 +610,36 @@ class JaslangParserTest extends TestCase
         $this->performTestWithOperatorPrecedence(
             '1-3+1-sum(5+9-1+4,1+2)',
             [
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 1),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 2),
-                $this->createToken(Lexer::TOKEN_NUMBER, '3', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 3),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 4),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 5),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 6),
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'sum', 7),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 10),
-                $this->createToken(Lexer::TOKEN_NUMBER, '5', 11),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '5', 11),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 12),
-                $this->createToken(Lexer::TOKEN_NUMBER, '9', 13),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '9', 13),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 14),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 15),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 15),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 16),
-                $this->createToken(Lexer::TOKEN_NUMBER, '4', 17),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 17),
                 $this->createToken(Lexer::TOKEN_COMMA, ',', 18),
-                $this->createToken(Lexer::TOKEN_NUMBER, '1', 19),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 19),
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 20),
-                $this->createToken(Lexer::TOKEN_NUMBER, '2', 21),
+                $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '2', 21),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 22),
             ],
             new BinaryOperation(
                 '-',
                 new BinaryOperation(
                     '-',
-                    new NumberLiteral('1'),
+                    $this->numberLiteral('1'),
                     new BinaryOperation(
                         '+',
-                        new NumberLiteral('3'),
-                        new NumberLiteral('1')
+                        $this->numberLiteral('3'),
+                        $this->numberLiteral('1')
                     )
                 ),
                 new FunctionCall(
@@ -649,19 +649,19 @@ class JaslangParserTest extends TestCase
                             '-',
                             new BinaryOperation(
                                 '+',
-                                new NumberLiteral('5'),
-                                new NumberLiteral('9')
+                                $this->numberLiteral('5'),
+                                $this->numberLiteral('9')
                             ),
                             new BinaryOperation(
                                 '+',
-                                new NumberLiteral('1'),
-                                new NumberLiteral('4')
+                                $this->numberLiteral('1'),
+                                $this->numberLiteral('4')
                             )
                         ),
                         new BinaryOperation(
                             '+',
-                            new NumberLiteral('1'),
-                            new NumberLiteral('2')
+                            $this->numberLiteral('1'),
+                            $this->numberLiteral('2')
                         )
                     ]
                 )
@@ -680,9 +680,9 @@ class JaslangParserTest extends TestCase
             [
                 $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-                $this->createToken(Lexer::TOKEN_STRING, 'foo', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 5),
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
-                $unexpected = $this->createToken(Lexer::TOKEN_STRING, 'bar', 11),
+                $unexpected = $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 11),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16),
             ],
             $this->unexpectedTokenException('foo("foo" "bar")', $unexpected)
@@ -776,7 +776,7 @@ class JaslangParserTest extends TestCase
 
     private function performTestWithOperatorPrecedence($input, $tokens, Node $expected, $precedence)
     {
-        $parser = $this->getParser($this->getLexer($input, $tokens), $this->getRepository($precedence));
+        $parser = $this->getParser($this->getLexer($input, $tokens), $this->getFunctionRepository($precedence));
         $actual = $parser->parse($input)->getFirstChild();
 
         $this->assertEquals($expected, $actual);
@@ -793,13 +793,31 @@ class JaslangParserTest extends TestCase
         return $lexer;
     }
 
-    private function getRepository(array $operatorPrecedence = [])
+    private function getFunctionRepository(array $operatorPrecedence = [])
     {
         $repo = $this->createMock(FunctionRepository::class);
 
         $repo->method('getOperatorPrecedence')
             ->willReturnMap($operatorPrecedence);
 
+        return $repo;
+    }
+
+    private function getTypeRepository(array $concreteTypes = [])
+    {
+        if (empty($concreteTypes)) {
+            $concreteTypes = [
+                new Type\Str(),
+                new Type\Num(),
+                new Type\Boolean(),
+            ];
+        }
+        
+        $repo = $this->createMock(TypeRepository::class);
+        
+        $repo->method('getConcreteTypes')
+            ->willReturn($concreteTypes);
+        
         return $repo;
     }
 
@@ -813,10 +831,26 @@ class JaslangParserTest extends TestCase
         return new UnexpectedEndOfInputException($input);
     }
 
-    private function getParser(Lexer $lexer, FunctionRepository $repository = null)
+    private function getParser(Lexer $lexer, FunctionRepository $fnRepo = null, TypeRepository $typeRepo = null)
     {
-        $repository = $repository ?: $this->getRepository();
+        $fnRepo   = $fnRepo ?: $this->getFunctionRepository();
+        $typeRepo = $typeRepo ?: $this->getTypeRepository();
 
-        return new JaslangParser($lexer, $repository);
+        return new JaslangParser($lexer, $fnRepo, $typeRepo);
+    }
+
+    private function stringLiteral($value)
+    {
+        return new Literal(new Type\Str(), $value);
+    }
+
+    private function numberLiteral($value)
+    {
+        return new Literal(new Type\Num(), $value);
+    }
+
+    private function booleanLiteral($value)
+    {
+        return new Literal(new Type\Boolean(), $value);
     }
 }

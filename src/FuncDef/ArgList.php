@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
+use Ehimen\Jaslang\Type\Type;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Str;
 use Ehimen\Jaslang\Value\Value;
@@ -22,35 +23,16 @@ class ArgList
         $this->args = $args;
     }
 
+    public function has($index)
+    {
+        return array_key_exists($index, $this->args);
+    }
+
     /**
      * @return Value|null
      */
-    public function get($index, $type = null, $allowNull = false)
+    public function get($index)
     {
-        $value = isset($this->args[$index]) ? $this->args[$index] : null;
-        
-        if ($type && ((null !== $value) || !$allowNull)) {
-            if (!ArgDef::isOfType($type, $value)) {
-                throw new InvalidArgumentException($index, $type, $value);
-            }
-        }
-        
-        return $value;
-    }
-
-    /**
-     * @return Num|null
-     */
-    public function getNumber($index, $optional = false)
-    {
-        return $this->get($index, ArgDef::NUMBER, $optional);
-    }
-
-    /**
-     * @return Str|null
-     */
-    public function getString($index, $optional = false)
-    {
-        return $this->get($index, ArgDef::STRING, $optional);
+        return isset($this->args[$index]) ? $this->args[$index] : null;
     }
 }

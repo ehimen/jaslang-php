@@ -20,16 +20,38 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     const DTYPE_WHITESPACE = 7;
     const DTYPE_OPERATOR = 8;
     const DTYPE_SEMICOLON = 9;
+    const DTYPE_LITERAL = 10;
     
     private $currentQuote = null;
     private $currentToken = '';
     private $currentPosition = 0;
     private $jaslangTokens = [];
+    
+    /**
+     * @var string[]
+     */
     private $operators = [];
+    
+    /**
+     * @var string[]
+     */
+    private $literals = [];
 
-    public function __construct(array $operators = [])
+    /**
+     * $operators and $literals allow for customisation of a language.
+     * 
+     * @param string[] $operators Any exact strings the lexer should consider an operator. 
+     * @param string[] $literals Any patterns the lexer should consider a literal.
+     */
+    public function __construct(array $operators = [], array $literals = [])
     {
         $this->operators = $operators;
+        $this->literals  = $literals;
+    }
+
+    public static function isLiteral(array $token)
+    {
+        return in_array($token['type'], Lexer::LITERAL_TOKENS, true);
     }
 
     public function tokenize($input)
@@ -62,7 +84,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             }
 
             if ($this->currentQuote === $value) {
-                $this->token(Lexer::TOKEN_STRING);
+                $this->token(Lexer::TOKEN_LITERAL_STRING);
                 continue;
             }
 
@@ -89,17 +111,19 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                     $this->token(Lexer::TOKEN_STATETERM);
                 } elseif ($type === static::DTYPE_OPERATOR) {
                     $this->token(Lexer::TOKEN_OPERATOR);
+                } elseif ($type === static::DTYPE_LITERAL) {
+                    $this->token(Lexer::TOKEN_LITERAL);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
                     $lower = strtolower($value);
                     
                     // Our doctrine lexer doesn't distinguish between bool/identifier, check now.
                     if (('false' === $lower) || ('true' === $value)) {
-                        $this->token(Lexer::TOKEN_BOOLEAN);
+                        $this->token(Lexer::TOKEN_LITERAL_BOOLEAN);
                     }
                     
                     $this->token(Lexer::TOKEN_IDENTIFIER);
                 } elseif (is_numeric($value)) {
-                    $this->token(Lexer::TOKEN_NUMBER);
+                    $this->token(Lexer::TOKEN_LITERAL_NUMBER);
                 } else {
                     $this->token(Lexer::TOKEN_UNKNOWN);
                 }
@@ -186,6 +210,8 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             [       
                 '[+-]?\d+(?:\.\d*)?',   // Decimal representation.
             ],
+            // Type-driven literal capture.
+            $this->literals,
             // User defined operators.
             array_map(
                 function ($operator) {
@@ -225,10 +251,23 @@ class DoctrineLexer extends AbstractLexer implements Lexer
             return static::DTYPE_SEMICOLON;
         } elseif ('' === trim($value)) {
             return static::DTYPE_WHITESPACE;
+        } elseif ($this->matchesCustomLiteral($value)) {
+            return static::DTYPE_LITERAL;
         } elseif (in_array($value, $this->operators, true)) {
             return static::DTYPE_OPERATOR;
         }
         
         return static::DTYPE_OTHER;
+    }
+
+    private function matchesCustomLiteral($value)
+    {
+        foreach ($this->literals as $pattern) {
+            if (preg_match('/' . $pattern . '/', $value)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

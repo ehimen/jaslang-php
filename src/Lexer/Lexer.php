@@ -4,11 +4,12 @@ namespace Ehimen\Jaslang\Lexer;
 
 interface Lexer
 {
-    const TOKEN_STRING = 'string';
+    const TOKEN_LITERAL_STRING = 'string';
     const TOKEN_IDENTIFIER = 'identifier';
     const TOKEN_OPERATOR = 'operator';
-    const TOKEN_NUMBER = 'number';
-    const TOKEN_BOOLEAN = 'boolean';
+    const TOKEN_LITERAL_NUMBER = 'number';
+    const TOKEN_LITERAL_BOOLEAN = 'boolean';
+    const TOKEN_LITERAL = 'literal';        // Any custom literals.
     const TOKEN_LEFT_PAREN = 'left-paren';
     const TOKEN_RIGHT_PAREN = 'right-paren';
     const TOKEN_COMMA = 'comma';
@@ -21,5 +22,14 @@ interface Lexer
     
     const ESCAPABLE_CHARS = ['\\', '"', "'"];
     
+    const LITERAL_TOKENS = [
+        self::TOKEN_LITERAL_STRING,
+        self::TOKEN_LITERAL_NUMBER,
+        self::TOKEN_LITERAL_BOOLEAN,
+        self::TOKEN_LITERAL,
+    ];
+    
     public function tokenize($input);
+
+    public static function isLiteral(array $token);
 }

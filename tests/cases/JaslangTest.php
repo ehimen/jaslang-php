@@ -11,8 +11,12 @@ use Ehimen\Jaslang\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\JaslangFactory;
+use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Str;
 use Ehimen\JaslangTestResources\AndOperator;
+use Ehimen\JaslangTestResources\CustomType\ChildFunction;
+use Ehimen\JaslangTestResources\CustomType\ChildType;
+use Ehimen\JaslangTestResources\CustomType\ParentType;
 use Ehimen\JaslangTestResources\FooFuncDef;
 use Ehimen\JaslangTestResources\FooOperator;
 use Ehimen\JaslangTestResources\Multiplication;
@@ -266,6 +270,41 @@ JASLANG;
     {
         $this->performTest("sum(1, 2); sum(4, 5)", '9');
     }
+
+    public function testCustomType()
+    {
+        $result = $this->getEvaluatorWithCustomType()->evaluate('testfunction(c, c)');
+        
+        $this->assertSame('true', $result);
+    }
+
+    public function testCustomTypeIsValidated()
+    {
+        $expected = new InvalidArgumentException('1', 'parenttype', new Num(100));
+        $input    = 'testfunction(c, 100)';
+        
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('testfunction(c, 100)')
+        ]));
+        $expected->setInput($input);
+        
+        $this->performRuntimeExceptionTest(
+            $input,
+            $expected,
+            $this->getEvaluatorWithCustomType()
+        );
+    }
+
+    private function getEvaluatorWithCustomType()
+    {
+        $factory = new JaslangFactory();
+
+        $factory->registerType('parenttype', new ParentType());
+        $factory->registerType('childtype', new ChildType());
+        $factory->registerFunction('testfunction', new ChildFunction());
+        
+        return $factory->create();
+    }
     
     private function performTest($input, $expected)
     {
@@ -281,10 +320,12 @@ JASLANG;
         $this->assertSame($expected, $factory->create()->evaluate($input));
     }
 
-    private function performRuntimeExceptionTest($input, RuntimeException $expected)
+    private function performRuntimeExceptionTest($input, RuntimeException $expected, Evaluator $evaluator = null)
     {
+        $evaluator = $evaluator ?: $this->getEvaluator();
+        
         try {
-            $this->getEvaluator()->evaluate($input);
+            $evaluator->evaluate($input);
         } catch (RuntimeException $actual) {
             $this->assertEquals($expected, $actual);
             return;

@@ -2,20 +2,20 @@
 
 namespace Ehimen\JaslangTestResources;
 
-use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
+use Ehimen\Jaslang\Type;
 use Ehimen\Jaslang\Value;
 
 class AndOperator extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return ArgDef::BOOLEAN;
+        return new Type\Boolean();
     }
 
     protected function getRightArgType()
     {
-        return ArgDef::BOOLEAN;
+        return new Type\Boolean();
     }
 
     protected function performOperation(Value\Value $left, Value\Value $right)

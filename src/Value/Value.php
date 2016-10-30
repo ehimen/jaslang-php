@@ -21,5 +21,5 @@ interface Value
      * 
      * @param Value $other
      */
-    public function identicalTo(Value $other);
+    public function isIdenticalTo(Value $other);
 }

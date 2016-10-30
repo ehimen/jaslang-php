@@ -102,16 +102,8 @@ class Evaluator
             $this->trace->push(new TraceEntry($node->debug()));
         }
         
-        if ($node instanceof StringLiteral) {
-            $result = new Str($node->getValue());
-        }
-        
-        if ($node instanceof NumberLiteral) {
-            $result = new Num($node->getValue());
-        }
-        
-        if ($node instanceof BooleanLiteral) {
-            $result = new Boolean($node->getValue());
+        if ($node instanceof Literal) {
+            $result = $node->getType()->createValue($node->getValue());
         }
         
         if ($node instanceof FunctionCall) {

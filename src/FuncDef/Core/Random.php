@@ -7,6 +7,7 @@ use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
+use Ehimen\Jaslang\Type\Num as NumType;
 use Ehimen\Jaslang\Value\Num;
 
 class Random implements FuncDef
@@ -14,21 +15,21 @@ class Random implements FuncDef
     public function getArgDefs()
     {
         return [
-            new ArgDef(ArgDef::NUMBER, true),
-            new ArgDef(ArgDef::NUMBER, true),
+            new ArgDef(new NumType(), true),
+            new ArgDef(new NumType(), true),
         ];
     }
 
     public function invoke(ArgList $args, EvaluationContext $context)
     {
-        if ($min = $args->getNumber(0, true)) {
-            if (!($max = $args->getNumber(1))) {
-                throw new InvalidArgumentException(1, ArgDef::NUMBER, null);
-            }
-            
-            return new Num(rand($min->getValue(), $max->getValue()));
+        if (!$args->has(0)) {
+            $result = rand();
+        } elseif (!$args->has(1)) {
+            $result = rand($args->get(0));
+        } else {
+            $result = rand($args->get(0), $args->get(1));
         }
         
-        return new Num(rand());
+        return new Num($result);
     }
 }

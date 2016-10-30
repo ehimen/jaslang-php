@@ -6,12 +6,15 @@ use Ehimen\Jaslang\Ast\BinaryOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
+use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\FunctionRepository;
+use Ehimen\Jaslang\Evaluator\TypeRepository;
 use Ehimen\Jaslang\Exception\RuntimeException;
+use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
 use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
@@ -46,10 +49,16 @@ class JaslangParser implements Parser
      */
     private $functionRepository;
 
-    public function __construct(Lexer $lexer, FunctionRepository $repository)
+    /**
+     * @var TypeRepository
+     */
+    private $typeRepository;
+
+    public function __construct(Lexer $lexer, FunctionRepository $fnRepo, TypeRepository $typeRepo)
     {
         $this->lexer              = $lexer;
-        $this->functionRepository = $repository;
+        $this->functionRepository = $fnRepo;
+        $this->typeRepository     = $typeRepo;
     }
 
     public function parse($input)
@@ -104,7 +113,7 @@ class JaslangParser implements Parser
             $this->closeNode();
         };
 
-        $literalTokens = [Lexer::TOKEN_STRING, Lexer::TOKEN_NUMBER, Lexer::TOKEN_BOOLEAN];
+        $literalTokens = Lexer::LITERAL_TOKENS;
 
         $start      = 0;
         $literal    = 'literal';
@@ -170,13 +179,14 @@ class JaslangParser implements Parser
         if (!($context instanceof ParentNode)) {
             throw new RuntimeException('Cannot create node as no context is present');
         }
-
-        if ($this->currentToken['type'] === Lexer::TOKEN_STRING) {
-            $node = new StringLiteral($this->currentToken['value']);
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_NUMBER) {
-            $node = new NumberLiteral($this->currentToken['value']);
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_BOOLEAN) {
-            $node = new BooleanLiteral($this->currentToken['value']);
+        
+        if (DoctrineLexer::isLiteral($this->currentToken)) {
+            foreach ($this->typeRepository->getConcreteTypes() as $type) {
+                if ($type->appliesToToken($this->currentToken)) {
+                    $node = new Literal($type, $this->currentToken['value']);
+                    break;
+                }
+            }
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken['value']);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
@@ -196,8 +206,14 @@ class JaslangParser implements Parser
             $node = new BinaryOperation($this->currentToken['value'], $lastChild);
         } elseif ($this->currentToken['type'] === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
-        } else {
-            throw new RuntimeException('Unhandled type "' . $this->currentToken['type'] . '" in Jaslang parser');
+        }
+        
+        if (!isset($node)) {
+            throw new RuntimeException(sprintf(
+                'Unhandled token "%s" [type: %s] in Jaslang parser',
+                $this->currentToken['value'],
+                $this->currentToken['type']
+            ));
         }
 
         // If we're creating a binary node, its infix nature

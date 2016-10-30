@@ -414,6 +414,18 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testMultibyte()
+    {
+        $this->performTestWithOperators(
+            'ѥ£€Ҧ("Ӕ")',
+            ['ѥ£€Ҧ'],
+            $this->createToken(Lexer::TOKEN_OPERATOR, 'ѥ£€Ҧ', 1),
+            $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 5),
+            $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'Ӕ', 6),
+            $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 9)
+        );
+    }
+
     private function performSyntaxErrorTest($input, $expected)
     {
         try {

@@ -8,7 +8,7 @@ use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 /**
  * TODO: this should wrap Doctrine lexer, not extend it.
  */
-class DoctrineLexer extends AbstractLexer implements Lexer
+class DoctrineLexer implements Lexer
 {
     const DTYPE_OTHER = 0;
     const DTYPE_PAREN_LEFT  = 1;
@@ -57,28 +57,29 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     public function tokenize($input)
     {
         $this->resetState();
-        $this->setInput($input);
         
         $updatePosition = true;
+        $tokens         = $this->scan($input);
         
-        do {
-            $token = $this->peek();
+        for ($i = 0; $i < count($tokens); $i++) {
+            $token = $tokens[$i];
+            
             if ($updatePosition) {
                 $this->currentPosition = $token['position'];
             }
+
             $updatePosition = true;
-            $value = $token['value'];
-            $type  = $token['type'];
-            $inQuotes = is_string($this->currentQuote);
+            $value          = $token['value'];
+            $type           = $token['type'];
+            $inQuotes       = is_string($this->currentQuote);
 
             // Handle escaping.
             if ($inQuotes && $value === Lexer::ESCAPE_CHAR) {
-                $nextValue = $this->glimpse()['value'];
-                
+                $nextValue  = isset($tokens[$i + 1]) ? $tokens[$i + 1]['value'] : null;
                 if (in_array($nextValue, Lexer::ESCAPABLE_CHARS, true)) {
                     $updatePosition = false;
                     $this->currentToken .= $nextValue;
-                    $this->moveNext();
+                    $i++;
                     continue;
                 }
             }
@@ -122,10 +123,9 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                 // We're continuing a token, so leave the position marker where it was.
                 $updatePosition = false;
             }
-        } while ($this->moveNext());
+        }
         
-        
-        if (!empty($inQuotes)) {
+        if (is_string($this->currentQuote)) {
             throw new UnexpectedEndOfInputException($input);
         }
         
@@ -158,40 +158,33 @@ class DoctrineLexer extends AbstractLexer implements Lexer
 
     /**
      * {@inheritdoc}
-     * 
-     * Copy & paste doctrine lexer impl, but removing static variable.
-     * TODO: Something better. Less reflection. 
      */
-    protected function scan($input)
+    private function scan($input)
     {
-        $hack = (new \ReflectionClass($this));
-        $parentTokens = $hack->getParentClass()->getProperty('tokens');
-        $parentTokens->setAccessible(true);
-        
-        $tokens = $parentTokens->getValue($this);
-        
-        $regex = sprintf(
-            '/(%s)|%s/%s',
-            implode(')|(', $this->getCatchablePatterns()),
-            implode('|', $this->getNonCatchablePatterns()),
-            $this->getModifiers()
+        $tokens = [];
+        $regex  = sprintf(
+            '/(%s)|/u',
+            implode(')|(', $this->getCatchablePatterns())
         );
-
+        
         $flags = PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_OFFSET_CAPTURE;
         $matches = preg_split($regex, $input, -1, $flags);
-
+        
+        $position = 0;
+        
         foreach ($matches as $match) {
-            // Must remain before 'value' assignment since it can change content
             $type = $this->getType($match[0]);
-
+            
             $tokens[] = array(
-                'value' => $match[0],
-                'type'  => $type,
-                'position' => $match[1],
+                'value'    => $match[0],
+                'type'     => $type,
+                'position' => $position,
             );
+            
+            $position += mb_strlen($match[0]);
         }
-
-        $parentTokens->setValue($this, $tokens);
+        
+        return $tokens;
     }
 
     protected function getCatchablePatterns()
@@ -220,7 +213,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
         return [];
     }
 
-    protected function getType(&$value)
+    protected function getType($value)
     {
         if ('\\' === $value) {
             return static::DTYPE_BACKSLASH;

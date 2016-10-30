@@ -13,7 +13,8 @@
     }
   ],
   "require": {
-    "doctrine/lexer": "^1.0"
+    "doctrine/lexer": "^1.0",
+    "ext-mbstring": "*"
   },
   "autoload": {
     "psr-4": {

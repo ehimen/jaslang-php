@@ -6,25 +6,13 @@ use Doctrine\Common\Lexer\AbstractLexer;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 
 /**
- * TODO: this should wrap Doctrine lexer, not extend it.
+ * The core Jaslang Lexer implementation.
  */
 class DoctrineLexer implements Lexer
 {
-    const DTYPE_OTHER = 0;
-    const DTYPE_PAREN_LEFT  = 1;
-    const DTYPE_PAREN_RIGHT = 2;
-    const DTYPE_QUOTE_SINGLE = 3;
-    const DTYPE_QUOTE_DOUBLE = 4;
-    const DTYPE_BACKSLASH = 5;
-    const DTYPE_COMMA = 6;
-    const DTYPE_WHITESPACE = 7;
-    const DTYPE_OPERATOR = 8;
-    const DTYPE_SEMICOLON = 9;
-    const DTYPE_LITERAL = 10;
-    
     private $currentQuote = null;
     private $currentToken = '';
-    private $currentPosition = 0;
+    private $currentTokenPosition = 0;
     private $jaslangTokens = [];
     
     /**
@@ -59,23 +47,30 @@ class DoctrineLexer implements Lexer
         $this->resetState();
         
         $updatePosition = true;
-        $tokens         = $this->scan($input);
         
-        for ($i = 0; $i < count($tokens); $i++) {
-            $token = $tokens[$i];
-            
+        $matches = $this->splitInput($input);
+        $position = 0;
+        
+        for ($i = 0; $i < count($matches); $i++) {
             if ($updatePosition) {
-                $this->currentPosition = $token['position'];
+                $this->currentTokenPosition = $position;
             }
-
+            
+            $value          = $matches[$i];
             $updatePosition = true;
-            $value          = $token['value'];
-            $type           = $token['type'];
             $inQuotes       = is_string($this->currentQuote);
+            
+            // Update a running position as preg_split offset capture breaks with multibyte.
+            $position += mb_strlen($value);
 
-            // Handle escaping.
             if ($inQuotes && $value === Lexer::ESCAPE_CHAR) {
-                $nextValue  = isset($tokens[$i + 1]) ? $tokens[$i + 1]['value'] : null;
+                // Handle escaping if in a string.
+                // If this is an escape character and the next is escapable,
+                // ignore the current escape character, add the next
+                // character to the current string, and bump along to the
+                // next match.
+                $nextValue  = isset($matches[$i + 1]) ? $matches[$i + 1] : null;
+                
                 if (in_array($nextValue, Lexer::ESCAPABLE_CHARS, true)) {
                     $updatePosition = false;
                     $this->currentToken .= $nextValue;
@@ -85,11 +80,13 @@ class DoctrineLexer implements Lexer
             }
 
             if ($this->currentQuote === $value) {
+                // Terminating a string.
                 $this->token(Lexer::TOKEN_LITERAL_STRING);
                 continue;
             }
 
-            if (!$inQuotes && ((static::DTYPE_QUOTE_DOUBLE === $type) || (static::DTYPE_QUOTE_SINGLE === $type))) {
+            if (!$inQuotes && (('"' === $value) || ("'" === $value))) {
+                // Starting a string.
                 $this->currentQuote = $value;
                 $updatePosition = false;
                 continue;
@@ -98,27 +95,7 @@ class DoctrineLexer implements Lexer
             $this->currentToken .= $value;
 
             if (!$inQuotes) {
-                if ($type === static::DTYPE_PAREN_LEFT) {
-                    $this->token(Lexer::TOKEN_LEFT_PAREN);
-                } elseif ($type === static::DTYPE_PAREN_RIGHT) {
-                    $this->token(Lexer::TOKEN_RIGHT_PAREN);
-                } elseif ($type === static::DTYPE_COMMA) {
-                    $this->token(Lexer::TOKEN_COMMA);
-                } elseif ($type === static::DTYPE_WHITESPACE) {
-                    $this->token(Lexer::TOKEN_WHITESPACE);
-                } elseif ($type === static::DTYPE_BACKSLASH) {
-                    $this->token(Lexer::TOKEN_BACKSLASH);
-                } elseif ($type === static::DTYPE_SEMICOLON) {
-                    $this->token(Lexer::TOKEN_STATETERM);
-                } elseif ($type === static::DTYPE_OPERATOR) {
-                    $this->token(Lexer::TOKEN_OPERATOR);
-                } elseif ($type === static::DTYPE_LITERAL) {
-                    $this->token(Lexer::TOKEN_LITERAL);
-                } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
-                    $this->token(Lexer::TOKEN_IDENTIFIER);
-                } else {
-                    $this->token(Lexer::TOKEN_UNKNOWN);
-                }
+                $this->tokenizeUnquoted($value);
             } else {
                 // We're continuing a token, so leave the position marker where it was.
                 $updatePosition = false;
@@ -126,6 +103,8 @@ class DoctrineLexer implements Lexer
         }
         
         if (is_string($this->currentQuote)) {
+            // If our current quote is still set,
+            // we must have a non-terminated string.
             throw new UnexpectedEndOfInputException($input);
         }
         
@@ -136,7 +115,7 @@ class DoctrineLexer implements Lexer
     {
         $this->currentQuote = null;
         $this->currentToken = '';
-        $this->currentPosition = 0;
+        $this->currentTokenPosition = 0;
         $this->jaslangTokens = [];
     }
 
@@ -149,95 +128,11 @@ class DoctrineLexer implements Lexer
         $this->jaslangTokens[] = [
             'type'     => $type,
             'value'    => $this->currentToken,
-            'position' => $this->currentPosition + 1, // Doctrine position is 0-indexed, we want first char to be at 1.
+            'position' => $this->currentTokenPosition + 1, // Doctrine position is 0-indexed, we want first char to be at 1.
         ];
         
         $this->currentToken = '';
         $this->currentQuote = null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    private function scan($input)
-    {
-        $tokens = [];
-        $regex  = sprintf(
-            '/(%s)|/u',
-            implode(')|(', $this->getCatchablePatterns())
-        );
-        
-        $flags = PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_OFFSET_CAPTURE;
-        $matches = preg_split($regex, $input, -1, $flags);
-        
-        $position = 0;
-        
-        foreach ($matches as $match) {
-            $type = $this->getType($match[0]);
-            
-            $tokens[] = array(
-                'value'    => $match[0],
-                'type'     => $type,
-                'position' => $position,
-            );
-            
-            $position += mb_strlen($match[0]);
-        }
-        
-        return $tokens;
-    }
-
-    protected function getCatchablePatterns()
-    {
-        $patterns = array_merge(
-            // Type-driven literal capture.
-            $this->literals,
-            // User defined operators.
-            array_map(
-                function ($operator) {
-                    return preg_quote($operator, '/');
-                },
-                $this->operators
-            ),
-            [
-                '\w+',        // Group all word characters
-                '\s+',        // And group all continuous whitespace
-            ]
-        );
-        
-        return $patterns;
-    }
-
-    protected function getNonCatchablePatterns()
-    {
-        return [];
-    }
-
-    protected function getType($value)
-    {
-        if ('\\' === $value) {
-            return static::DTYPE_BACKSLASH;
-        } elseif ('(' === $value) {
-            return static::DTYPE_PAREN_LEFT;
-        } elseif (')' === $value) {
-            return static::DTYPE_PAREN_RIGHT;
-        } elseif ('\'' === $value) {
-            return static::DTYPE_QUOTE_SINGLE;
-        } elseif ('"' === $value) {
-            return static::DTYPE_QUOTE_DOUBLE;
-        } elseif (',' === $value) {
-            return static::DTYPE_COMMA;
-        } elseif (';' === $value) {
-            return static::DTYPE_SEMICOLON;
-        } elseif ('' === trim($value)) {
-            return static::DTYPE_WHITESPACE;
-        } elseif ($this->matchesCustomLiteral($value)) {
-            return static::DTYPE_LITERAL;
-        } elseif (in_array($value, $this->operators, true)) {
-            return static::DTYPE_OPERATOR;
-        }
-        
-        return static::DTYPE_OTHER;
     }
 
     private function matchesCustomLiteral($value)
@@ -249,5 +144,62 @@ class DoctrineLexer implements Lexer
         }
         
         return false;
+    }
+
+    private function splitInput($input)
+    {
+        $dynamicPatterns = array_merge(
+            // Type-driven literal capture.
+            $this->literals,
+            // User defined operators.
+            array_map(
+                function ($operator) {
+                    return preg_quote($operator, '/');
+                },
+                $this->operators
+            )
+        );
+        
+        $regex  = sprintf(
+            '/(%s)|(\w+)|(\s+)|/u',     // Group all word characters & group all continuous whitespace.
+            implode(')|(', $dynamicPatterns)
+        );
+        
+        return preg_split(
+            $regex,
+            $input,
+            -1,
+            PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE
+        );
+    }
+
+    private function matchesCustomOperator($value)
+    {
+        return in_array($value, $this->operators, true);
+    }
+
+    private function tokenizeUnquoted($value)
+    {
+        if ('(' === $value) {
+            $this->token(Lexer::TOKEN_LEFT_PAREN);
+        } elseif (')' === $value) {
+            $this->token(Lexer::TOKEN_RIGHT_PAREN);
+        } elseif (',' === $value) {
+            $this->token(Lexer::TOKEN_COMMA);
+        } elseif ('' === trim($value)) {
+            $this->token(Lexer::TOKEN_WHITESPACE);
+        } elseif ('\\' === $value) {
+            $this->token(Lexer::TOKEN_BACKSLASH);
+        } elseif (';' === $value) {
+            $this->token(Lexer::TOKEN_STATETERM);
+        } elseif ($this->matchesCustomOperator($value)) {
+            $this->token(Lexer::TOKEN_OPERATOR);
+        } elseif ($this->matchesCustomLiteral($value)) {
+            $this->token(Lexer::TOKEN_LITERAL);
+        } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
+            $this->token(Lexer::TOKEN_IDENTIFIER);
+        } else {
+            $this->token(Lexer::TOKEN_UNKNOWN);
+        }
     }
 }

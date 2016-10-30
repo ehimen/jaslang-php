@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\Evaluator;
+namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Exception\OutOfBoundsException;

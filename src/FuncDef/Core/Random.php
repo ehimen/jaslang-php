@@ -4,11 +4,11 @@ namespace Ehimen\Jaslang\FuncDef\Core;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
-use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Type\Core\Num as NumType;
-use Ehimen\Jaslang\Value\Num;
+use Ehimen\Jaslang\Value\Core\Num;
 
 class Random implements FuncDef
 {

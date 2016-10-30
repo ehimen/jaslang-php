@@ -4,7 +4,7 @@ namespace Ehimen\Jaslang\FuncDef\Core;
 
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Type;
-use Ehimen\Jaslang\Value\Boolean;
+use Ehimen\Jaslang\Value\Core\Boolean;
 use Ehimen\Jaslang\Value\Value;
 
 /**

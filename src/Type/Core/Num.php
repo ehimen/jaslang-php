@@ -5,7 +5,7 @@ namespace Ehimen\Jaslang\Type\Core;
 use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Type\Type;
-use Ehimen\Jaslang\Value\Num as NumValue;
+use Ehimen\Jaslang\Value\Core\Num as NumValue;
 use Ehimen\Jaslang\Value\Value;
 
 class Num implements ConcreteType

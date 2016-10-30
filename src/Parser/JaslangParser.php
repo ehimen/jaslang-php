@@ -11,8 +11,8 @@ use Ehimen\Jaslang\Ast\NumberLiteral;
 use Ehimen\Jaslang\Ast\ParentNode;
 use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\Ast\StringLiteral;
-use Ehimen\Jaslang\Evaluator\FunctionRepository;
-use Ehimen\Jaslang\Evaluator\TypeRepository;
+use Ehimen\Jaslang\FuncDef\FunctionRepository;
+use Ehimen\Jaslang\Type\TypeRepository;
 use Ehimen\Jaslang\Exception\RuntimeException;
 use Ehimen\Jaslang\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
@@ -41,12 +41,16 @@ class JaslangParser implements Parser
      * @var Token
      */
     private $currentToken;
-    
+
+    /**
+     * @var Root
+     */
     private $ast;
-    
+
+    /**
+     * @var string
+     */
     private $input;
-    
-    private $nextToken;
 
     /**
      * @var FunctionRepository
@@ -82,7 +86,6 @@ class JaslangParser implements Parser
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
-            $this->nextToken    = isset($tokens[$i + 1]) ? $tokens[$i + 1] : null;
             
             try {
                 $dfa->transition($token->getType());

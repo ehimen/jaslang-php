@@ -3,7 +3,7 @@
 namespace Ehimen\JaslangTestResources;
 
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
-use Ehimen\Jaslang\Value\Num;
+use Ehimen\Jaslang\Value\Core\Num;
 use Ehimen\Jaslang\Value\Value;
 use Ehimen\Jaslang\Type;
 

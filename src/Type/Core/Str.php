@@ -6,7 +6,7 @@ use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Type\Type;
-use Ehimen\Jaslang\Value\Str as StrValue;
+use Ehimen\Jaslang\Value\Core\Str as StrValue;
 use Ehimen\Jaslang\Value\Value;
 
 class Str implements ConcreteType 

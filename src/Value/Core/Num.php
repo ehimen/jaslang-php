@@ -1,8 +1,10 @@
 <?php
 
-namespace Ehimen\Jaslang\Value;
+namespace Ehimen\Jaslang\Value\Core;
 
-class Num extends Native implements StringLike 
+use Ehimen\Jaslang\Value\Native;
+
+class Num extends Native 
 {
     public function __construct($value)
     {

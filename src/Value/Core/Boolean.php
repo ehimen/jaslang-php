@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Value;
+namespace Ehimen\Jaslang\Value\Core;
+
+use Ehimen\Jaslang\Value\Native;
 
 class Boolean extends Native
 {

@@ -5,7 +5,7 @@ namespace Ehimen\Jaslang\Type\Core;
 use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Type\Type;
-use Ehimen\Jaslang\Value\Boolean as BooleanValue;
+use Ehimen\Jaslang\Value\Core\Boolean as BooleanValue;
 use Ehimen\Jaslang\Value\Value;
 
 class Boolean implements ConcreteType 

@@ -7,8 +7,7 @@ interface Value
     /**
      * Gets the PHP string representation of this value.
      * 
-     * Note this should not be used in Jaslang evaluation. For Jaslang string conversion,
-     * @see StringLike
+     * Note this should not be used in Jaslang evaluation to convert to string.
      * 
      * @return string
      */

@@ -20,8 +20,8 @@ class AndOperator extends BinaryFunction
 
     protected function performOperation(Value\Value $left, Value\Value $right)
     {
-        /** @var Value\Boolean $left */
-        /** @var Value\Boolean $right */
-        return new Value\Boolean($left->getValue() && $right->getValue());
+        /** @var \Ehimen\Jaslang\Value\Core\Boolean $left */
+        /** @var \Ehimen\Jaslang\Value\Core\Boolean $right */
+        return new Value\Core\Boolean($left->getValue() && $right->getValue());
     }
 }

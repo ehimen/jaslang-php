@@ -2,10 +2,10 @@
 
 namespace Ehimen\JaslangTestResources;
 
-use Ehimen\Jaslang\FuncDef\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
-use Ehimen\Jaslang\Value\Boolean;
-use Ehimen\Jaslang\Value\Str;
+use Ehimen\Jaslang\Value\Core\Boolean;
+use Ehimen\Jaslang\Value\Core\Str;
 use Ehimen\Jaslang\Value\Value;
 use Ehimen\Jaslang\Type;
 

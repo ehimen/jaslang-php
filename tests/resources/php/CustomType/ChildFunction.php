@@ -3,10 +3,10 @@
 namespace Ehimen\JaslangTestResources\CustomType;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
-use Ehimen\Jaslang\Value\Boolean;
+use Ehimen\Jaslang\Value\Core\Boolean;
 
 class ChildFunction implements FuncDef
 {

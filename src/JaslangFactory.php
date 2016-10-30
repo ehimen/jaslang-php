@@ -4,14 +4,14 @@ namespace Ehimen\Jaslang;
 
 use Ehimen\Jaslang\Evaluator\Evaluator;
 use Ehimen\Jaslang\Evaluator\JaslangInvoker;
-use Ehimen\Jaslang\Evaluator\TypeRepository;
+use Ehimen\Jaslang\Type\TypeRepository;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\FuncDef\Core\Identity;
 use Ehimen\Jaslang\FuncDef\Core\Random;
 use Ehimen\Jaslang\FuncDef\Core\Substring;
 use Ehimen\Jaslang\FuncDef\Core\Subtract;
 use Ehimen\Jaslang\FuncDef\Core\Sum;
-use Ehimen\Jaslang\Evaluator\FunctionRepository;
+use Ehimen\Jaslang\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Parser\JaslangParser;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\Evaluator;
+namespace Ehimen\Jaslang\Type;
 
 use Ehimen\Jaslang\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Type\ConcreteType;

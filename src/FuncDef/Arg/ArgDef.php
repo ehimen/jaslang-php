@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\FuncDef;
+namespace Ehimen\Jaslang\FuncDef\Arg;
 
 use Ehimen\Jaslang\Type\Type;
 

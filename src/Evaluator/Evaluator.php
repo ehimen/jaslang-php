@@ -20,12 +20,12 @@ use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\FuncDef\ArgList;
-use Ehimen\Jaslang\Evaluator\FunctionRepository;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Parser\Parser;
-use Ehimen\Jaslang\Value\Boolean;
-use Ehimen\Jaslang\Value\Num;
-use Ehimen\Jaslang\Value\Str;
+use Ehimen\Jaslang\Value\Core\Boolean;
+use Ehimen\Jaslang\Value\Core\Num;
+use Ehimen\Jaslang\Value\Core\Str;
 
 class Evaluator
 {

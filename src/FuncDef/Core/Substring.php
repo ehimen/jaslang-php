@@ -3,11 +3,11 @@
 namespace Ehimen\Jaslang\FuncDef\Core;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
-use Ehimen\Jaslang\Value\Num;
-use Ehimen\Jaslang\Value\Str;
+use Ehimen\Jaslang\Value\Core\Num;
+use Ehimen\Jaslang\Value\Core\Str;
 use Ehimen\Jaslang\Type;
 
 class Substring implements FuncDef

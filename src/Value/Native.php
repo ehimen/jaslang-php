@@ -27,7 +27,11 @@ abstract class Native implements Value
             return false;
         }
         
-        return ($this->value === $other->value);
+        if ($other instanceof static) {
+            return ($this->value === $other->value);
+        }
+        
+        return ($this === $other);
     }
 
 

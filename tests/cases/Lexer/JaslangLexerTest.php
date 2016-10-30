@@ -11,7 +11,7 @@ use Ehimen\Jaslang\Type\Core\Num;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 
-class JaslangLexerText extends TestCase
+class JaslangLexerTest extends TestCase
 {
     use JaslangTestUtil;
 

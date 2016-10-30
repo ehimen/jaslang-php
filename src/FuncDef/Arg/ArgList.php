@@ -1,11 +1,11 @@
 <?php
 
-namespace Ehimen\Jaslang\FuncDef;
+namespace Ehimen\Jaslang\FuncDef\Arg;
 
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Type\Type;
-use Ehimen\Jaslang\Value\Num;
-use Ehimen\Jaslang\Value\Str;
+use Ehimen\Jaslang\Value\Core\Num;
+use Ehimen\Jaslang\Value\Core\Str;
 use Ehimen\Jaslang\Value\Value;
 
 class ArgList

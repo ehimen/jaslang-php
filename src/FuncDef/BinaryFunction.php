@@ -3,6 +3,8 @@
 namespace Ehimen\Jaslang\FuncDef;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Value\Value;
 

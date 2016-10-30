@@ -4,10 +4,11 @@ namespace Ehimen\Jaslang\Evaluator;
 
 use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Evaluator\Exception\InvalidArgumentException;
-use Ehimen\Jaslang\FuncDef\ArgDef;
-use Ehimen\Jaslang\FuncDef\ArgList;
+use Ehimen\Jaslang\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Type\Type;
+use Ehimen\Jaslang\Type\TypeRepository;
 
 /**
  * Dispatches function invocations, validating arguments along the way.

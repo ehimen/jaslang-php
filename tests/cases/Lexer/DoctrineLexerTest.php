@@ -371,6 +371,26 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testLiteralNotIdentifier()
+    {
+        $this->performTestWithLiteralPatterns(
+            'foo',
+            ['foo'],
+            $this->createToken(Lexer::TOKEN_LITERAL, 'foo', 1)
+        );
+    }
+
+    public function testIdentifierNotLiteral()
+    {
+        $this->performTestWithLiteralPatterns(
+            'foobar foo',
+            ['^foo$'],
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foobar', 1),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+            $this->createToken(Lexer::TOKEN_LITERAL, 'foo', 8)
+        );
+    }
+
     private function performSyntaxErrorTest($input, $expected)
     {
         try {
@@ -393,8 +413,13 @@ class DoctrineLexerTest extends TestCase
         $this->assertEquals($tokens, $this->getLexer($operators)->tokenize($input));
     }
 
-    private function getLexer($operators = [])
+    private function performTestWithLiteralPatterns($input, $literalPatterns, ...$tokens)
     {
-        return new DoctrineLexer($operators);
+        $this->assertEquals($tokens, $this->getLexer([], $literalPatterns)->tokenize($input));
+    }
+
+    private function getLexer(array $operators = [], array $literalPatterns = [])
+    {
+        return new DoctrineLexer($operators, $literalPatterns);
     }
 }

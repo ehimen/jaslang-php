@@ -16,12 +16,12 @@ class Identity extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return new Type\Any();
+        return new Type\Core\Any();
     }
 
     protected function getRightArgType()
     {
-        return new Type\Any();
+        return new Type\Core\Any();
     }
 
     protected function performOperation(Value $left, Value $right)

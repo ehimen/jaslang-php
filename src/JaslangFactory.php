@@ -15,10 +15,10 @@ use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\FuncDef\FuncDef;
 use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Parser\JaslangParser;
-use Ehimen\Jaslang\Type\Any;
-use Ehimen\Jaslang\Type\Boolean;
-use Ehimen\Jaslang\Type\Num;
-use Ehimen\Jaslang\Type\Str;
+use Ehimen\Jaslang\Type\Core\Any;
+use Ehimen\Jaslang\Type\Core\Boolean;
+use Ehimen\Jaslang\Type\Core\Num;
+use Ehimen\Jaslang\Type\Core\Str;
 use Ehimen\Jaslang\Type\Type;
 
 /**

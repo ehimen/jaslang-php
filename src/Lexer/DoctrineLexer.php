@@ -114,16 +114,7 @@ class DoctrineLexer extends AbstractLexer implements Lexer
                 } elseif ($type === static::DTYPE_LITERAL) {
                     $this->token(Lexer::TOKEN_LITERAL);
                 } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
-                    $lower = strtolower($value);
-                    
-                    // Our doctrine lexer doesn't distinguish between bool/identifier, check now.
-                    if (('false' === $lower) || ('true' === $value)) {
-                        $this->token(Lexer::TOKEN_LITERAL_BOOLEAN);
-                    }
-                    
                     $this->token(Lexer::TOKEN_IDENTIFIER);
-                } elseif (is_numeric($value)) {
-                    $this->token(Lexer::TOKEN_LITERAL_NUMBER);
                 } else {
                     $this->token(Lexer::TOKEN_UNKNOWN);
                 }
@@ -206,10 +197,6 @@ class DoctrineLexer extends AbstractLexer implements Lexer
     protected function getCatchablePatterns()
     {
         $patterns = array_merge(
-            // Fixed patterns. Must be matched first.
-            [       
-                '[+-]?\d+(?:\.\d*)?',   // Decimal representation.
-            ],
             // Type-driven literal capture.
             $this->literals,
             // User defined operators.

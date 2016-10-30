@@ -6,6 +6,8 @@ use Ehimen\Jaslang\Lexer\DoctrineLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
+use Ehimen\Jaslang\Type\Core\Boolean;
+use Ehimen\Jaslang\Type\Core\Num;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 
@@ -139,24 +141,27 @@ class DoctrineLexerTest extends TestCase
 
     public function testInteger()
     {
-        $this->performTest(
+        $this->performTestWithLiteralPatterns(
             '1337',
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1337', 1)
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '1337', 1)
         );
     }
 
     public function testDecimal()
     {
-        $this->performTest(
+        $this->performTestWithLiteralPatterns(
             '1.3',
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1.3', 1)
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '1.3', 1)
         );
     }
 
     public function testNestedFunctions()
     {
-        $this->performTest(
+        $this->performTestWithLiteralPatterns(
             'foo("bar", bar(1, 3.14))',
+            [Num::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 5),
@@ -164,10 +169,10 @@ class DoctrineLexerTest extends TestCase
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 12),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 15),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '1', 16),
+            $this->createToken(Lexer::TOKEN_LITERAL, '1', 16),
             $this->createToken(Lexer::TOKEN_COMMA, ',', 17),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 18),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3.14', 19),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3.14', 19),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 23),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
         );
@@ -213,80 +218,86 @@ class DoctrineLexerTest extends TestCase
 
     public function testAdditionOperator()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             "3 + 4",
             ['+'],
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 1),
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '3', 1),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
             $this->createToken(Lexer::TOKEN_OPERATOR, '+', 3),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 5)
+            $this->createToken(Lexer::TOKEN_LITERAL, '4', 5)
         );
     }
 
     public function testAdditionOperatorInFunction()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             "foo(3 + 4)",
             ['+'],
+            [Num::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 5),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3', 5),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
             $this->createToken(Lexer::TOKEN_OPERATOR, '+', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 8),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 9),
+            $this->createToken(Lexer::TOKEN_LITERAL, '4', 9),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10)
         );
     }
 
     public function testSignedNumbers()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             '+3.14 - -26',
             ['-'],
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '+3.14', 1),
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '+3.14', 1),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
             $this->createToken(Lexer::TOKEN_OPERATOR, '-', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 8),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '-26', 9)
+            $this->createToken(Lexer::TOKEN_LITERAL, '-26', 9)
         );
     }
 
     public function testBoolean()
     {
-        $this->performTest(
+        $this->performTestWithLiteralPatterns(
             'foo(true, false)',
+            [Boolean::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-            $this->createToken(Lexer::TOKEN_LITERAL_BOOLEAN, 'true', 5),
+            $this->createToken(Lexer::TOKEN_LITERAL, 'true', 5),
             $this->createToken(Lexer::TOKEN_COMMA, ',', 9),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
-            $this->createToken(Lexer::TOKEN_LITERAL_BOOLEAN, 'false', 11),
+            $this->createToken(Lexer::TOKEN_LITERAL, 'false', 11),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16)
         );
     }
 
     public function testHangingSigned()
     {
-        $this->performTest(
+        $this->performTestWithLiteralPatterns(
             '+3.',
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '+3.', 1)
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '+3.', 1)
         );
     }
 
     public function testArbitraryOperator()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             "foo(3 +=/*!<>-^ 4)",
             ['+=/*!<>-^'],
+            [Num::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3', 5),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3', 5),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
             $this->createToken(Lexer::TOKEN_OPERATOR, '+=/*!<>-^', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 16),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '4', 17),
+            $this->createToken(Lexer::TOKEN_LITERAL, '4', 17),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18)
         );
     }
@@ -302,24 +313,26 @@ class DoctrineLexerTest extends TestCase
 
     public function testCustomOperator()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             'foo() AND 3.14',
             ['AND'],
+            [Num::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
             $this->createToken(Lexer::TOKEN_OPERATOR, 'AND', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3.14', 11)
+            $this->createToken(Lexer::TOKEN_LITERAL, '3.14', 11)
         );
     }
 
     public function testCustomOperators()
     {
-        $this->performTestWithOperators(
+        $this->performTestWithOperatorsAndLiteralPatterns(
             'foo() OR (3.14 bar true)',
             ['OR', 'bar'],
+            [Boolean::LITERAL_PATTERN, Num::LITERAL_PATTERN],
             $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 1),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
@@ -327,11 +340,11 @@ class DoctrineLexerTest extends TestCase
             $this->createToken(Lexer::TOKEN_OPERATOR, 'OR', 7),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 9),
             $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 10),
-            $this->createToken(Lexer::TOKEN_LITERAL_NUMBER, '3.14', 11),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3.14', 11),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 15),
             $this->createToken(Lexer::TOKEN_OPERATOR, 'bar', 16),
             $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 19),
-            $this->createToken(Lexer::TOKEN_LITERAL_BOOLEAN, 'true', 20),
+            $this->createToken(Lexer::TOKEN_LITERAL, 'true', 20),
             $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
         );
     }
@@ -391,6 +404,16 @@ class DoctrineLexerTest extends TestCase
         );
     }
 
+    public function testNumericIdentifier()
+    {
+        $this->performTestWithLiteralPatterns(
+            '3.14foo',
+            [Num::LITERAL_PATTERN],
+            $this->createToken(Lexer::TOKEN_LITERAL, '3.14', 1),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 5)
+        );
+    }
+
     private function performSyntaxErrorTest($input, $expected)
     {
         try {
@@ -411,6 +434,15 @@ class DoctrineLexerTest extends TestCase
     private function performTestWithOperators($input, $operators, ...$tokens)
     {
         $this->assertEquals($tokens, $this->getLexer($operators)->tokenize($input));
+    }
+
+    private function performTestWithOperatorsAndLiteralPatterns(
+        $input,
+        array $operators,
+        array $literalPatterns,
+        ...$tokens
+    ) {
+        $this->assertEquals($tokens, $this->getLexer($operators, $literalPatterns)->tokenize($input));
     }
 
     private function performTestWithLiteralPatterns($input, $literalPatterns, ...$tokens)

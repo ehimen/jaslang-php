@@ -10,12 +10,12 @@ class AndOperator extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return new Type\Boolean();
+        return new Type\Core\Boolean();
     }
 
     protected function getRightArgType()
     {
-        return new Type\Boolean();
+        return new Type\Core\Boolean();
     }
 
     protected function performOperation(Value\Value $left, Value\Value $right)

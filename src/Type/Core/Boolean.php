@@ -1,13 +1,16 @@
 <?php
 
-namespace Ehimen\Jaslang\Type;
+namespace Ehimen\Jaslang\Type\Core;
 
-use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Type\ConcreteType;
+use Ehimen\Jaslang\Type\Type;
 use Ehimen\Jaslang\Value\Boolean as BooleanValue;
 use Ehimen\Jaslang\Value\Value;
 
 class Boolean implements ConcreteType 
 {
+    const LITERAL_PATTERN = '^true|false$';
+
     public function createValue($value)
     {
         return new BooleanValue($value);
@@ -30,7 +33,7 @@ class Boolean implements ConcreteType
 
     public function appliesToToken(array $token)
     {
-        return ($token['type'] === Lexer::TOKEN_LITERAL_BOOLEAN);
+        return in_array(strtolower($token['value']), ['true', 'false'], true);
     }
 
     public function getStringForValue($value)
@@ -40,7 +43,6 @@ class Boolean implements ConcreteType
 
     public function getLiteralPattern()
     {
-        // TODO: This is hardcoded in to the lexer. Could detach this for bools?
-        return null;
+        return static::LITERAL_PATTERN;
     }
 }

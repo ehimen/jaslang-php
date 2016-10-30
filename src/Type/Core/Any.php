@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Type;
+namespace Ehimen\Jaslang\Type\Core;
+
+use Ehimen\Jaslang\Type\Type;
 
 class Any implements Type
 {

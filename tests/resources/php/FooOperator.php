@@ -16,12 +16,12 @@ class FooOperator extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return new Type\Str();
+        return new Type\Core\Str();
     }
 
     protected function getRightArgType()
     {
-        return new Type\Str();
+        return new Type\Core\Str();
     }
 
     protected function performOperation(Value $left, Value $right)

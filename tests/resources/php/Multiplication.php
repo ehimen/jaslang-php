@@ -11,12 +11,12 @@ class Multiplication extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return new Type\Num();
+        return new Type\Core\Num();
     }
 
     protected function getRightArgType()
     {
-        return new Type\Num();
+        return new Type\Core\Num();
     }
 
     protected function performOperation(Value $left, Value $right)

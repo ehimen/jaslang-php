@@ -7,7 +7,7 @@ use Ehimen\Jaslang\FuncDef\ArgDef;
 use Ehimen\Jaslang\FuncDef\ArgList;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\FuncDef\FuncDef;
-use Ehimen\Jaslang\Type\Num as NumType;
+use Ehimen\Jaslang\Type\Core\Num as NumType;
 use Ehimen\Jaslang\Value\Num;
 use Ehimen\Jaslang\Value\Value;
 

@@ -15,9 +15,9 @@ class Substring implements FuncDef
     public function getArgDefs()
     {
         return [
-            new ArgDef(new Type\Str(), false),
-            new ArgDef(new Type\Num(), false),
-            new ArgDef(new Type\Num(), false),
+            new ArgDef(new Type\Core\Str(), false),
+            new ArgDef(new Type\Core\Num(), false),
+            new ArgDef(new Type\Core\Num(), false),
         ];
     }
 

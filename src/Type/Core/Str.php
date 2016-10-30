@@ -1,8 +1,10 @@
 <?php
 
-namespace Ehimen\Jaslang\Type;
+namespace Ehimen\Jaslang\Type\Core;
 
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Type\ConcreteType;
+use Ehimen\Jaslang\Type\Type;
 use Ehimen\Jaslang\Value\Str as StrValue;
 use Ehimen\Jaslang\Value\Value;
 

@@ -8,11 +8,11 @@ use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 /**
  * The core Jaslang Lexer implementation.
  */
-class DoctrineLexer implements Lexer
+class JaslangLexer implements Lexer
 {
     private $currentQuote = null;
     private $currentToken = '';
-    private $currentTokenPosition = 0;
+    private $currentTokenPosition = 1;
     private $jaslangTokens = [];
     
     /**
@@ -37,19 +37,13 @@ class DoctrineLexer implements Lexer
         $this->literals  = $literals;
     }
 
-    public static function isLiteral(array $token)
-    {
-        return in_array($token['type'], Lexer::LITERAL_TOKENS, true);
-    }
-
     public function tokenize($input)
     {
         $this->resetState();
         
         $updatePosition = true;
-        
-        $matches = $this->splitInput($input);
-        $position = 0;
+        $matches        = $this->splitInput($input);
+        $position       = 1;
         
         for ($i = 0; $i < count($matches); $i++) {
             if ($updatePosition) {
@@ -125,11 +119,7 @@ class DoctrineLexer implements Lexer
             return;
         }
         
-        $this->jaslangTokens[] = [
-            'type'     => $type,
-            'value'    => $this->currentToken,
-            'position' => $this->currentTokenPosition + 1, // Doctrine position is 0-indexed, we want first char to be at 1.
-        ];
+        $this->jaslangTokens[] = new Token($this->currentToken, $type, $this->currentTokenPosition);
         
         $this->currentToken = '';
         $this->currentQuote = null;

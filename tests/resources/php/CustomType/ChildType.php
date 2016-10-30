@@ -2,6 +2,7 @@
 
 namespace Ehimen\JaslangTestResources\CustomType;
 
+use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Value\Value;
 
@@ -17,9 +18,9 @@ class ChildType implements ConcreteType
         return ($value instanceof ChildValue);
     }
 
-    public function appliesToToken(array $token)
+    public function appliesToToken(Token $token)
     {
-        return ($token['value'] === 'c');
+        return ($token->getValue() === 'c');
     }
 
     public function getStringForValue($value)

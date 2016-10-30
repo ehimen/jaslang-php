@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Type;
 
+use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Value\Value;
 
 /**
@@ -18,10 +19,10 @@ interface ConcreteType extends Type
     public function appliesToValue(Value $value);
 
     /**
-     * @param array $token
+     * @param Token $token
      * @return bool
      */
-    public function appliesToToken(array $token);
+    public function appliesToToken(Token $token);
 
     /**
      * Describes the value as would be interpreted by the type.

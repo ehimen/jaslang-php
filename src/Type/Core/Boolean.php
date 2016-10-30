@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Type\Core;
 
+use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Type\Type;
 use Ehimen\Jaslang\Value\Boolean as BooleanValue;
@@ -31,9 +32,9 @@ class Boolean implements ConcreteType
         return ($value instanceof BooleanValue);
     }
 
-    public function appliesToToken(array $token)
+    public function appliesToToken(Token $token)
     {
-        return in_array(strtolower($token['value']), ['true', 'false'], true);
+        return in_array(strtolower($token->getValue()), ['true', 'false'], true);
     }
 
     public function getStringForValue($value)

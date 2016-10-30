@@ -24,8 +24,11 @@ interface Lexer
         self::TOKEN_LITERAL_STRING,
         self::TOKEN_LITERAL,
     ];
-    
-    public function tokenize($input);
 
-    public static function isLiteral(array $token);
+    /**
+     * @param string $input
+     * 
+     * @return Token[]
+     */
+    public function tokenize($input);
 }

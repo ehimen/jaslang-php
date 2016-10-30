@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Type\Core;
 
+use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Type\ConcreteType;
 use Ehimen\Jaslang\Type\Type;
 use Ehimen\Jaslang\Value\Num as NumValue;
@@ -31,9 +32,9 @@ class Num implements ConcreteType
         return ($value instanceof NumValue);
     }
 
-    public function appliesToToken(array $token)
+    public function appliesToToken(Token $token)
     {
-        return is_numeric($token['value']);
+        return is_numeric($token->getValue());
     }
 
     public function getStringForValue($value)

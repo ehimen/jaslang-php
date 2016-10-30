@@ -2,7 +2,7 @@
 
 namespace Ehimen\JaslangTests\Lexer;
 
-use Ehimen\Jaslang\Lexer\DoctrineLexer;
+use Ehimen\Jaslang\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
@@ -11,7 +11,7 @@ use Ehimen\Jaslang\Type\Core\Num;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 
-class DoctrineLexerTest extends TestCase
+class JaslangLexerText extends TestCase
 {
     use JaslangTestUtil;
 
@@ -464,6 +464,6 @@ class DoctrineLexerTest extends TestCase
 
     private function getLexer(array $operators = [], array $literalPatterns = [])
     {
-        return new DoctrineLexer($operators, $literalPatterns);
+        return new JaslangLexer($operators, $literalPatterns);
     }
 }

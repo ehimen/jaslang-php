@@ -14,8 +14,9 @@ use Ehimen\Jaslang\Ast\StringLiteral;
 use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\Evaluator\TypeRepository;
 use Ehimen\Jaslang\Exception\RuntimeException;
-use Ehimen\Jaslang\Lexer\DoctrineLexer;
+use Ehimen\Jaslang\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Lexer\Lexer;
+use Ehimen\Jaslang\Lexer\Token;
 use Ehimen\Jaslang\Parser\Dfa\DfaBuilder;
 use Ehimen\Jaslang\Parser\Dfa\Exception\NotAcceptedException;
 use Ehimen\Jaslang\Parser\Dfa\Exception\TransitionImpossibleException;
@@ -35,7 +36,10 @@ class JaslangParser implements Parser
      * @var ParentNode[]
      */
     private $nodeStack = [];
-    
+
+    /**
+     * @var Token
+     */
     private $currentToken;
     
     private $ast;
@@ -68,8 +72,8 @@ class JaslangParser implements Parser
 
         $tokens = array_values(array_filter(
             $this->lexer->tokenize($input),
-            function ($token) {
-                return ($token['type'] !== Lexer::TOKEN_WHITESPACE);
+            function (Token $token) {
+                return ($token->getType() !== Lexer::TOKEN_WHITESPACE);
             }
         ));
 
@@ -81,7 +85,7 @@ class JaslangParser implements Parser
             $this->nextToken    = isset($tokens[$i + 1]) ? $tokens[$i + 1] : null;
             
             try {
-                $dfa->transition($token['type']);
+                $dfa->transition($token->getType());
             } catch (TransitionImpossibleException $e) {
                 throw new UnexpectedTokenException($input, $token);
             }
@@ -180,21 +184,21 @@ class JaslangParser implements Parser
             throw new RuntimeException('Cannot create node as no context is present');
         }
         
-        if (DoctrineLexer::isLiteral($this->currentToken)) {
+        if ($this->currentToken->isLiteral()) {
             foreach ($this->typeRepository->getConcreteTypes() as $type) {
                 if ($type->appliesToToken($this->currentToken)) {
-                    $node = new Literal($type, $this->currentToken['value']);
+                    $node = new Literal($type, $this->currentToken->getValue());
                     break;
                 }
             }
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_IDENTIFIER) {
-            $node = new FunctionCall($this->currentToken['value']);
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_OPERATOR) {
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_IDENTIFIER) {
+            $node = new FunctionCall($this->currentToken->getValue());
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
             $lastChild = $context->getLastChild();
 
             if ($lastChild instanceof BinaryOperation) {
                 $previousPrecedence = $this->functionRepository->getOperatorPrecedence($lastChild->getOperator());
-                $thisPrecedence     = $this->functionRepository->getOperatorPrecedence($this->currentToken['value']);
+                $thisPrecedence     = $this->functionRepository->getOperatorPrecedence($this->currentToken->getValue());
 
                 if ($thisPrecedence > $previousPrecedence) {
                     $context = $lastChild;
@@ -203,16 +207,16 @@ class JaslangParser implements Parser
                 }
             }
 
-            $node = new BinaryOperation($this->currentToken['value'], $lastChild);
-        } elseif ($this->currentToken['type'] === Lexer::TOKEN_LEFT_PAREN) {
+            $node = new BinaryOperation($this->currentToken->getValue(), $lastChild);
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
         }
         
         if (!isset($node)) {
             throw new RuntimeException(sprintf(
                 'Unhandled token "%s" [type: %s] in Jaslang parser',
-                $this->currentToken['value'],
-                $this->currentToken['type']
+                $this->currentToken->getValue(),
+                $this->currentToken->getType()
             ));
         }
 

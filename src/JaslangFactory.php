@@ -13,7 +13,7 @@ use Ehimen\Jaslang\FuncDef\Core\Subtract;
 use Ehimen\Jaslang\FuncDef\Core\Sum;
 use Ehimen\Jaslang\Evaluator\FunctionRepository;
 use Ehimen\Jaslang\FuncDef\FuncDef;
-use Ehimen\Jaslang\Lexer\DoctrineLexer;
+use Ehimen\Jaslang\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Parser\JaslangParser;
 use Ehimen\Jaslang\Type\Core\Any;
 use Ehimen\Jaslang\Type\Core\Boolean;
@@ -85,7 +85,7 @@ class JaslangFactory
         
         $invoker = new JaslangInvoker($typeRepo);
         $parser  = new JaslangParser(
-            new DoctrineLexer(
+            new JaslangLexer(
                 $fnRepo->getRegisteredOperatorIdentifiers(),
                 $typeRepo->getConcreteTypeLiteralPatterns()
             ),

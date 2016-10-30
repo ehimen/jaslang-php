@@ -14,13 +14,19 @@ class Dfa
     private $current;
     
     private $accepted = [];
-    
+
+    /**
+     * @param Transition[] $rules
+     * @param string $start
+     * @param array $accepted
+     * @param array $whenEntering
+     */
     public function __construct(array $rules, $start, array $accepted, array $whenEntering)
     {
         foreach ($rules as $rule) {
-            $from  = $rule[0];
-            $how   = $rule[1];
-            $to    = $rule[2];
+            $from  = $rule->getFrom();
+            $how   = $rule->getHow();
+            $to    = $rule->getTo();
             
             if (!isset($this->states[$from])) {
                 $this->states[$from] = [];
@@ -34,8 +40,8 @@ class Dfa
         }
         
         $this->whenEntering = $whenEntering;
-        $this->current     = $start;
-        $this->accepted    = $accepted;
+        $this->current      = $start;
+        $this->accepted     = $accepted;
     }
 
     public function transition($path)

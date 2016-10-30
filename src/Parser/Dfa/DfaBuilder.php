@@ -16,7 +16,7 @@ class DfaBuilder
         }
         
         foreach ($path as $p) {
-            $this->rules[] = [$from, $p, $to];
+            $this->rules[] = new Transition($from, $to, $p);
         }
         
         return $this;

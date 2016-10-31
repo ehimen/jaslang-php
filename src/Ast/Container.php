@@ -26,9 +26,9 @@ class Container implements ParentNode
         return $this->contained->debug();
     }
 
-    public function addChild(Node $child, $replacePrevious = false)
+    public function addChild(Node $child)
     {
-        if (!$replacePrevious && $this->contained) {
+        if ($this->contained) {
             throw new InvalidArgumentException('Cannot add child to a container as it already has one.');
         }
         
@@ -44,9 +44,15 @@ class Container implements ParentNode
         return [$this->contained];
     }
 
-    public function getLastChild()
+    public function getLastChild($pop = false)
     {
-        return $this->contained;
+        $child = $this->contained;
+
+        if ($pop) {
+            $this->contained = null;
+        }
+
+        return $child;
     }
 
 }

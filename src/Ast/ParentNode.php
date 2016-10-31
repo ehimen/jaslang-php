@@ -10,17 +10,11 @@ interface ParentNode extends Node
     /**
      * Adds a child to this node.
      * 
-     * If $replacePrevious is true, this will remove the most-recently-added child.
-     * This facilitates operators in our parser which require shifting of the AST
-     * as binary operators are infix, thus we encounter the left operand before
-     * we encounter the operator itself.
-     * 
      * @param Node $child
-     * @param bool $replacePrevious
      * 
      * @return mixed
      */
-    public function addChild(Node $child, $replacePrevious = false);
+    public function addChild(Node $child);
 
     /**
      * @return Node[]
@@ -29,8 +23,15 @@ interface ParentNode extends Node
 
     /**
      * Gets the child most recently added to this node.
+     *
+     * If $pop is true, this will remove the most-recently-added child.
+     * This facilitates operators in our parser which require shifting of the AST
+     * as with prefix operators, we encounter the left operand(s) before
+     * we encounter the operator itself.
+     *
+     * @param bool $pop
      * 
      * @return Node|null
      */
-    public function getLastChild();
+    public function getLastChild($pop = false);
 }

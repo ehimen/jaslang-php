@@ -75,9 +75,9 @@ class JaslangFactory
         $fnRepo->registerFunction('random', new Random());
 
         // Core operators.
-        $fnRepo->registerOperator('+', $sum, OperatorSignature::binaryOperator());
-        $fnRepo->registerOperator('-', $sub, OperatorSignature::binaryOperator());
-        $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binaryOperator());
+        $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
+        $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
+        $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binary());
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

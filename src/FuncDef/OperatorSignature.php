@@ -28,9 +28,19 @@ class OperatorSignature
         $this->precedence = $precedence;
     }
 
-    public static function binaryOperator($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    public static function binary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
         return new static(1, 1, $precedence);
+    }
+
+    public static function postfixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    {
+        return new static(0, 1, $precedence);
+    }
+
+    public static function prefixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    {
+        return new static(1, 0, $precedence);
     }
 
     /**

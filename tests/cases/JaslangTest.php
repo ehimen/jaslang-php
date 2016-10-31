@@ -218,7 +218,7 @@ JASLANG;
     {
         $factory = new JaslangFactory();
         $factory->registerFunction('foo', new FooFuncDef());
-        $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binaryOperator());
+        $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binary());
         
         $result = $factory->create()->evaluate('"foo" +-+-+-+-+ foo()');
         $this->assertSame('true', $result);
@@ -227,7 +227,7 @@ JASLANG;
     public function testAlphabeticOperator()
     {
         $factory = new JaslangFactory();
-        $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binaryOperator());
+        $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binary());
         $evaluator = $factory->create();
 
         $result = $evaluator->evaluate('false AND true');
@@ -327,7 +327,7 @@ JASLANG;
     private function performMultiplicationTest($input, $multiplicationPrecedence, $expected)
     {
         $factory = new JaslangFactory();
-        $signature = OperatorSignature::binaryOperator($multiplicationPrecedence);
+        $signature = OperatorSignature::binary($multiplicationPrecedence);
         $factory->registerOperator('*', new Multiplication(), $signature);
         $this->assertSame($expected, $factory->create()->evaluate($input));
     }

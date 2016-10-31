@@ -44,8 +44,14 @@ abstract class UnlimitedChildrenParentNode implements ParentNode
         );
     }
 
-    public function getLastChild()
+    public function getLastChild($pop = false)
     {
-        return end($this->children);
+        if ($pop) {
+            $child = array_pop($this->children);
+        } else {
+            $child = end($this->children);
+        }
+
+        return ($child instanceof Node) ? $child : null;
     }
 }

@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang;
 
 use Ehimen\Jaslang\Evaluator\Evaluator;
 use Ehimen\Jaslang\Evaluator\JaslangInvoker;
+use Ehimen\Jaslang\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Type\TypeRepository;
 use Ehimen\Jaslang\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\FuncDef\Core\Identity;
@@ -51,10 +52,10 @@ class JaslangFactory
     public function registerOperator(
         $identifier,
         BinaryFunction $operator,
-        $precedence = FunctionRepository::OPERATOR_PRECEDENCE_DEFAULT
+        OperatorSignature $signature
     ) {
         // TODO: validate identifier against language.
-        $this->getFunctionRepository()->registerOperator($identifier, $operator, $precedence);
+        $this->getFunctionRepository()->registerOperator($identifier, $operator, $signature);
     }
 
     public function registerType($name, Type $type)
@@ -74,9 +75,9 @@ class JaslangFactory
         $fnRepo->registerFunction('random', new Random());
 
         // Core operators.
-        $fnRepo->registerOperator('+', $sum);
-        $fnRepo->registerOperator('-', $sub);
-        $fnRepo->registerOperator('===', new Identity());
+        $fnRepo->registerOperator('+', $sum, OperatorSignature::binaryOperator());
+        $fnRepo->registerOperator('-', $sub, OperatorSignature::binaryOperator());
+        $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binaryOperator());
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

@@ -13,8 +13,6 @@ use Ehimen\Jaslang\Operator\Operator;
  */
 class FunctionRepository
 {
-    const OPERATOR_PRECEDENCE_DEFAULT = 0;
-
     /**
      * @var FuncDef[]
      */
@@ -26,9 +24,9 @@ class FunctionRepository
     private $operators = [];
 
     /**
-     * @var int
+     * @var OperatorSignature[]
      */
-    private $operatorPrecedence = [];
+    private $operatorSignatures = [];
 
     public function registerFunction($identifier, FuncDef $func)
     {
@@ -51,8 +49,11 @@ class FunctionRepository
         return $this->functions[$identifier];
     }
 
-    public function registerOperator($identifier, BinaryFunction $operator, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
-    {
+    public function registerOperator(
+        $identifier,
+        BinaryFunction $operator,
+        OperatorSignature $signature
+    ) {
         if (isset($this->operators[$identifier])) {
             throw new InvalidArgumentException(
                 'Operator with identifier "%s" is already registered',
@@ -60,7 +61,7 @@ class FunctionRepository
             );
         }
 
-        $this->operatorPrecedence[$identifier] = $precedence;
+        $this->operatorSignatures[$identifier] = $signature;
         $this->operators[$identifier]          = $operator;
     }
 
@@ -89,14 +90,14 @@ class FunctionRepository
     /**
      * @param $identifier
      *
-     * @return int
+     * @return OperatorSignature
      */
-    public function getOperatorPrecedence($identifier)
+    public function getOperatorSignature($identifier)
     {
-        if (isset($this->operatorPrecedence[$identifier])) {
-            return $this->operatorPrecedence[$identifier];
+        if (!isset($this->operatorSignatures[$identifier])) {
+            throw new OutOfBoundsException('Operator signature with identifier "%s" not found');
         }
 
-        return static::OPERATOR_PRECEDENCE_DEFAULT;
+        return $this->operatorSignatures[$identifier];
     }
 }

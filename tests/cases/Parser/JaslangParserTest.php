@@ -2,19 +2,21 @@
 
 namespace Ehimen\JaslangTests\Parser;
 
-use Ehimen\Jaslang\Ast\BinaryOperation;
+use Ehimen\Jaslang\Ast\Operator;
 use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
 use Ehimen\Jaslang\Ast\Literal;
 use Ehimen\Jaslang\Ast\Node;
 use Ehimen\Jaslang\Ast\Root;
 use Ehimen\Jaslang\FuncDef\FunctionRepository;
+use Ehimen\Jaslang\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Type\TypeRepository;
 use Ehimen\Jaslang\Lexer\Lexer;
 use Ehimen\Jaslang\Parser\Exception\SyntaxErrorException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedEndOfInputException;
 use Ehimen\Jaslang\Parser\Exception\UnexpectedTokenException;
 use Ehimen\Jaslang\Parser\JaslangParser;
+use Ehimen\Jaslang\Value\Value;
 use Ehimen\JaslangTests\JaslangTestUtil;
 use PHPUnit\Framework\TestCase;
 use Ehimen\Jaslang\Type;
@@ -236,7 +238,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
                 $this->createToken(Lexer::TOKEN_LITERAL, '4', 5)
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '+',
                 $this->numberLiteral(3),
                 $this->numberLiteral(4)
@@ -258,9 +260,9 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_OPERATOR, '+', 7),
                 $this->createToken(Lexer::TOKEN_LITERAL, '5', 8)
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '+',
-                new BinaryOperation(
+                $this->binaryOperator(
                     '+',
                     $this->numberLiteral(3),
                     $this->numberLiteral(4)
@@ -295,20 +297,20 @@ class JaslangParserTest extends TestCase
             new FunctionCall(
                 'sum',
                 [
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '-',
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '+',
                             $this->numberLiteral(3),
                             $this->numberLiteral(4)
                         ),
                         $this->numberLiteral(5)
                     ),
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '+',
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '-',
-                            new BinaryOperation(
+                            $this->binaryOperator(
                                 '+',
                                 $this->numberLiteral(6),
                                 $this->numberLiteral(7)
@@ -357,7 +359,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 12),
                 $this->createToken(Lexer::TOKEN_LITERAL, '2', 13),
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '+',
                 new FunctionCall(
                     'sum',
@@ -396,9 +398,9 @@ class JaslangParserTest extends TestCase
                 'sum',
                 [
                     $this->numberLiteral('1'),
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '+',
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '+',
                             $this->numberLiteral('2'),
                             new FunctionCall(
@@ -429,11 +431,11 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '3', 6),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '+',
                 $this->numberLiteral('1'),
                 new Container(
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '+',
                         $this->numberLiteral('2'),
                         $this->numberLiteral('3')
@@ -508,21 +510,21 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '3', 13),
             ],
             new Root([
-                new BinaryOperation(
+                $this->binaryOperator(
                     '+',
                     $this->numberLiteral('1'),
                     $this->numberLiteral('1')
                 ),
-                new BinaryOperation(
+                $this->binaryOperator(
                     '+',
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '+',
                         $this->numberLiteral('2'),
                         $this->numberLiteral('2')
                     ),
                     $this->numberLiteral('2')
                 ),
-                new BinaryOperation(
+                $this->binaryOperator(
                     '+',
                     $this->numberLiteral('3'),
                     $this->numberLiteral('3')
@@ -560,7 +562,7 @@ class JaslangParserTest extends TestCase
                     'sum',
                     [
                         $this->numberLiteral('2'),
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '+',
                             $this->numberLiteral('3'),
                             $this->numberLiteral('4')
@@ -589,18 +591,20 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_OPERATOR, '-', 4),
                 $this->createToken(Lexer::TOKEN_LITERAL, '1', 5),
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '+',
                 $this->numberLiteral('1'),
-                new BinaryOperation(
+                $this->binaryOperator(
                     '-',
                     $this->numberLiteral('3'),
-                    $this->numberLiteral('1')
-                )
+                    $this->numberLiteral('1'),
+                    10
+                ),
+                0
             ),
             [
-                ['+', 0],
-                ['-', 10],      // Subtract is higher precedence than sum.
+                ['+', OperatorSignature::binaryOperator(0)],
+                ['-', OperatorSignature::binaryOperator(10)],      // Subtract is higher precedence than sum.
             ]
         );
     }
@@ -631,44 +635,51 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '2', 21),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 22),
             ],
-            new BinaryOperation(
+            $this->binaryOperator(
                 '-',
-                new BinaryOperation(
+                $this->binaryOperator(
                     '-',
                     $this->numberLiteral('1'),
-                    new BinaryOperation(
+                    $this->binaryOperator(
                         '+',
                         $this->numberLiteral('3'),
-                        $this->numberLiteral('1')
-                    )
+                        $this->numberLiteral('1'),
+                        10
+                    ),
+                    0
                 ),
                 new FunctionCall(
                     'sum',
                     [
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '-',
-                            new BinaryOperation(
+                            $this->binaryOperator(
                                 '+',
                                 $this->numberLiteral('5'),
-                                $this->numberLiteral('9')
+                                $this->numberLiteral('9'),
+                                10
                             ),
-                            new BinaryOperation(
+                            $this->binaryOperator(
                                 '+',
                                 $this->numberLiteral('1'),
-                                $this->numberLiteral('4')
-                            )
+                                $this->numberLiteral('4'),
+                                10
+                            ),
+                            0
                         ),
-                        new BinaryOperation(
+                        $this->binaryOperator(
                             '+',
                             $this->numberLiteral('1'),
-                            $this->numberLiteral('2')
+                            $this->numberLiteral('2'),
+                            10
                         )
                     ]
-                )
+                ),
+                0
             ),
             [
-                ['-', 0],
-                ['+', 10],      // Subtract is higher precedence than sum.
+                ['-', OperatorSignature::binaryOperator(0)],
+                ['+', OperatorSignature::binaryOperator(10)],      // Subtract is higher precedence than sum.
             ]
         );
     }
@@ -762,7 +773,10 @@ class JaslangParserTest extends TestCase
 
     private function performTest($input, $tokens, Node $expected)
     {
-        $actual = $this->getParser($this->getLexer($input, $tokens))->parse($input)->getFirstChild();
+        $actual = $this
+            ->getParser($this->getLexer($input, $tokens))
+            ->parse($input)
+            ->getFirstChild();
 
         $this->assertEquals($expected, $actual);
     }
@@ -793,12 +807,17 @@ class JaslangParserTest extends TestCase
         return $lexer;
     }
 
-    private function getFunctionRepository(array $operatorPrecedence = [])
+    private function getFunctionRepository(array $operatorSignature = [])
     {
         $repo = $this->createMock(FunctionRepository::class);
 
-        $repo->method('getOperatorPrecedence')
-            ->willReturnMap($operatorPrecedence);
+        $signatureMethod = $repo->method('getOperatorSignature');
+
+        if (!empty($operatorSignature)) {
+            $signatureMethod->willReturnMap($operatorSignature);
+        } else {
+            $signatureMethod->willReturn(OperatorSignature::binaryOperator());
+        }
 
         return $repo;
     }
@@ -852,5 +871,25 @@ class JaslangParserTest extends TestCase
     private function booleanLiteral($value)
     {
         return new Literal(new Type\Core\Boolean(), $value);
+    }
+
+    /**
+     * @return Operator
+     */
+    private function binaryOperator(
+        $operator,
+        Node $lhs,
+        Node $rhs,
+        $precedence = OperatorSignature::OPERATOR_PRECEDENCE_DEFAULT
+    ) {
+        $operator = new Operator(
+            $operator,
+            OperatorSignature::binaryOperator($precedence)
+        );
+
+        $operator->addChild($lhs);
+        $operator->addChild($rhs);
+
+        return $operator;
     }
 }

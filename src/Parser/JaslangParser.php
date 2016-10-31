@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Parser;
 
-use Ehimen\Jaslang\Ast\BinaryOperation;
+use Ehimen\Jaslang\Ast\Operator;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\Container;
 use Ehimen\Jaslang\Ast\FunctionCall;
@@ -197,20 +197,24 @@ class JaslangParser implements Parser
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken->getValue());
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
-            $lastChild = $context->getLastChild();
+            $thisSignature = $this->functionRepository->getOperatorSignature($this->currentToken->getValue());
+            $node          = new Operator($this->currentToken->getValue(), $thisSignature);
 
-            if ($lastChild instanceof BinaryOperation) {
-                $previousPrecedence = $this->functionRepository->getOperatorPrecedence($lastChild->getOperator());
-                $thisPrecedence     = $this->functionRepository->getOperatorPrecedence($this->currentToken->getValue());
+            for ($i = 0; $i < $thisSignature->getLeftArgs(); $i++) {
+                $lastChild = $context->getLastChild();
 
-                if ($thisPrecedence > $previousPrecedence) {
-                    $context = $lastChild;
-                    array_push($this->nodeStack, $lastChild);
-                    $lastChild = $lastChild->getRhs();
+                if ($lastChild instanceof Operator) {
+                    $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
+
+                    if ($thisSignature->getPrecedence() > $previousSignature->getPrecedence()) {
+                        $context = $lastChild;
+                        array_push($this->nodeStack, $lastChild);
+                        $lastChild = $lastChild->getLastChild();
+                    }
                 }
-            }
 
-            $node = new BinaryOperation($this->currentToken->getValue(), $lastChild);
+                $node->addChild($lastChild);
+            }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
         }
@@ -230,11 +234,11 @@ class JaslangParser implements Parser
         // what we're replacing as its LHS (done on construction
         // above). If it's not a binary operation, we simply add
         // it to the end of the parent's children.
-        $context->addChild($node, ($node instanceof BinaryOperation));
+        $context->addChild($node, ($node instanceof Operator));
+        // TODO: don't want to do the above if $context is an operator that doesn't accept RHS args.
 
-        if ($context instanceof BinaryOperation) {
-            // If we're in a binary operator, this is the second argument so we
-            // are closing it.
+        if (($context instanceof Operator) && $context->canBeClosed()) {
+            // All arguments of an operator have been added. Close it.
             $this->closeNode();
         }
         

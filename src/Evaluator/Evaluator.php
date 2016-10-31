@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Evaluator;
 
-use Ehimen\Jaslang\Ast\BinaryOperation;
+use Ehimen\Jaslang\Ast\Operator;
 use Ehimen\Jaslang\Ast\BinaryOperation\AdditionOperation;
 use Ehimen\Jaslang\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Ast\Container;
@@ -122,25 +122,20 @@ class Evaluator
             $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $this->evaluationContext);
         }
         
-        if ($node instanceof BinaryOperation) {
+        if ($node instanceof Operator) {
             try {
                 $operator = $this->repository->getOperator($node->getOperator());
             } catch (OutOfBoundsException $e) {
                 throw new UndefinedOperatorException($node->getOperator());
             }
-            
-            if (!$node->getLhs()) {
-                throw new InvalidArgumentException('Cannot evaluate binary operator as its left operand is missing!');
-            }
-            
-            if (!$node->getRhs()) {
-                throw new InvalidArgumentException('Cannot evaluate binary operator as its right operand is missing!');
-            }
-            
-            $lhs = $this->evaluateNode($node->getLhs());
-            $rhs = $this->evaluateNode($node->getRhs());
 
-            $result = $this->invoker->invokeFunction($operator, new ArgList([$lhs, $rhs]), $this->evaluationContext);
+            $arguments = [];
+
+            foreach ($node->getChildren() as $argument) {
+                $arguments[] = $this->evaluateNode($argument);
+            }
+
+            $result = $this->invoker->invokeFunction($operator, new ArgList($arguments), $this->evaluationContext);
         }
         
         if ($node instanceof ParentNode) {

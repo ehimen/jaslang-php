@@ -10,6 +10,7 @@ use Ehimen\Jaslang\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Evaluator\Trace\TraceEntry;
+use Ehimen\Jaslang\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\JaslangFactory;
 use Ehimen\Jaslang\Value\Core\Num;
 use Ehimen\Jaslang\Value\Core\Str;
@@ -217,7 +218,7 @@ JASLANG;
     {
         $factory = new JaslangFactory();
         $factory->registerFunction('foo', new FooFuncDef());
-        $factory->registerOperator('+-+-+-+-+', new FooOperator());
+        $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binaryOperator());
         
         $result = $factory->create()->evaluate('"foo" +-+-+-+-+ foo()');
         $this->assertSame('true', $result);
@@ -226,7 +227,7 @@ JASLANG;
     public function testAlphabeticOperator()
     {
         $factory = new JaslangFactory();
-        $factory->registerOperator('AND', new AndOperator());
+        $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binaryOperator());
         $evaluator = $factory->create();
 
         $result = $evaluator->evaluate('false AND true');
@@ -326,7 +327,8 @@ JASLANG;
     private function performMultiplicationTest($input, $multiplicationPrecedence, $expected)
     {
         $factory = new JaslangFactory();
-        $factory->registerOperator('*', new Multiplication(), $multiplicationPrecedence);
+        $signature = OperatorSignature::binaryOperator($multiplicationPrecedence);
+        $factory->registerOperator('*', new Multiplication(), $signature);
         $this->assertSame($expected, $factory->create()->evaluate($input));
     }
 

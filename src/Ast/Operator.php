@@ -29,6 +29,12 @@ class Operator extends UnlimitedChildrenParentNode
 
     public function canBeClosed()
     {
+        foreach ($this->getChildren() as $child) {
+            if (($child instanceof static) && !$child->canBeClosed()) {
+                return false;
+            }
+        }
+
         // TODO: should be exactly equal? Should to isValid() or something?
         return count($this->getChildren()) >= $this->getExpectedArgCount();
     }

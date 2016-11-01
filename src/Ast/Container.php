@@ -44,15 +44,13 @@ class Container implements ParentNode
         return [$this->contained];
     }
 
-    public function getLastChild($pop = false)
+    public function getLastChild()
     {
-        $child = $this->contained;
-
-        if ($pop) {
-            $this->contained = null;
-        }
-
-        return $child;
+        return $this->contained;
     }
 
+    public function removeLastChild()
+    {
+        $this->contained = null;
+    }
 }

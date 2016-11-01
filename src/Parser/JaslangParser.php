@@ -205,20 +205,21 @@ class JaslangParser implements Parser
             $children      = [];
 
             for ($i = 0; $i < $thisSignature->getLeftArgs(); $i++) {
-                $lastChild = $context->getLastChild(true);
+                $lastChild = $context->getLastChild();
 
                 if ($lastChild instanceof Operator) {
                     $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
 
                     if ($thisSignature->getPrecedence() > $previousSignature->getPrecedence()) {
-                        array_unshift($children, $lastChild->getLastChild(true));
-                        $context->addChild($lastChild);
+                        array_unshift($children, $lastChild->getLastChild());
+                        $lastChild->removeLastChild();
                         $context = $lastChild;
-                        $skipAdd = true;
+                        continue;
                     }
-                } else {
-                    array_unshift($children, $lastChild);
                 }
+
+                $context->removeLastChild();
+                array_unshift($children, $lastChild);
             }
 
             foreach ($children as $child) {
@@ -243,9 +244,7 @@ class JaslangParser implements Parser
         // what we're replacing as its LHS (done on construction
         // above). If it's not a binary operation, we simply add
         // it to the end of the parent's children.
-        if (empty($skipAdd)) {
-            $context->addChild($node);
-        }
+        $context->addChild($node);
         // TODO: don't want to do the above if $context is an operator that doesn't accept RHS args.
 
         if (($context instanceof Operator) && $context->canBeClosed()) {

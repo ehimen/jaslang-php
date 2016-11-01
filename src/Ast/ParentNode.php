@@ -23,15 +23,17 @@ interface ParentNode extends Node
 
     /**
      * Gets the child most recently added to this node.
-     *
-     * If $pop is true, this will remove the most-recently-added child.
-     * This facilitates operators in our parser which require shifting of the AST
-     * as with prefix operators, we encounter the left operand(s) before
-     * we encounter the operator itself.
-     *
-     * @param bool $pop
      * 
      * @return Node|null
      */
-    public function getLastChild($pop = false);
+    public function getLastChild();
+
+    /**
+     * Removes the most-recently-added child.
+     * 
+     * This facilitates operators in our parser which require shifting of the AST
+     * as with prefix operators, we encounter the left operand(s) before
+     * we encounter the operator itself.
+     */
+    public function removeLastChild();
 }

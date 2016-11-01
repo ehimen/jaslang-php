@@ -593,47 +593,6 @@ class JaslangParserTest extends TestCase
         $signature = OperatorSignature::prefixUnary();
 
         $this->performTestWithOperators(
-            '3++',
-            [
-                $this->createToken(Lexer::TOKEN_LITERAL, '3', 1),
-                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 2),
-            ],
-            $this->operator('++', [$this->numberLiteral('3')], $signature),
-            [
-                ['++', $signature],
-            ]
-        );
-    }
-
-    public function testPrefixBinaryOperator()
-    {
-        $signature = new OperatorSignature(2, 0);
-
-        $this->performTestWithOperators(
-            '4 3 ++',
-            [
-                $this->createToken(Lexer::TOKEN_LITERAL, '4', 1),
-                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
-                $this->createToken(Lexer::TOKEN_LITERAL, '3', 3),
-                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
-                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 5),
-            ],
-            $this->operator(
-                '++',
-                [$this->numberLiteral('4'), $this->numberLiteral('3')],
-                $signature
-            ),
-            [
-                ['++', $signature],
-            ]
-        );
-    }
-
-    public function testPostfixUnaryOperator()
-    {
-        $signature = OperatorSignature::postfixUnary();
-
-        $this->performTestWithOperators(
             '++3',
             [
                 $this->createToken(Lexer::TOKEN_OPERATOR, '++', 1),
@@ -646,7 +605,7 @@ class JaslangParserTest extends TestCase
         );
     }
 
-    public function testPostfixBinaryOperator()
+    public function testPrefixBinaryOperator()
     {
         $signature = new OperatorSignature(0, 2);
 
@@ -662,6 +621,47 @@ class JaslangParserTest extends TestCase
             $this->operator(
                 '++',
                 [$this->numberLiteral('3'), $this->numberLiteral('4')],
+                $signature
+            ),
+            [
+                ['++', $signature],
+            ]
+        );
+    }
+
+    public function testPostfixUnaryOperator()
+    {
+        $signature = OperatorSignature::postfixUnary();
+
+        $this->performTestWithOperators(
+            '3++',
+            [
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 2),
+            ],
+            $this->operator('++', [$this->numberLiteral('3')], $signature),
+            [
+                ['++', $signature],
+            ]
+        );
+    }
+
+    public function testPostfixBinaryOperator()
+    {
+        $signature = new OperatorSignature(2, 0);
+
+        $this->performTestWithOperators(
+            '4 3 ++',
+            [
+                $this->createToken(Lexer::TOKEN_LITERAL, '4', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 3),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 5),
+            ],
+            $this->operator(
+                '++',
+                [$this->numberLiteral('4'), $this->numberLiteral('3')],
                 $signature
             ),
             [
@@ -707,8 +707,8 @@ class JaslangParserTest extends TestCase
 
     public function testNaryOperatorPrecedence()
     {
-        $postfix = new OperatorSignature(0, 2, 0);
-        $prefix  = new OperatorSignature(3, 0, 10);
+        $prefix  = new OperatorSignature(0, 2, 0);
+        $postfix = new OperatorSignature(3, 0, 10);
         
         $this->performTestWithOperators(
             '++ 3 2 1 -- 4',        // Should be interpreted: ++ (3 2 1 --) 4
@@ -735,15 +735,58 @@ class JaslangParserTest extends TestCase
                             $this->numberLiteral('2'),
                             $this->numberLiteral('1'),
                         ],
-                        $prefix
+                        $postfix
                     ),
                     $this->numberLiteral('4'),
+                ],
+                $prefix
+            ),
+            [
+                ['++', $prefix],
+                ['--', $postfix],
+            ]
+        );
+    }
+
+    public function testNaryOperatorDefaultPrecedence()
+    {
+        $prefix  = new OperatorSignature(0, 2);
+        $postfix = new OperatorSignature(3, 0);
+        
+        $this->performTestWithOperators(
+            '4 ++ 3 2 1 --',        // Should be interpreted: 4 (++ 3 2) 1 --
+            [
+                $this->createToken(Lexer::TOKEN_LITERAL, '4', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 3),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 6),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL, '2', 8),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 9),
+                $this->createToken(Lexer::TOKEN_LITERAL, '1', 10),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 11),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '--', 12),
+            ],
+            $this->operator(
+                '--',
+                [
+                    $this->numberLiteral('4'),
+                    $this->operator(
+                        '++',
+                        [
+                            $this->numberLiteral('3'),
+                            $this->numberLiteral('2'),
+                        ],
+                        $prefix
+                    ),
+                    $this->numberLiteral('1'),
                 ],
                 $postfix
             ),
             [
-                ['++', $postfix],
-                ['--', $prefix],
+                ['++', $prefix],
+                ['--', $postfix],
             ]
         );
     }

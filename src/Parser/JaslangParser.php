@@ -191,41 +191,11 @@ class JaslangParser implements Parser
         }
         
         if ($this->currentToken->isLiteral()) {
-            foreach ($this->typeRepository->getConcreteTypes() as $type) {
-                if ($type->appliesToToken($this->currentToken)) {
-                    $node = new Literal($type, $this->currentToken->getValue());
-                    break;
-                }
-            }
+            $node = $this->createLiteral();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_IDENTIFIER) {
             $node = new FunctionCall($this->currentToken->getValue());
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
-            $thisSignature = $this->functionRepository->getOperatorSignature($this->currentToken->getValue());
-            $node          = new Operator($this->currentToken->getValue(), $thisSignature);
-            $children      = [];
-
-            for ($i = 0; $i < $thisSignature->getLeftArgs(); $i++) {
-                $lastChild = $context->getLastChild();
-
-                if ($lastChild instanceof Operator) {
-                    $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
-
-                    if ($thisSignature->getPrecedence() > $previousSignature->getPrecedence()) {
-                        array_unshift($children, $lastChild->getLastChild());
-                        $lastChild->removeLastChild();
-                        $context = $lastChild;
-                        array_push($this->nodeStack, $context);
-                        continue;
-                    }
-                }
-
-                $context->removeLastChild();
-                array_unshift($children, $lastChild);
-            }
-
-            foreach ($children as $child) {
-                $node->addChild($child);
-            }
+            $node = $this->createOperator($context);
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
         }
@@ -237,31 +207,38 @@ class JaslangParser implements Parser
                 $this->currentToken->getType()
             ));
         }
-
-        // If we're creating a binary node, its infix nature
-        // means we need to shift the AST a bit.
-        // We take the place of the most recently added
-        // node in our context. We ensure our operator takes
-        // what we're replacing as its LHS (done on construction
-        // above). If it's not a binary operation, we simply add
-        // it to the end of the parent's children.
+        
         $context->addChild($node);
-        // TODO: don't want to do the above if $context is an operator that doesn't accept RHS args.
-
+        
+        // Creation of nodes can imply a closing of operator nodes.
+        // E.g. for the term "3 + 4", we'd close the operator on the
+        // final token, "4".
+        // This loop closes all operators that we can in case termination
+        // of this operator implies termination of other.e.g. "3 + 4 + 5".
+        // The "5" terminates both operator nodes.
         while (($context instanceof Operator) && $context->canBeClosed()) {
-            // All arguments of an operator have been added. Close it.
             $this->closeNode();
             $context = end($this->nodeStack);
         }
         
         if ($node instanceof ParentNode) {
+            // If we have a node that can have children,
+            // push this to our stack so that the next iteration
+            // will be creating nodes in this context.
             array_push($this->nodeStack, $node);
-        }
 
-        while (($node instanceof Operator) && $node->canBeClosed()) {
-            // All arguments of an operator have been added. Close it.
-            $this->closeNode();
-            $node = end($this->nodeStack);
+            // Operator nodes are a special case as we may need to
+            // close them immediately if they've already been 
+            // constructed with all of their required operands.
+            // Example, a postfix operator that has already has
+            // its operand as it was the previous token. We've shuffled
+            // the AST when creating the node, we just need to close
+            // the the node now, looping in case the closing of this node
+            // means that parent nodes are closable.
+            while (($node instanceof Operator) && $node->canBeClosed()) {
+                $this->closeNode();
+                $node = end($this->nodeStack);
+            }
         }
     }
 
@@ -275,5 +252,62 @@ class JaslangParser implements Parser
         }
 
         array_pop($this->nodeStack);
+    }
+
+    /**
+     * This logic handles operator precedence.
+     * 
+     * Because some operators can appear after their operands (postfix),
+     * we sometimes need reshuffle the AST a bit. Context made be modified
+     * to reflect a potentially new context node.
+     * 
+     * @param ParentNode $context
+     * 
+     * @return Operator
+     */
+    private function createOperator(ParentNode &$context)
+    {
+        $signature = $this->functionRepository->getOperatorSignature($this->currentToken->getValue());
+        $node      = new Operator($this->currentToken->getValue(), $signature);
+        $children  = [];
+
+        for ($i = 0; $i < $signature->getLeftArgs(); $i++) {
+            $lastChild = $context->getLastChild();
+
+            if ($lastChild instanceof Operator) {
+                $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
+
+                if ($signature->takesPrecedenceOver($previousSignature)) {
+                    array_unshift($children, $lastChild->getLastChild());
+                    $lastChild->removeLastChild();
+                    $context = $lastChild;
+                    array_push($this->nodeStack, $context);
+                    continue;
+                }
+            }
+
+            $context->removeLastChild();
+            array_unshift($children, $lastChild);
+        }
+
+        foreach ($children as $child) {
+            $node->addChild($child);
+        }
+        
+        return $node;
+    }
+
+    /**
+     * @return Literal|null
+     */
+    private function createLiteral()
+    {
+        foreach ($this->typeRepository->getConcreteTypes() as $type) {
+            if ($type->appliesToToken($this->currentToken)) {
+                return new Literal($type, $this->currentToken->getValue());
+            }
+        }
+        
+        return null;
     }
 }

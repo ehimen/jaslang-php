@@ -28,20 +28,47 @@ class OperatorSignature
         $this->precedence = $precedence;
     }
 
+    /**
+     * Create a signature for an infix binary operator, with $precedence.
+     * 
+     * Example: addition, 2 + 3
+     * 
+     * @param int $precedence
+     * 
+     * @return static
+     */
     public static function binary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
         return new static(1, 1, $precedence);
     }
 
+    /**
+     * Create a signature for a postfix unary operator, with $precedence.
+     *
+     * Example: postfix increment, x++
+     *
+     * @param int $precedence
+     *
+     * @return static
+     */
     public static function postfixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        // TODO: postfix/prefix language is probably the wrong way around.
-        return new static(0, 1, $precedence);
+        return new static(1, 0, $precedence);
     }
 
+
+    /**
+     * Create a signature for a prefix unary operator, with $precedence.
+     *
+     * Example: prefix increment, ++x
+     *
+     * @param int $precedence
+     *
+     * @return static
+     */
     public static function prefixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return new static(1, 0, $precedence);
+        return new static(0, 1, $precedence);
     }
 
     /**
@@ -66,5 +93,10 @@ class OperatorSignature
     public function getPrecedence()
     {
         return $this->precedence;
+    }
+
+    public function takesPrecedenceOver(self $other)
+    {
+        return ($this->precedence > $other->precedence);
     }
 }

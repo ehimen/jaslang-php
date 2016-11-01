@@ -9,7 +9,11 @@ class Operator extends UnlimitedChildrenParentNode
     private $operator;
 
     private $signature;
-    
+
+    /**
+     * @param string $operator
+     * @param OperatorSignature $signature
+     */
     public function __construct($operator, OperatorSignature $signature)
     {
         $this->operator = $operator;

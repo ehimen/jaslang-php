@@ -35,6 +35,7 @@ class OperatorSignature
 
     public static function postfixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
+        // TODO: postfix/prefix language is probably the wrong way around.
         return new static(0, 1, $precedence);
     }
 

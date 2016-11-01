@@ -214,6 +214,7 @@ class JaslangParser implements Parser
                         array_unshift($children, $lastChild->getLastChild());
                         $lastChild->removeLastChild();
                         $context = $lastChild;
+                        array_push($this->nodeStack, $context);
                         continue;
                     }
                 }
@@ -247,18 +248,20 @@ class JaslangParser implements Parser
         $context->addChild($node);
         // TODO: don't want to do the above if $context is an operator that doesn't accept RHS args.
 
-        if (($context instanceof Operator) && $context->canBeClosed()) {
+        while (($context instanceof Operator) && $context->canBeClosed()) {
             // All arguments of an operator have been added. Close it.
             $this->closeNode();
+            $context = end($this->nodeStack);
         }
         
         if ($node instanceof ParentNode) {
             array_push($this->nodeStack, $node);
         }
 
-        if (($node instanceof Operator) && $node->canBeClosed()) {
+        while (($node instanceof Operator) && $node->canBeClosed()) {
             // All arguments of an operator have been added. Close it.
             $this->closeNode();
+            $node = end($this->nodeStack);
         }
     }
 

@@ -596,7 +596,7 @@ class JaslangParserTest extends TestCase
             '3++',
             [
                 $this->createToken(Lexer::TOKEN_LITERAL, '3', 1),
-                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 3),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 2),
             ],
             $this->operator('++', [$this->numberLiteral('3')], $signature),
             [
@@ -625,6 +625,125 @@ class JaslangParserTest extends TestCase
             ),
             [
                 ['++', $signature],
+            ]
+        );
+    }
+
+    public function testPostfixUnaryOperator()
+    {
+        $signature = OperatorSignature::postfixUnary();
+
+        $this->performTestWithOperators(
+            '++3',
+            [
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 3),
+            ],
+            $this->operator('++', [$this->numberLiteral('3')], $signature),
+            [
+                ['++', $signature],
+            ]
+        );
+    }
+
+    public function testPostfixBinaryOperator()
+    {
+        $signature = new OperatorSignature(0, 2);
+
+        $this->performTestWithOperators(
+            '++ 3 4',
+            [
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 4),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL, '4', 6),
+            ],
+            $this->operator(
+                '++',
+                [$this->numberLiteral('3'), $this->numberLiteral('4')],
+                $signature
+            ),
+            [
+                ['++', $signature],
+            ]
+        );
+    }
+
+    public function testNaryOperator()
+    {
+        $signature = new OperatorSignature(3, 2);
+
+        $this->performTestWithOperators(
+            '4 3 2 ++ 5 6',
+            [
+                $this->createToken(Lexer::TOKEN_LITERAL, '4', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 2),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 3),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 4),
+                $this->createToken(Lexer::TOKEN_LITERAL, '2', 5),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 6),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL, '5', 9),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 10),
+                $this->createToken(Lexer::TOKEN_LITERAL, '6', 11),
+            ],
+            $this->operator(
+                '++',
+                [
+                    $this->numberLiteral('4'),
+                    $this->numberLiteral('3'),
+                    $this->numberLiteral('2'),
+                    $this->numberLiteral('5'),
+                    $this->numberLiteral('6'),
+                ],
+                $signature
+            ),
+            [
+                ['++', $signature],
+            ]
+        );
+    }
+
+    public function testNaryOperatorPrecedence()
+    {
+        $postfix = new OperatorSignature(0, 2, 0);
+        $prefix  = new OperatorSignature(3, 0, 10);
+        
+        $this->performTestWithOperators(
+            '++ 3 2 1 -- 4',        // Should be interpreted: ++ (3 2 1 --) 4
+            [
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 1),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 3),
+                $this->createToken(Lexer::TOKEN_LITERAL, '3', 4),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+                $this->createToken(Lexer::TOKEN_LITERAL, '2', 6),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL, '1', 8),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 9),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '--', 11),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 12),
+                $this->createToken(Lexer::TOKEN_LITERAL, '4', 13),
+            ],
+            $this->operator(
+                '++',
+                [
+                    $this->operator(
+                        '--',
+                        [
+                            $this->numberLiteral('3'),
+                            $this->numberLiteral('2'),
+                            $this->numberLiteral('1'),
+                        ],
+                        $prefix
+                    ),
+                    $this->numberLiteral('4'),
+                ],
+                $postfix
+            ),
+            [
+                ['++', $postfix],
+                ['--', $prefix],
             ]
         );
     }

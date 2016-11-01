@@ -43,11 +43,12 @@ The list of core functions is currently very limited due to focus on the engire.
 
 ## TODO
 
-* Evaluation context: program output, pure functions?
 * Variables
-* Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
-* Implement some decent core functions.
+* Revisit test suite, implementing useful test function/types in PHP resources. Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
+* Following on from test suite revisit, consider removing core types/functions/operators?
 * Unary operators (bool negation)
+* Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
+* Evaluation context: program output, pure functions?
 * Ternary operator?
 * Clean up phar/build
 * Return types

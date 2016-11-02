@@ -2,7 +2,7 @@
 
 namespace Ehimen\JaslangTests;
 
-use Ehimen\Jaslang\Lexer\Token;
+use Ehimen\Jaslang\Engine\Lexer\Token;
 
 trait JaslangTestUtil
 {

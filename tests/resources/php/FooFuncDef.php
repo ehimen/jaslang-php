@@ -2,10 +2,10 @@
 
 namespace Ehimen\JaslangTestResources;
 
-use Ehimen\Jaslang\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\FuncDef\Arg\ArgList;
-use Ehimen\Jaslang\FuncDef\FuncDef;
-use Ehimen\Jaslang\Value\Core\Str;
+use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Core\Value\Str;
 
 /**
  * Returns the string "foo".

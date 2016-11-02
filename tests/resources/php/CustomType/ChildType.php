@@ -2,9 +2,9 @@
 
 namespace Ehimen\JaslangTestResources\CustomType;
 
-use Ehimen\Jaslang\Lexer\Token;
-use Ehimen\Jaslang\Type\ConcreteType;
-use Ehimen\Jaslang\Value\Value;
+use Ehimen\Jaslang\Engine\Lexer\Token;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 class ChildType implements ConcreteType
 {

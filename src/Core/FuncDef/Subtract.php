@@ -1,13 +1,13 @@
 <?php
 
-namespace Ehimen\JaslangTestResources;
+namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\Value\Num;
 use Ehimen\Jaslang\Engine\Value\Value;
 use Ehimen\Jaslang\Core\Type;
 
-class Multiplication extends BinaryFunction
+class Subtract extends BinaryFunction
 {
     protected function getLeftArgType()
     {
@@ -23,6 +23,6 @@ class Multiplication extends BinaryFunction
     {
         /** @var Num $left */
         /** @var Num $right */
-        return new Num($left->getValue() * $right->getValue());
+        return new Num($left->getValue() - $right->getValue());
     }
 }

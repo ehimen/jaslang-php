@@ -1,17 +1,37 @@
 # Jaslang
 
-A language capable of parsing and evaluating simple expressions. Written in PHP.
+Jaslang is split in to two parts: the engine and the core language.
 
-The output of a Jaslang expression is a single string. Jaslang supports expressions of arbitrary complexity.
-Currently supported language features:
+* The engine is a framework for defining & implementing a language.
+* The core language is a programming language built using the engine.
 
-* Functions, including support for easily creating user-defined functions.
-* Binary operators, including support for easily creating user-defined operators.
-* Simple type system: Number, String and Boolean.
-* A parse engine built with distinct lexical and AST-phases.
+These two parts of the project are contained in this repository, but may
+be separated in the future. Written in PHP.
+
+## Jaslang Engine
+
+A lexer, parser and evaluator. Development of the engine is driven
+by requirements of the core language. Whilst this imposes some constraints
+on the kinds of languages that can be defined, the engine aims to be
+abstracted and extensible enough to define languages beyond Jaslang.
+It comprises of:
+
+* A language parser with distinct lexical and AST-phases.
 * Debugging information, including syntax checks and evaluation traces.
+* Pluggable system for types, functions and operators.
 
-## Examples
+## Jaslang Language
+
+A language designed around the evaluation of simple expressions.
+
+The output of a Jaslang expression is a single string. Jaslang supports 
+expressions of arbitrary complexity. Currently supported language 
+features:
+
+* Simple type system: Number, String and Boolean.
+* Multiple statements, program output is based on the final statement.
+
+### Examples
 
 ```
 # Numbers, functions and operators.
@@ -39,21 +59,17 @@ random("hello world")                   // Jaslang runtime exception! Invalid ar
                                         // #2 > random("hello world")
 ```
 
-The list of core functions is currently very limited due to focus on the engire.
+The list of core functions is currently very limited due to focus on the engine.
 
-## TODO
+# TODO
 
-* Variables
-* Revisit test suite, implementing useful test function/types in PHP resources. Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
-* Following on from test suite revisit, consider removing core types/functions/operators?
 * Unary operators (bool negation)
+* Variables
+* Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
 * Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
 * Evaluation context: program output, pure functions?
 * Ternary operator?
 * Clean up phar/build
 * Return types
-* Default operator precedence.
-* Work on string-like type.
 * Doc-generation tool.
 * AST dumps, allowing Jaslang (or other) interpreters to be written in other languages. PHP does the "compile" phase
-* More generic solution to lexer/parser, allowing creation of arbitrary languages

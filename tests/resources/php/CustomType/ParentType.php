@@ -2,8 +2,8 @@
 
 namespace Ehimen\JaslangTestResources\CustomType;
 
-use Ehimen\Jaslang\Type\Core\Any;
-use Ehimen\Jaslang\Type\Type;
+use Ehimen\Jaslang\Engine\Type\Core\Any;
+use Ehimen\Jaslang\Engine\Type\Type;
 
 class ParentType implements Type
 {

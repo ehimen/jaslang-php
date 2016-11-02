@@ -2,7 +2,7 @@
 
 namespace Ehimen\JaslangTestResources\CustomType;
 
-use Ehimen\Jaslang\Value\Value;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 class ChildValue implements Value
 {

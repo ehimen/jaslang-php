@@ -1,28 +1,28 @@
 <?php
 
-namespace Ehimen\JaslangTestResources;
+namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
+use Ehimen\Jaslang\Core\Type\Num as NumType;
 use Ehimen\Jaslang\Core\Value\Num;
 use Ehimen\Jaslang\Engine\Value\Value;
-use Ehimen\Jaslang\Core\Type;
 
-class Multiplication extends BinaryFunction
+class Sum extends BinaryFunction
 {
     protected function getLeftArgType()
     {
-        return new Type\Num();
+        return new NumType();
     }
 
     protected function getRightArgType()
     {
-        return new Type\Num();
+        return new NumType();
     }
 
     protected function performOperation(Value $left, Value $right)
     {
         /** @var Num $left */
         /** @var Num $right */
-        return new Num($left->getValue() * $right->getValue());
+        return new Num($left->getValue() + $right->getValue());
     }
 }

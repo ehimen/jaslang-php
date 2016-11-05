@@ -15,6 +15,10 @@ use Ehimen\Jaslang\Engine\Value\Value;
 interface Invoker
 {
     /**
+     * @param FuncDef           $function
+     * @param ArgList           $args
+     * @param EvaluationContext $context
+     *
      * @return Value
      */
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context);

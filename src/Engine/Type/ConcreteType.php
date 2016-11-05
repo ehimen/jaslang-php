@@ -16,6 +16,11 @@ interface ConcreteType extends Type
      */
     public function createValue($value);
 
+    /**
+     * @param Value $value
+     *
+     * @return bool
+     */
     public function appliesToValue(Value $value);
 
     /**
@@ -28,6 +33,8 @@ interface ConcreteType extends Type
      * Describes the value as would be interpreted by the type.
      *
      * Used for debugging/error reporting.
+     *
+     * @param mixed $value
      *
      * @return string
      */

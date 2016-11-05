@@ -37,6 +37,8 @@ class JaslangInvoker implements Invoker
     /**
      * @param ArgDef[] $argDefs
      * @param ArgList $args
+     *
+     * @throws InvalidArgumentException
      */
     private function validateArgs(array $argDefs, ArgList $args)
     {

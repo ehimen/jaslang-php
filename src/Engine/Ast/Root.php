@@ -14,7 +14,7 @@ class Root extends UnlimitedChildrenParentNode
      */
     public function getFirstChild()
     {
-        $child = reset($this->getChildren());
+        $child = current($this->getChildren());
 
         if (!($child instanceof Node)) {
             throw new OutOfBoundsException('Cannot get first child Root node does not contain any children.');

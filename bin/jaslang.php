@@ -2,6 +2,10 @@
 
 // TODO: de-rubbish this.
 
+use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Engine\Parser\Exception\SyntaxErrorException;
+use Ehimen\Jaslang\Core\JaslangFactory;
+
 require_once 'vendor/autoload.php';
 
 if (!isset($argv[1])) {
@@ -28,12 +32,12 @@ if (strlen($jaslang) === 0) {
 }
 
 try {
-    echo (new Ehimen\Jaslang\JaslangFactory())->create()->evaluate($jaslang);
-} catch (\Ehimen\Jaslang\Evaluator\Exception\RuntimeException $e) {
+    echo (new JaslangFactory())->create()->evaluate($jaslang);
+} catch (RuntimeException $e) {
     echo $e->getMessage();
     echo PHP_EOL;
     echo $e->getEvaluationTrace()->getAsString();
-} catch (\Ehimen\Jaslang\Parser\Exception\SyntaxErrorException $e) {
+} catch (SyntaxErrorException $e) {
     echo $e->getMessage();
 }
 

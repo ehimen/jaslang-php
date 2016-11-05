@@ -6,7 +6,7 @@ use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 
 /**
  * Contains a single node in the AST.
- * 
+ *
  * This is output by our parser to signify parenthesis grouping.
  */
 class Container implements ParentNode

@@ -4,10 +4,10 @@ namespace Ehimen\Jaslang\Engine\Value;
 
 /**
  * A value whose type is native to PHP.
- * 
+ *
  * This is convenience for simple types which wrap a native value.
  */
-abstract class Native implements Value 
+abstract class Native implements Value
 {
     protected $value;
     

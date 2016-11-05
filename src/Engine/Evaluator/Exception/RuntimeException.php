@@ -8,7 +8,7 @@ use Ehimen\Jaslang\Engine\Exception\EvaluationException;
 /**
  * An exception encountered whilst evaluating Jaslang input.
  */
-class RuntimeException extends EvaluationException 
+class RuntimeException extends EvaluationException
 {
     protected $evaluationTrace;
 

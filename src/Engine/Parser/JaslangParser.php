@@ -112,7 +112,7 @@ class JaslangParser implements Parser
             $this->createNode();
         };
         
-        $closeNode = function() {
+        $closeNode = function () {
             $this->closeNode();
         };
 
@@ -129,38 +129,38 @@ class JaslangParser implements Parser
         $stateTerm  = 'state-term';
 
         $builder
-            ->addRule($start,      Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($start,      $literalTokens,           $literal)
-            ->addRule($start,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
-            ->addRule($start,      Lexer::TOKEN_OPERATOR,    $operator)
-            ->addRule($literal,    Lexer::TOKEN_OPERATOR,    $operator)
-            ->addRule($literal,    Lexer::TOKEN_COMMA,       $comma)
-            ->addRule($literal,    Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($literal,    Lexer::TOKEN_STATETERM,   $stateTerm)
-            ->addRule($literal,    Lexer::TOKEN_LITERAL,     $literal)
-            ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($operator,   $literalTokens,           $literal)
-            ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN,  $fnOpen)
-            ->addRule($fnOpen,     Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($fnOpen,     $literalTokens,           $literal)
-            ->addRule($fnOpen,     Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($parenClose, Lexer::TOKEN_COMMA,       $comma)
+            ->addRule($start, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($start, $literalTokens, $literal)
+            ->addRule($start, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($start, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($literal, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($literal, Lexer::TOKEN_COMMA, $comma)
+            ->addRule($literal, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($literal, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($literal, Lexer::TOKEN_LITERAL, $literal)
+            ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($operator, $literalTokens, $literal)
+            ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN, $fnOpen)
+            ->addRule($fnOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($fnOpen, $literalTokens, $literal)
+            ->addRule($fnOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($parenClose, Lexer::TOKEN_COMMA, $comma)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($parenClose, Lexer::TOKEN_OPERATOR,    $operator)
-            ->addRule($parenClose, Lexer::TOKEN_STATETERM,   $stateTerm)
-            ->addRule($comma,      $literalTokens,           $literal)
-            ->addRule($comma,      Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($comma,      Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
-            ->addRule($operator,   Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($operator,   $literalTokens,           $literal)
-            ->addRule($operator,   Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
-            ->addRule($parenOpen,  Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
-            ->addRule($parenOpen,  Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($parenOpen,  $literalTokens,           $literal)
-            ->addRule($parenOpen,  Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($stateTerm,  Lexer::TOKEN_IDENTIFIER,  $identifier)
-            ->addRule($stateTerm,  $literalTokens,           $literal)
-            ->addRule($stateTerm,  Lexer::TOKEN_LEFT_PAREN,  $parenOpen)
+            ->addRule($parenClose, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($parenClose, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($comma, $literalTokens, $literal)
+            ->addRule($comma, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($comma, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($operator, $literalTokens, $literal)
+            ->addRule($operator, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($parenOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($parenOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($parenOpen, $literalTokens, $literal)
+            ->addRule($parenOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($stateTerm, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($stateTerm, $literalTokens, $literal)
+            ->addRule($stateTerm, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -224,7 +224,7 @@ class JaslangParser implements Parser
             array_push($this->nodeStack, $node);
 
             // Operator nodes are a special case as we may need to
-            // close them immediately if they've already been 
+            // close them immediately if they've already been
             // constructed with all of their required operands.
             // Example, a postfix operator that has already has
             // its operand as it was the previous token. We've shuffled
@@ -252,13 +252,13 @@ class JaslangParser implements Parser
 
     /**
      * This logic handles operator precedence.
-     * 
+     *
      * Because some operators can appear after their operands (postfix),
      * we sometimes need reshuffle the AST a bit. Context made be modified
      * to reflect a potentially new context node.
-     * 
+     *
      * @param ParentNode $context
-     * 
+     *
      * @return Operator
      */
     private function createOperator(ParentNode &$context)

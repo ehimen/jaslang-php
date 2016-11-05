@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
  * Dispatches function calls. Serves as an extension point to provide context to functions being invoked.
- * 
+ *
  * Quas wex exort.
  */
 interface Invoker

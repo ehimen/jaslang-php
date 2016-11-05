@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Core\Value\Str as StrValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class Str implements ConcreteType 
+class Str implements ConcreteType
 {
     public function createValue($value)
     {
@@ -43,10 +43,10 @@ class Str implements ConcreteType
 
     /**
      * {@inheritdoc}
-     * 
+     *
      * Strings are a special case and require special handling in the lexer around escaping.
      * Thus, strings have their own dedicated token and handling is hardcoded in the lexer.
-     * We don't need to capture anything more. 
+     * We don't need to capture anything more.
      */
     public function getLiteralPattern()
     {

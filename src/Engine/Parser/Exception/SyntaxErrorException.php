@@ -4,7 +4,7 @@ namespace Ehimen\Jaslang\Engine\Parser\Exception;
 
 use Ehimen\Jaslang\Engine\Exception\EvaluationException;
 
-class SyntaxErrorException extends EvaluationException 
+class SyntaxErrorException extends EvaluationException
 {
     public function __construct($input, $message = '')
     {

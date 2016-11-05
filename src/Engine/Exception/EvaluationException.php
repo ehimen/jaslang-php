@@ -4,7 +4,7 @@ namespace Ehimen\Jaslang\Engine\Exception;
 
 /**
  * Any exception that is a result of processing Jaslang.
- * 
+ *
  * This indicates an error with some Jaslang input, not
  * a programming error in the Jaslang library.
  */

@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
  * Are two operands identical?
- * 
+ *
  * This is the === operator in PHP.
  */
 class Identity extends BinaryFunction

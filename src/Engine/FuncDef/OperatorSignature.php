@@ -30,11 +30,11 @@ class OperatorSignature
 
     /**
      * Create a signature for an infix binary operator, with $precedence.
-     * 
+     *
      * Example: addition, 2 + 3
-     * 
+     *
      * @param int $precedence
-     * 
+     *
      * @return static
      */
     public static function binary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)

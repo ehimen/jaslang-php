@@ -65,10 +65,10 @@ class JaslangInvoker implements Invoker
 
     /**
      * TODO: extract to dedicated class.
-     * 
+     *
      * @param $expected
      * @param $actual
-     * 
+     *
      * @return bool
      */
     private function typesMatch(Type $expected, Type $actual)

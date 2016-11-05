@@ -7,7 +7,7 @@ use Ehimen\Jaslang\Engine\Value\Value;
 /**
  * Indicates that an invalid argument was provided to a Jaslang function.
  */
-class InvalidArgumentException extends RuntimeException 
+class InvalidArgumentException extends RuntimeException
 {
     /**
      * @var string

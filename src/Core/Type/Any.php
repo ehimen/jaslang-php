@@ -8,7 +8,7 @@ class Any implements Type
 {
     /**
      * {@inheritdoc}
-     * 
+     *
      * Any is our base type. It does not extend anything.
      */
     public function getParent()

@@ -27,7 +27,7 @@ interface Lexer
 
     /**
      * @param string $input
-     * 
+     *
      * @return Token[]
      */
     public function tokenize($input);

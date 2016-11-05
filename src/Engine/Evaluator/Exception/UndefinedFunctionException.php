@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Exception;
 
-class UndefinedFunctionException extends RuntimeException 
+class UndefinedFunctionException extends RuntimeException
 {
     private $identifier;
     

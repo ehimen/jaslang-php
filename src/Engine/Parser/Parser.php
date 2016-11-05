@@ -8,7 +8,7 @@ interface Parser
 {
     /**
      * @param string
-     * 
+     *
      * @return Root
      */
     public function parse($input);

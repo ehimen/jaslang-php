@@ -54,7 +54,7 @@ class Evaluator
 
     /**
      * @param $input
-     * 
+     *
      * @return string
      * @throws RuntimeException
      */

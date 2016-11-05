@@ -3,18 +3,14 @@
 namespace Ehimen\Jaslang\Engine\Parser;
 
 use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Engine\Ast\Container;
 use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
-use Ehimen\Jaslang\Engine\Ast\NumberLiteral;
 use Ehimen\Jaslang\Engine\Ast\ParentNode;
 use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\StringLiteral;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
-use Ehimen\Jaslang\Engine\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Engine\Lexer\Lexer;
 use Ehimen\Jaslang\Engine\Lexer\Token;
 use Ehimen\Jaslang\Engine\Parser\Dfa\DfaBuilder;

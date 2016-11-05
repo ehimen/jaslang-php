@@ -2,7 +2,6 @@
 
 namespace Ehimen\Jaslang\Engine\Lexer;
 
-use Doctrine\Common\Lexer\AbstractLexer;
 use Ehimen\Jaslang\Engine\Parser\Exception\UnexpectedEndOfInputException;
 
 /**

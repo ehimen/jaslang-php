@@ -4,9 +4,6 @@ namespace Ehimen\Jaslang\Engine\FuncDef;
 
 use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
-use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
-use Ehimen\Jaslang\Engine\Operator\Operator;
 
 /**
  * TODO: Type-hinting here on BinaryFunction will be limiting. Need more general OperatorFunction?

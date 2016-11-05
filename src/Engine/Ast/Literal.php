@@ -3,7 +3,6 @@
 namespace Ehimen\Jaslang\Engine\Ast;
 
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
-use Ehimen\Jaslang\Engine\Type\Type;
 
 class Literal implements Node
 {

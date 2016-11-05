@@ -175,15 +175,15 @@ JASLANG;
     {
         $expected = new UndefinedFunctionException('definitelynotacorefunction');
         
-        $expected->setInput('sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))');
+        $expected->setInput('sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))');
         $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))'),
-            new TraceEntry('rand(sum(4, 3), definitelynotacorefunction("100"))'),
+            new TraceEntry('sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))'),
+            new TraceEntry('random(sum(4, 3), definitelynotacorefunction("100"))'),
             new TraceEntry('definitelynotacorefunction("100")'),
         ]));
         
         $this->performRuntimeExceptionTest(
-            'sum(sum(1, 3), rand(sum(4, 3), definitelynotacorefunction("100")))',
+            'sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))',
             $expected
         );
     }

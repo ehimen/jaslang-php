@@ -101,16 +101,18 @@ class Evaluator
         }
         
         if ($node instanceof FunctionCall) {
-            $arguments = [];
-            
-            foreach ($node->getArguments() as $argument) {
-                $arguments[] = $this->evaluateNode($argument);
-            }
-            
+            // Attempt to get the function definition before evaluating
+            // arguments as this allows for early failure.
             try {
                 $funcDef = $this->repository->getFunction($node->getName());
             } catch (OutOfBoundsException $e) {
                 throw new UndefinedFunctionException($node->getName());
+            }
+
+            $arguments = [];
+
+            foreach ($node->getArguments() as $argument) {
+                $arguments[] = $this->evaluateNode($argument);
             }
             
             $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $this->evaluationContext);

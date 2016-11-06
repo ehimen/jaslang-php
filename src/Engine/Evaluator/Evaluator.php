@@ -3,15 +3,11 @@
 namespace Ehimen\Jaslang\Engine\Evaluator;
 
 use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\BinaryOperation\AdditionOperation;
-use Ehimen\Jaslang\Engine\Ast\BooleanLiteral;
 use Ehimen\Jaslang\Engine\Ast\Container;
 use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
-use Ehimen\Jaslang\Engine\Ast\NumberLiteral;
 use Ehimen\Jaslang\Engine\Ast\ParentNode;
-use Ehimen\Jaslang\Engine\Ast\StringLiteral;
 use Ehimen\Jaslang\Engine\Evaluator\Context\NullContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
@@ -23,9 +19,6 @@ use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Parser;
-use Ehimen\Jaslang\Engine\Value\Core\Boolean;
-use Ehimen\Jaslang\Engine\Value\Core\Num;
-use Ehimen\Jaslang\Engine\Value\Core\Str;
 
 class Evaluator
 {
@@ -61,8 +54,9 @@ class Evaluator
 
     /**
      * @param $input
-     * 
+     *
      * @return string
+     * @throws RuntimeException
      */
     public function evaluate($input)
     {

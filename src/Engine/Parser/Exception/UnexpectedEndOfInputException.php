@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Parser\Exception;
 
-class UnexpectedEndOfInputException extends SyntaxErrorException  
+class UnexpectedEndOfInputException extends SyntaxErrorException
 {
     public function __construct($input)
     {

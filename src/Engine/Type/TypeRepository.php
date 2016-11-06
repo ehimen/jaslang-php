@@ -3,8 +3,6 @@
 namespace Ehimen\Jaslang\Engine\Type;
 
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\Engine\Type\ConcreteType;
-use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**

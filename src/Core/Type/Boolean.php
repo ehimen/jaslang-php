@@ -8,7 +8,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Core\Value\Boolean as BooleanValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class Boolean implements ConcreteType 
+class Boolean implements ConcreteType
 {
     const LITERAL_PATTERN = '^[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]$';      // Insensitive, regardless regex modifiers.
 

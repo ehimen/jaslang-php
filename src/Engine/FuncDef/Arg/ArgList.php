@@ -2,10 +2,6 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
-use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
-use Ehimen\Jaslang\Engine\Type\Type;
-use Ehimen\Jaslang\Engine\Value\Core\Num;
-use Ehimen\Jaslang\Engine\Value\Core\Str;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 class ArgList
@@ -23,12 +19,19 @@ class ArgList
         $this->args = $args;
     }
 
+    /**
+     * @param mixed $index
+     *
+     * @return bool
+     */
     public function has($index)
     {
         return array_key_exists($index, $this->args);
     }
 
     /**
+     * @param mixed $index
+     *
      * @return Value|null
      */
     public function get($index)

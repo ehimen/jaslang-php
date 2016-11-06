@@ -2,7 +2,6 @@
 
 namespace Ehimen\Jaslang\Engine\Lexer;
 
-use Doctrine\Common\Lexer\AbstractLexer;
 use Ehimen\Jaslang\Engine\Parser\Exception\UnexpectedEndOfInputException;
 
 /**
@@ -27,8 +26,8 @@ class JaslangLexer implements Lexer
 
     /**
      * $operators and $literals allow for customisation of a language.
-     * 
-     * @param string[] $operators Any exact strings the lexer should consider an operator. 
+     *
+     * @param string[] $operators Any exact strings the lexer should consider an operator.
      * @param string[] $literals Any patterns the lexer should consider a literal.
      */
     public function __construct(array $operators = [], array $literals = [])

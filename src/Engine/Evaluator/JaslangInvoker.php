@@ -37,6 +37,8 @@ class JaslangInvoker implements Invoker
     /**
      * @param ArgDef[] $argDefs
      * @param ArgList $args
+     *
+     * @throws InvalidArgumentException
      */
     private function validateArgs(array $argDefs, ArgList $args)
     {
@@ -63,10 +65,10 @@ class JaslangInvoker implements Invoker
 
     /**
      * TODO: extract to dedicated class.
-     * 
+     *
      * @param $expected
      * @param $actual
-     * 
+     *
      * @return bool
      */
     private function typesMatch(Type $expected, Type $actual)

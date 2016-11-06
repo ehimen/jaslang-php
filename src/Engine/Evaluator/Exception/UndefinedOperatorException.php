@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Exception;
 
-class UndefinedOperatorException extends RuntimeException 
+class UndefinedOperatorException extends RuntimeException
 {
     private $identifier;
     

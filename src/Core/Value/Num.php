@@ -4,7 +4,7 @@ namespace Ehimen\Jaslang\Core\Value;
 
 use Ehimen\Jaslang\Engine\Value\Native;
 
-class Num extends Native 
+class Num extends Native
 {
     public function __construct($value)
     {

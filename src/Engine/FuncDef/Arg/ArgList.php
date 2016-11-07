@@ -2,17 +2,15 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
-use Ehimen\Jaslang\Engine\Value\Value;
-
 class ArgList
 {
     /**
-     * @var Value[]
+     * @var Argument[]
      */
     private $args = [];
     
     /**
-     * @param Value[] $args
+     * @param Argument[] $args
      */
     public function __construct(array $args)
     {
@@ -20,7 +18,7 @@ class ArgList
     }
 
     /**
-     * @param mixed $index
+     * @param int $index
      *
      * @return bool
      */
@@ -32,7 +30,7 @@ class ArgList
     /**
      * @param mixed $index
      *
-     * @return Value|null
+     * @return Argument|null
      */
     public function get($index)
     {

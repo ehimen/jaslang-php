@@ -2,16 +2,10 @@
 
 namespace Ehimen\Jaslang\Engine\Value;
 
-interface Value
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
+
+interface Value extends Argument
 {
-    /**
-     * Gets the PHP string representation of this value.
-     *
-     * Note this should not be used in Jaslang evaluation to convert to string.
-     *
-     * @return string
-     */
-    public function toString();
 
     /**
      * Is this value identical to $other?

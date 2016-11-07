@@ -4,11 +4,12 @@ namespace Ehimen\Jaslang\Engine\Evaluator;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
  * Dispatches function invocations, validating arguments along the way.
@@ -27,7 +28,7 @@ class JaslangInvoker implements Invoker
     
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context)
     {
-        $this->validateArgs($function->getArgDefs(), $args);
+        $this->validateArgs($function->getParameters(), $args);
         
         return $function->invoke($args, $context);
         
@@ -35,8 +36,8 @@ class JaslangInvoker implements Invoker
     }
 
     /**
-     * @param ArgDef[] $argDefs
-     * @param ArgList $args
+     * @param Parameter[] $argDefs
+     * @param ArgList     $args
      *
      * @throws InvalidArgumentException
      */
@@ -44,9 +45,15 @@ class JaslangInvoker implements Invoker
     {
         // TODO: validate not too many!
         foreach ($argDefs as $i => $def) {
-            $arg  = $args->get($i);
-            $type = $this->repository->getTypeName($def->getType());
-            
+            $arg = $args->get($i);
+
+            if ($def->isValue() || $def->isVariable()) {
+                $type = $this->repository->getTypeName($def->getExpectedType());
+            } else {
+                // Must be expected a type identifier.
+                $type = 'type-identifier';
+            }
+
             if (null === $arg) {
                 if ($def->isOptional()) {
                     continue;
@@ -54,11 +61,17 @@ class JaslangInvoker implements Invoker
 
                 throw new InvalidArgumentException($i, $type, $arg);
             }
-            
-            $argType = $this->repository->getTypeByValue($arg);
-            
-            if (!$this->typesMatch($def->getType(), $argType)) {
-                throw new InvalidArgumentException($i, $type, $arg);
+
+            if ($def->isValue()) {
+                if (!($arg instanceof Value)) {
+                    throw new InvalidArgumentException($i, $type, $arg);
+                }
+
+                $argType = $this->repository->getTypeByValue($arg);
+
+                if (!$this->typesMatch($def->getExpectedType(), $argType)) {
+                    throw new InvalidArgumentException($i, $type, $arg);
+                }
             }
         }
     }
@@ -66,12 +79,12 @@ class JaslangInvoker implements Invoker
     /**
      * TODO: extract to dedicated class.
      *
-     * @param $expected
-     * @param $actual
+     * @param Type $expected
+     * @param Type|null $actual
      *
      * @return bool
      */
-    private function typesMatch(Type $expected, Type $actual)
+    private function typesMatch(Type $expected, Type $actual = null)
     {
         do {
             if (get_class($expected) === get_class($actual)) {

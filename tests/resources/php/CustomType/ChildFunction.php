@@ -3,18 +3,18 @@
 namespace Ehimen\JaslangTestResources\CustomType;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Core\Value\Boolean;
 
 class ChildFunction implements FuncDef
 {
-    public function getArgDefs()
+    public function getParameters()
     {
         return [
-            new ArgDef(new ChildType()),
-            new ArgDef(new ParentType())
+            Parameter::value(new ChildType()),
+            Parameter::value(new ParentType())
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Exception;
 
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -19,7 +20,7 @@ class InvalidArgumentException extends RuntimeException
      */
     private $actual;
 
-    public function __construct($index, $expectedType, Value $actual = null)
+    public function __construct($index, $expectedType, Argument $actual = null)
     {
         parent::__construct(sprintf(
             'Invalid argument at position %d. Expected "%s", got %s',

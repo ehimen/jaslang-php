@@ -3,7 +3,7 @@
 namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Core\Type;
@@ -11,12 +11,12 @@ use Ehimen\Jaslang\Core\Value;
 
 class Substring implements FuncDef
 {
-    public function getArgDefs()
+    public function getParameters()
     {
         return [
-            new ArgDef(new Type\Str(), false),
-            new ArgDef(new Type\Num(), false),
-            new ArgDef(new Type\Num(), false),
+            Parameter::value(new Type\Str(), false),
+            Parameter::value(new Type\Num(), false),
+            Parameter::value(new Type\Num(), false),
         ];
     }
 

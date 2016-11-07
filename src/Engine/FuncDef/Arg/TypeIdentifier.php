@@ -14,6 +14,11 @@ class TypeIdentifier implements Argument
         $this->identifier = $identifier;
     }
 
+    public function toString()
+    {
+        return '[type] ' . $this->identifier;
+    }
+
     public function getIdentifier()
     {
         return $this->identifier;

@@ -6,8 +6,8 @@ use Ehimen\Jaslang\Engine\Type\Type;
 
 class Parameter
 {
-    const TYPE_TYPE = 'type';
-    const TYPE_VAR = 'val';
+    const TYPE_TYPE  = 'type';
+    const TYPE_VAR   = 'val';
     const TYPE_VALUE = 'value';
 
     /**

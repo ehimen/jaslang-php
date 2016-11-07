@@ -117,7 +117,7 @@ JASLANG;
      */
     public function testSubtractNoArgs()
     {
-        $expected = new InvalidArgumentException(0, 'number');
+        $expected = InvalidArgumentException::invalidArgument(0, 'number');
         
         $expected->setInput('subtract()');
         $expected->setEvaluationTrace(new EvaluationTrace([
@@ -135,7 +135,7 @@ JASLANG;
      */
     public function testSubtractOneArg()
     {
-        $expected = new InvalidArgumentException(1, 'number');
+        $expected = InvalidArgumentException::invalidArgument(1, 'number');
         
         $expected->setInput('subtract(100)');
         $expected->setEvaluationTrace(new EvaluationTrace([
@@ -153,7 +153,7 @@ JASLANG;
      */
     public function testSubtractNestedInvalidArg()
     {
-        $expected = new InvalidArgumentException(0, 'number', new Str("foo"));
+        $expected = InvalidArgumentException::invalidArgument(0, 'number', new Str("foo"));
         
         $expected->setInput('sum(sum(1, 3), sum(1 + 3, subtract("foo")))');
         $expected->setEvaluationTrace(new EvaluationTrace([
@@ -279,7 +279,7 @@ JASLANG;
 
     public function testCustomTypeIsValidated()
     {
-        $expected = new InvalidArgumentException('1', 'parenttype', new Num(100));
+        $expected = InvalidArgumentException::invalidArgument('1', 'parenttype', new Num(100));
         $input    = 'testfunction(c, 100)';
         
         $expected->setEvaluationTrace(new EvaluationTrace([

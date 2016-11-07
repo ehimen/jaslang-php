@@ -12,7 +12,7 @@ class ArgList
     /**
      * @param Argument[] $args
      */
-    public function __construct(array $args)
+    public function __construct(array $args = [])
     {
         $this->args = $args;
     }
@@ -35,5 +35,13 @@ class ArgList
     public function get($index)
     {
         return isset($this->args[$index]) ? $this->args[$index] : null;
+    }
+
+    /**
+     * @return int
+     */
+    public function count()
+    {
+        return count($this->args);
     }
 }

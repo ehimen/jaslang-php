@@ -6,6 +6,8 @@ use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
@@ -20,18 +22,18 @@ class JaslangInvoker implements Invoker
      * @var TypeRepository
      */
     private $repository;
-    
+
     public function __construct(TypeRepository $repository)
     {
         $this->repository = $repository;
     }
-    
+
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context)
     {
         $this->validateArgs($function->getParameters(), $args);
-        
+
         return $function->invoke($args, $context);
-        
+
         // TODO: return type. Really need to validate this. Keep not returning wrapped values!
     }
 
@@ -43,7 +45,10 @@ class JaslangInvoker implements Invoker
      */
     private function validateArgs(array $argDefs, ArgList $args)
     {
-        // TODO: validate not too many!
+        if ($args->count() > count($argDefs)) {
+            throw InvalidArgumentException::unexpectedArgument(count($argDefs));
+        }
+
         foreach ($argDefs as $i => $def) {
             $arg = $args->get($i);
 
@@ -59,41 +64,47 @@ class JaslangInvoker implements Invoker
                     continue;
                 }
 
-                throw new InvalidArgumentException($i, $type, $arg);
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
 
-            if ($def->isValue()) {
-                if (!($arg instanceof Value)) {
-                    throw new InvalidArgumentException($i, $type, $arg);
+            if ($def->isValue() || $def->isVariable()) {
+                if ($def->isValue() && !($arg instanceof Value)) {
+                    throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+                } elseif ($def->isVariable() && !($arg instanceof Variable)) {
+                    throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
 
-                $argType = $this->repository->getTypeByValue($arg);
+                $argType = ($arg instanceof Value)
+                    ? $this->repository->getTypeByValue($arg)
+                    : $arg->getType();
 
                 if (!$this->typesMatch($def->getExpectedType(), $argType)) {
-                    throw new InvalidArgumentException($i, $type, $arg);
+                    throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
+            } elseif ($def->isType() && !($arg instanceof TypeIdentifier)) {
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
         }
     }
 
     /**
-     * TODO: extract to dedicated class.
+     * Validates that types match, respecting type inheritance.
      *
-     * @param Type $expected
+     * @param Type      $expected
      * @param Type|null $actual
      *
      * @return bool
      */
-    private function typesMatch(Type $expected, Type $actual = null)
+    private function typesMatch(Type $expected, Type $actual)
     {
         do {
             if (get_class($expected) === get_class($actual)) {
                 return true;
             }
-            
+
             $actual = $actual->getParent();
         } while ($actual instanceof Type);
-        
+
         return false;
     }
 }

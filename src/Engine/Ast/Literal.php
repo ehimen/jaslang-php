@@ -15,7 +15,7 @@ class Literal implements Node
     
     public function __construct(ConcreteType $type, $value)
     {
-        $this->type = $type;
+        $this->type  = $type;
         $this->value = $value;
     }
 

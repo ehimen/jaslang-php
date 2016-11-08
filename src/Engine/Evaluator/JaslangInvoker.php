@@ -4,6 +4,8 @@ namespace Ehimen\Jaslang\Engine\Evaluator;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
+use Ehimen\Jaslang\Engine\Exception\LogicException;
+use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
@@ -52,11 +54,14 @@ class JaslangInvoker implements Invoker
         foreach ($argDefs as $i => $def) {
             $arg = $args->get($i);
 
-            if ($def->isValue() || $def->isVariable()) {
+            if ($def->isValue()) {
                 $type = $this->repository->getTypeName($def->getExpectedType());
-            } else {
-                // Must be expected a type identifier.
+            } elseif ($def->isType()) {
                 $type = 'type-identifier';
+            } elseif ($def->isVariable()) {
+                $type = 'variable';
+            } else {
+                throw new LogicException('Cannot handle definition as is not one of variable, type or value');
             }
 
             if (null === $arg) {
@@ -67,10 +72,8 @@ class JaslangInvoker implements Invoker
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
 
-            if ($def->isValue() || $def->isVariable()) {
-                if ($def->isValue() && !($arg instanceof Value)) {
-                    throw InvalidArgumentException::invalidArgument($i, $type, $arg);
-                } elseif ($def->isVariable() && !($arg instanceof Variable)) {
+            if ($def->isValue()) {
+                if (!($arg instanceof Value)) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
 
@@ -78,10 +81,12 @@ class JaslangInvoker implements Invoker
                     ? $this->repository->getTypeByValue($arg)
                     : $arg->getType();
 
-                if (!$this->typesMatch($def->getExpectedType(), $argType)) {
+                if ($argType && !$this->typesMatch($def->getExpectedType(), $argType)) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
             } elseif ($def->isType() && !($arg instanceof TypeIdentifier)) {
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+            } elseif ($def->isVariable() && !($arg instanceof Variable)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
         }

@@ -2,23 +2,33 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator;
 
+use Ehimen\Jaslang\Engine\Ast\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Operator;
 use Ehimen\Jaslang\Engine\Ast\Container;
 use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\ParentNode;
+use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
+use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Context\NullContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedOperatorException;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
+use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Parser;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 class Evaluator
 {
@@ -42,14 +52,21 @@ class Evaluator
      */
     private $trace;
 
-    private $evaluationContext;
+    /**
+     * @var ContextFactory
+     */
+    private $contextFactory;
 
-    public function __construct(Parser $parser, FunctionRepository $repository, Invoker $invoker)
-    {
-        $this->parser = $parser;
-        $this->repository = $repository;
-        $this->invoker = $invoker;
-        $this->evaluationContext = new NullContext();
+    public function __construct(
+        Parser $parser,
+        FunctionRepository $repository,
+        Invoker $invoker,
+        ContextFactory $contextFactory
+    ) {
+        $this->parser         = $parser;
+        $this->repository     = $repository;
+        $this->invoker        = $invoker;
+        $this->contextFactory = $contextFactory;
     }
 
     /**
@@ -66,9 +83,12 @@ class Evaluator
 
         $result = '';
         
+        $context = $this->contextFactory->createContext();
+        
         try {
             foreach ($ast->getChildren() as $statement) {
-                $result = $this->evaluateNode($statement)->toString();
+                // The evaluator returns the string of the last evaluation.
+                $result = $this->evaluateNode($statement, $context)->toString();
             }
         } catch (RuntimeException $e) {
             $e->setEvaluationTrace($this->trace);
@@ -79,17 +99,18 @@ class Evaluator
         return $result;
     }
 
-    private function evaluateNode(Node $node)
+    /**
+     * @return Argument
+     */
+    private function evaluateNode(Node $node, EvaluationContext $context)
     {
-
-
         if ($node instanceof Container) {
             // Special case for a contained node, evaluate the wrapped
             // node, skipping any stack trace handling etc.
             // A contained node only exists to greatly simplify
             // parsing grouping parentheses.
             // TODO: ideally it shouldn't be in the parsed AST?
-            return $this->evaluateNode($node->getLastChild());
+            return $this->evaluateNode($node->getLastChild(), $context);
         }
         
         if ($node instanceof ParentNode) {
@@ -111,11 +132,11 @@ class Evaluator
 
             $arguments = [];
 
-            foreach ($node->getArguments() as $argument) {
-                $arguments[] = $this->evaluateNode($argument);
+            foreach ($node->getArguments() as $i => $argument) {
+                $arguments[] = $this->resolveArgument($argument, $funcDef, $i, $context);
             }
             
-            $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $this->evaluationContext);
+            $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $context);
         }
         
         if ($node instanceof Operator) {
@@ -127,11 +148,11 @@ class Evaluator
 
             $arguments = [];
 
-            foreach ($node->getChildren() as $argument) {
-                $arguments[] = $this->evaluateNode($argument);
+            foreach ($node->getChildren() as $i => $argument) {
+                $arguments[] = $this->resolveArgument($argument, $operator, $i, $context);
             }
 
-            $result = $this->invoker->invokeFunction($operator, new ArgList($arguments), $this->evaluationContext);
+            $result = $this->invoker->invokeFunction($operator, new ArgList($arguments), $context);
         }
         
         if ($node instanceof ParentNode) {
@@ -146,5 +167,39 @@ class Evaluator
             'Evaluator cannot handle node of type %s',
             get_class($node)
         ));
+    }
+
+    /**
+     * @param Node              $node
+     * @param FuncDef           $function
+     * @param                   $position
+     * @param EvaluationContext $evaluationContext
+     *
+     * @return Argument
+     */
+    private function resolveArgument(Node $node, FuncDef $function, $position, EvaluationContext $evaluationContext)
+    {
+        if ($node instanceof Identifier) {
+            $parameters = $function->getParameters();
+            $parameter  = isset($parameters[$position]) ? $parameters[$position] : null;
+            
+            if ($parameter instanceof Parameter) {
+                if ($parameter->isType()) {
+                    return new TypeIdentifier($node->getName());
+                }
+                
+                if ($parameter->isVariable()) {
+                    return new Variable($node->getName());
+                }
+            }
+
+            try {
+                return $evaluationContext->getSymbolTable()->get($node->getName());
+            } catch (OutOfBoundsException $e) {
+                throw new UndefinedSymbolException($node->getName());
+            }
+        }
+        
+        return $this->evaluateNode($node, $evaluationContext);
     }
 }

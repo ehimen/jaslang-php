@@ -12,9 +12,19 @@ interface ConcreteType extends Type
 {
     /**
      * @param $value
+     *
      * @return Value
      */
     public function createValue($value);
+
+    /**
+     * Creates an empty value for this type.
+     * 
+     * This is the default value for values of this type that have not been set.
+     * 
+     * @return Value
+     */
+    public function createEmptyValue();
 
     /**
      * @param Value $value

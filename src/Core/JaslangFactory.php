@@ -2,6 +2,10 @@
 
 namespace Ehimen\Jaslang\Core;
 
+use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\Let;
+use Ehimen\Jaslang\Core\FuncDef\Multiply;
+use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
@@ -78,14 +82,18 @@ class JaslangFactory
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binary());
+        $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 2, 100));
+        $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
+        $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary(10));
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());
         $typeRepo->registerType('number', new Num());
         $typeRepo->registerType('boolean', new Boolean());
-        
-        $invoker = new JaslangInvoker($typeRepo);
-        $parser  = new JaslangParser(
+
+        $contextFactory = new JaslangContextFactory($typeRepo);
+        $invoker        = new JaslangInvoker($typeRepo);
+        $parser         = new JaslangParser(
             new JaslangLexer(
                 $fnRepo->getRegisteredOperatorIdentifiers(),
                 $typeRepo->getConcreteTypeLiteralPatterns()
@@ -94,10 +102,11 @@ class JaslangFactory
             $typeRepo
         );
 
-        $evaluator = new Evaluator($parser, $fnRepo, $invoker);
+        $evaluator = new Evaluator($parser, $fnRepo, $invoker, $contextFactory);
 
         // Reset our repository for subsequent create() calls.
         $this->functionRepository = null;
+        $this->typeRepository     = null;
 
         return $evaluator;
     }

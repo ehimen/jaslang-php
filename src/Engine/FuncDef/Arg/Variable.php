@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
-use Ehimen\Jaslang\Engine\Type\Type;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 
 class Variable implements Argument
 {
@@ -13,7 +13,7 @@ class Variable implements Argument
 
     private $type;
 
-    public function __construct($identifier, Type $type)
+    public function __construct($identifier, ConcreteType $type = null)
     {
         $this->identifier = $identifier;
         $this->type       = $type;
@@ -27,10 +27,5 @@ class Variable implements Argument
     public function toString()
     {
         return '[variable] ' . $this->identifier;
-    }
-
-    public function getType()
-    {
-        return $this->type;
     }
 }

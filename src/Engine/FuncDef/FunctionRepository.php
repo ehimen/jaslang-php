@@ -48,14 +48,14 @@ class FunctionRepository
 
     public function registerOperator(
         $identifier,
-        BinaryFunction $operator,
+        FuncDef $operator,
         OperatorSignature $signature
     ) {
         if (isset($this->operators[$identifier])) {
-            throw new InvalidArgumentException(
+            throw new InvalidArgumentException(sprintf(
                 'Operator with identifier "%s" is already registered',
                 $identifier
-            );
+            ));
         }
 
         $this->operatorSignatures[$identifier] = $signature;

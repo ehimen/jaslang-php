@@ -17,6 +17,11 @@ class Num implements ConcreteType
         return new NumValue($value);
     }
 
+    public function createEmptyValue()
+    {
+        return $this->createValue(0);
+    }
+
     public function getParent()
     {
         return new Any();

@@ -51,9 +51,9 @@ class Parameter
     /**
      * Denotes a parameter which expects to receive a variable of a particular type.
      */
-    public static function variable(Type $type, $optional = false)
+    public static function variable($optional = false)
     {
-        return new static(static::TYPE_VAR, $type, $optional);
+        return new static(static::TYPE_VAR, null, $optional);
     }
 
     public function isVariable()

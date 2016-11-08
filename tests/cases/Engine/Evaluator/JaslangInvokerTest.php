@@ -10,6 +10,7 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -106,32 +107,11 @@ class JaslangInvokerTest extends TestCase
     public function testInvokeVariable()
     {
         $variable = $this->createMock(Variable::class);
-        $variable->method('getType')
-            ->willReturn($this->createMock(Type::class));
         
         $this->performTest(
-            [Parameter::variable($this->createMock(Type::class))],
+            [Parameter::variable()],
             [$variable],
             []
-        );
-    }
-
-    public function testInvokeVariableValidatesType()
-    {
-        $string    = $this->createMock(Type::class);
-        $otherType = $this->getMockBuilder(Type::class)
-            ->setMockClassName('OtherType')
-            ->getMock();
-
-        $variable = new Variable('foo', $otherType);
-        
-        $this->performInvalidArgTest(
-            [Parameter::variable($string)],
-            [$variable],
-            [
-                ['string', $variable, $string]
-            ],
-            InvalidArgumentException::invalidArgument(0, 'string', $variable)
         );
     }
 

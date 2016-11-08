@@ -2,10 +2,12 @@
 
 namespace Ehimen\JaslangTests\Core;
 
+use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
@@ -251,7 +253,8 @@ JASLANG;
 
     public function testOperatorPrecedence()
     {
-        $input = '3 + 5 * 2';
+        // TODO: this test is really testing the engine.
+        $input = '3 + 5 test-multiply 2';
 
         $this->performMultiplicationTest($input, 10, '13');
         $this->performMultiplicationTest($input, -10, '16');
@@ -259,7 +262,8 @@ JASLANG;
 
     public function testOperatorPrecedenceComplex()
     {
-        $input = '3 + sum(3 + 5 * 2, 2 + 3 * sum(1, 2)) * 10';
+        // TODO: this test is really testing the engine.
+        $input = '3 + sum(3 + 5 test-multiply 2, 2 + 3 test-multiply sum(1, 2)) test-multiply 10';
 
         $this->performMultiplicationTest($input, 10, '243');
         $this->performMultiplicationTest($input, -10, '340');
@@ -304,6 +308,79 @@ JASLANG;
         $this->performTest('True', 'true');
     }
 
+    public function testVariableInitialisation()
+    {
+        $this->performTest(
+            'let string foo',
+            '[variable] foo'
+        );
+    }
+
+    public function testVariableAssignment()
+    {
+        $this->performTest(
+            'let string foo = "bar"',
+            'bar'
+        );
+    }
+
+    public function testVariablesInFunction()
+    {
+        $code = <<<CODE
+let number one = 13;
+let number two = 24;
+
+sum(one, two)
+CODE;
+        
+        $this->performTest($code, '37');
+    }
+
+    public function testSeparateAssignment()
+    {
+        $code = <<<CODE
+let number one;
+let number two;
+
+one = 13;
+two = 24;
+
+sum(one, two)
+CODE;
+        
+        $this->performTest($code, '37');
+    }
+
+    public function testAssignmentTypeMismatchThrows()
+    {
+        $input = 'let number notnumber = "13"';
+        
+        $exception = Assign::typeMismatch('number', new Str('13'));
+        
+        $exception->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('let number notnumber = "13"'),
+        ]));
+        $exception->setInput($input);
+        
+        $this->performRuntimeExceptionTest(
+            $input,
+            $exception
+        );
+    }
+
+    public function testUndefinedVariableThrows()
+    {
+        $input = 'let string foo = "bar"; substring(bar, 0, 1)';
+        
+        $exception = new UndefinedSymbolException('bar');
+        $exception->setInput($input);
+        $exception->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('substring(bar, 0, 1)'),
+        ]));
+        
+        $this->performRuntimeExceptionTest($input, $exception);
+    }
+
     private function getEvaluatorWithCustomType()
     {
         $factory = new JaslangFactory();
@@ -326,7 +403,7 @@ JASLANG;
     {
         $factory = new JaslangFactory();
         $signature = OperatorSignature::binary($multiplicationPrecedence);
-        $factory->registerOperator('*', new Multiplication(), $signature);
+        $factory->registerOperator('test-multiply', new Multiplication(), $signature);
         $this->assertSame($expected, $factory->create()->evaluate($input));
     }
 

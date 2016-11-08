@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Exception;
 
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -19,17 +20,26 @@ class InvalidArgumentException extends RuntimeException
      */
     private $actual;
 
-    public function __construct($index, $expectedType, Value $actual = null)
+    public static function invalidArgument($index, $expectedType, Argument $actual = null)
     {
-        parent::__construct(sprintf(
+        $exception = new static(sprintf(
             'Invalid argument at position %d. Expected "%s", got %s',
             $index,
             $expectedType,
             $actual ? $actual->toString() : '[empty]'
-            // TODO: show type!
         ));
+
+        $exception->expectedType = $expectedType;
+        $exception->actual       = $actual;
         
-        $this->expectedType = $expectedType;
-        $this->actual       = $actual;
+        return $exception;
+    }
+
+    public static function unexpectedArgument($expectedCount)
+    {
+        return new static(sprintf(
+            'Too many arguments. Expected a total of %d',
+            $expectedCount
+        ));
     }
 }

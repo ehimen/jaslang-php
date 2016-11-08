@@ -3,7 +3,7 @@
 namespace Ehimen\Jaslang\Engine\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -17,11 +17,11 @@ use Ehimen\Jaslang\Engine\Value\Value;
  */
 abstract class BinaryFunction implements FuncDef
 {
-    public function getArgDefs()
+    public function getParameters()
     {
         return [
-            new ArgDef($this->getLeftArgType(), false),
-            new ArgDef($this->getRightArgType(), false),
+            Parameter::value($this->getLeftArgType(), false),
+            Parameter::value($this->getRightArgType(), false),
         ];
     }
 

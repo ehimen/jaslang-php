@@ -2,6 +2,8 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
+use Ehimen\Jaslang\Engine\Type\TypeRepository;
+
 /**
  * Some context of evaluation.
  *
@@ -10,4 +12,13 @@ namespace Ehimen\Jaslang\Engine\Evaluator\Context;
  */
 interface EvaluationContext
 {
+    /**
+     * @return SymbolTable
+     */
+    public function getSymbolTable();
+
+    /**
+     * @return TypeRepository
+     */
+    public function getTypeRepository();
 }

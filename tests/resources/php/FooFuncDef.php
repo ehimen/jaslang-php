@@ -12,7 +12,7 @@ use Ehimen\Jaslang\Core\Value\Str;
  */
 class FooFuncDef implements FuncDef
 {
-    public function getArgDefs()
+    public function getParameters()
     {
         return [];
     }

@@ -17,6 +17,11 @@ class Boolean implements ConcreteType
         return new BooleanValue($value);
     }
 
+    public function createEmptyValue()
+    {
+        return $this->createValue(false);
+    }
+
     public function isA(Type $type)
     {
         return ($this instanceof $type);

@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Parser;
 
+use Ehimen\Jaslang\Engine\Ast\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Operator;
 use Ehimen\Jaslang\Engine\Ast\Container;
 use Ehimen\Jaslang\Engine\Ast\FunctionCall;
@@ -37,6 +38,11 @@ class JaslangParser implements Parser
      * @var Token
      */
     private $currentToken;
+
+    /**
+     * @var Token
+     */
+    private $nextToken;
 
     /**
      * @var Root
@@ -82,6 +88,7 @@ class JaslangParser implements Parser
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
+            $this->nextToken    = isset($tokens[$i + 1]) ? $tokens[$i + 1] : null;
             
             try {
                 $dfa->transition($token->getType());
@@ -141,6 +148,11 @@ class JaslangParser implements Parser
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN, $fnOpen)
+            ->addRule($identifier, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($identifier, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($identifier, Lexer::TOKEN_COMMA, $comma)
+            ->addRule($identifier, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($identifier, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($fnOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($fnOpen, $literalTokens, $literal)
             ->addRule($fnOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -161,6 +173,7 @@ class JaslangParser implements Parser
             ->addRule($stateTerm, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($stateTerm, $literalTokens, $literal)
             ->addRule($stateTerm, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($stateTerm, Lexer::TOKEN_OPERATOR, $operator)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -172,6 +185,7 @@ class JaslangParser implements Parser
             ->accept($literal)
             ->accept($parenClose)
             ->accept($operator)
+            ->accept($identifier)
         ;
         
         return $builder->build();
@@ -189,7 +203,11 @@ class JaslangParser implements Parser
         if ($this->currentToken->isLiteral()) {
             $node = $this->createLiteral();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_IDENTIFIER) {
-            $node = new FunctionCall($this->currentToken->getValue());
+            if ($this->isNextToken(Lexer::TOKEN_LEFT_PAREN)) {
+                $node = new FunctionCall($this->currentToken->getValue());
+            } else {
+                $node = new Identifier($this->currentToken->getValue());
+            }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
             $node = $this->createOperator($context);
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
@@ -305,5 +323,14 @@ class JaslangParser implements Parser
         }
         
         return null;
+    }
+
+    private function isNextToken($type)
+    {
+        if (null === $this->nextToken) {
+            return false;
+        }
+        
+        return ($type === $this->nextToken->getType());
     }
 }

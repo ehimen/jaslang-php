@@ -79,7 +79,7 @@ class TypeRepository
 
     public function getTypeByName($name)
     {
-        if (!isset($this->types[$name])) {
+        if (!$this->hasTypeByName($name)) {
             throw new OutOfBoundsException(sprintf(
                 'No type with name "%s" has been registered',
                 $name
@@ -87,5 +87,10 @@ class TypeRepository
         }
         
         return $this->types[$name];
+    }
+
+    public function hasTypeByName($name)
+    {
+        return isset($this->types[$name]);
     }
 }

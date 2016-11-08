@@ -13,6 +13,11 @@ class ChildType implements ConcreteType
         return new ChildValue();
     }
 
+    public function createEmptyValue()
+    {
+        return $this-$this->createValue(null);
+    }
+
     public function appliesToValue(Value $value)
     {
         return ($value instanceof ChildValue);

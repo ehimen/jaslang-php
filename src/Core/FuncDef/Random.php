@@ -3,7 +3,7 @@
 namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgDef;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Core\Type\Num as NumType;
@@ -11,11 +11,11 @@ use Ehimen\Jaslang\Core\Value\Num;
 
 class Random implements FuncDef
 {
-    public function getArgDefs()
+    public function getParameters()
     {
         return [
-            new ArgDef(new NumType(), true),
-            new ArgDef(new NumType(), true),
+            Parameter::value(new NumType(), true),
+            Parameter::value(new NumType(), true),
         ];
     }
 

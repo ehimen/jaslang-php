@@ -16,6 +16,11 @@ class Str implements ConcreteType
         return new StrValue($value);
     }
 
+    public function createEmptyValue()
+    {
+        return $this->createValue('');
+    }
+
     public function getParent()
     {
         return new Any();

@@ -57,17 +57,26 @@ random("hello world")                   // Jaslang runtime exception! Invalid ar
                                         // #0 > random(sum(1, random("hello world")))
                                         // #1 > sum(1, random("hello world"))
                                         // #2 > random("hello world")
+                                        
+# Variables
+let number pi = 3.142;
+let number radius = 5;
+
+2 * pi * radius                         // 31.42
+
+# Type safety
+let number foo = "bar"                  // Jaslang runtime exception! Assignment expected value of type number, but got "bar"
+                                           #0 > let number foo = "bar"
 ```
 
 The list of core functions is currently very limited due to focus on the engine.
 
 # TODO
 
+* Refine syntax checking/parsing. State machine has become very loose.
 * Unary operators (bool negation)
-* Variables
 * Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
 * Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
-* Evaluation context: program output, pure functions?
 * Ternary operator?
 * Clean up phar/build
 * Return types

@@ -2,7 +2,11 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
+use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
+use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
  * Some context of evaluation.
@@ -21,4 +25,15 @@ interface EvaluationContext
      * @return TypeRepository
      */
     public function getTypeRepository();
+
+    /**
+     * @param string $name
+     * @param Type $type
+     *
+     * @throws UndefinedSymbolException
+     * @throws TypeErrorException
+     * 
+     * @return Value
+     */
+    public function getVariableOfTypeOrThrow($name, Type $type);
 }

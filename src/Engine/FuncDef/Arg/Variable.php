@@ -2,8 +2,6 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
-use Ehimen\Jaslang\Engine\Type\ConcreteType;
-
 class Variable implements Argument
 {
     /**
@@ -11,12 +9,9 @@ class Variable implements Argument
      */
     private $identifier;
 
-    private $type;
-
-    public function __construct($identifier, ConcreteType $type = null)
+    public function __construct($identifier)
     {
         $this->identifier = $identifier;
-        $this->type       = $type;
     }
 
     public function getIdentifier()

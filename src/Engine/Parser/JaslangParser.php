@@ -182,6 +182,7 @@ class JaslangParser implements Parser
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($operator, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN, $fnOpen)
             ->addRule($identifier, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($identifier, Lexer::TOKEN_OPERATOR, $operator)

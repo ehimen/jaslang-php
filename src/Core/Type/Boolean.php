@@ -8,7 +8,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Core\Value\Boolean as BooleanValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class Boolean implements ConcreteType
+class Boolean extends BaseType implements ConcreteType
 {
     const LITERAL_PATTERN = '^[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]$';      // Insensitive, regardless regex modifiers.
 
@@ -20,16 +20,6 @@ class Boolean implements ConcreteType
     public function createEmptyValue()
     {
         return $this->createValue(false);
-    }
-
-    public function isA(Type $type)
-    {
-        return ($this instanceof $type);
-    }
-
-    public function getParent()
-    {
-        return new Any();
     }
 
     public function appliesToValue(Value $value)

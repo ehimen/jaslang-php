@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\Increment;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
@@ -81,6 +82,7 @@ class JaslangFactory
         $fnRepo->registerFunction('random', new Random());
 
         // Core operators.
+        $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binary());

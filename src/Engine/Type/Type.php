@@ -16,7 +16,23 @@ namespace Ehimen\Jaslang\Engine\Type;
 interface Type
 {
     /**
-     * @return static|null
+     * Returns true if this type is satisfied by other.
+     * 
+     * In terms of type grouping, this should return true
+     * if this is in group $other, but not if 
+     * $other is in group this.
+     *
+     * E.g.
+     *  $any->isA($string) false
+     *  $string->isA($any) true
+     * 
+     * Having this as a method allows types to have
+     * complex relations with one another. This provides
+     * flexibility of custom type systems.
+     * 
+     * @param Type $other
+     *
+     * @return bool
      */
-    public function getParent();
+    public function isA(Type $other);
 }

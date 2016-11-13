@@ -4,9 +4,10 @@ namespace Ehimen\JaslangTestResources\CustomType;
 
 use Ehimen\Jaslang\Engine\Lexer\Token;
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
+use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class ChildType implements ConcreteType
+class ChildType extends ParentType implements ConcreteType
 {
     public function createValue($value)
     {
@@ -33,13 +34,13 @@ class ChildType implements ConcreteType
         return 'c';
     }
 
-    public function getParent()
-    {
-        return new ParentType();
-    }
-
     public function getLiteralPattern()
     {
         return '^c$';
+    }
+    
+    public function isA(Type $other)
+    {
+        return ($other instanceof ParentType) || ($other instanceof self);
     }
 }

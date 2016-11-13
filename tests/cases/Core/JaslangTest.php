@@ -6,6 +6,7 @@ use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
@@ -377,6 +378,42 @@ foo = !foo;
 CODE;
 
         $this->performTest($code, 'false');
+    }
+
+    public function testIncrement()
+    {
+        $code = <<<CODE
+let number a = 1;
+let number b = a++;
+
+a++;
+b++;
+
+a + b
+CODE;
+
+        $this->performTest($code, '5');
+    }
+
+    public function testIncrementFailsOnString()
+    {
+        $code = <<<CODE
+let string a = 'foo';
+
+a++
+CODE;
+
+        $expected = TypeErrorException::valueTypeMismatch('number', 'string', new Str('foo'));
+        
+        $expected->setEvaluationTrace(new EvaluationTrace([
+            new TraceEntry('a ++'),
+        ]));
+        $expected->setInput($code);
+        
+        $this->performRuntimeExceptionTest(
+            $code,
+            $expected
+        );
     }
     
     public function testAssignmentTypeMismatchThrows()

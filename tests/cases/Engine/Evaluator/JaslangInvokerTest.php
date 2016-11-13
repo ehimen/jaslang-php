@@ -25,7 +25,7 @@ class JaslangInvokerTest extends TestCase
 
     public function testInvokeSingleArg()
     {
-        $string = $this->createMock(Type::class);
+        $string = $this->createPermissiveType();
 
         $this->performTest(
             [Parameter::value($string)],
@@ -38,7 +38,7 @@ class JaslangInvokerTest extends TestCase
 
     public function testInvokeMultiArgs()
     {
-        $string = $this->createMock(Type::class);
+        $string = $this->createPermissiveType();
         $int    = $this->createMock(Type::class);
         
         $this->performTest(
@@ -189,5 +189,18 @@ class JaslangInvokerTest extends TestCase
             ->willReturn($parameters);
 
         return $function;
+    }
+
+    /**
+     * @return Type
+     */
+    private function createPermissiveType()
+    {
+        $type = $this->createMock(Type::class);
+        
+        $type->method('isA')
+            ->willReturn(true);
+        
+        return $type;
     }
 }

@@ -81,7 +81,7 @@ class JaslangInvoker implements Invoker
                     ? $this->repository->getTypeByValue($arg)
                     : $arg->getType();
 
-                if ($argType && !$this->typesMatch($def->getExpectedType(), $argType)) {
+                if ($argType && !$argType->isA($def->getExpectedType())) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
             } elseif ($def->isType() && !($arg instanceof TypeIdentifier)) {
@@ -90,26 +90,5 @@ class JaslangInvoker implements Invoker
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
         }
-    }
-
-    /**
-     * Validates that types match, respecting type inheritance.
-     *
-     * @param Type      $expected
-     * @param Type|null $actual
-     *
-     * @return bool
-     */
-    private function typesMatch(Type $expected, Type $actual)
-    {
-        do {
-            if (get_class($expected) === get_class($actual)) {
-                return true;
-            }
-
-            $actual = $actual->getParent();
-        } while ($actual instanceof Type);
-
-        return false;
     }
 }

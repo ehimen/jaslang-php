@@ -7,8 +7,8 @@ use Ehimen\Jaslang\Engine\Type\Type;
 
 class ParentType implements Type
 {
-    public function getParent()
+    public function isA(Type $other)
     {
-        return new Any(); 
+        return ($other instanceof ParentType);
     }
 }

@@ -8,7 +8,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Core\Value\Num as NumValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class Num implements ConcreteType
+class Num extends BaseType implements ConcreteType
 {
     const LITERAL_PATTERN = '[+-]?\d+(?:\.\d*)?';
 
@@ -20,16 +20,6 @@ class Num implements ConcreteType
     public function createEmptyValue()
     {
         return $this->createValue(0);
-    }
-
-    public function getParent()
-    {
-        return new Any();
-    }
-
-    public function isA(Type $type)
-    {
-        return ($this instanceof $type);
     }
 
     public function appliesToValue(Value $value)

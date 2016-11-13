@@ -9,7 +9,10 @@ use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\ParentNode;
 use Ehimen\Jaslang\Engine\Ast\Root;
+use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
+use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Lexer\Lexer;
@@ -64,11 +67,29 @@ class JaslangParser implements Parser
      */
     private $typeRepository;
 
-    public function __construct(Lexer $lexer, FunctionRepository $fnRepo, TypeRepository $typeRepo)
+    /**
+     * @var Validator
+     */
+    private $validator;
+    
+    private $statementOpen = false;
+
+    /**
+     * @var NodeCreationObserver[]
+     */
+    private $nodeCreationObservers = [];
+
+    public function __construct(Lexer $lexer, FunctionRepository $fnRepo, TypeRepository $typeRepo, Validator $validator)
     {
         $this->lexer              = $lexer;
         $this->functionRepository = $fnRepo;
         $this->typeRepository     = $typeRepo;
+        $this->validator          = $validator;
+    }
+
+    public function registerNodeCreationObserver(NodeCreationObserver $observer)
+    {
+        $this->nodeCreationObservers[] = $observer;
     }
 
     public function parse($input)
@@ -76,6 +97,7 @@ class JaslangParser implements Parser
         $this->input = $input;
         $dfa = $this->getDfa();
 
+        /** @var Token[] $tokens */
         $tokens = array_values(array_filter(
             $this->lexer->tokenize($input),
             function (Token $token) {
@@ -85,6 +107,7 @@ class JaslangParser implements Parser
 
         $this->ast = new Root();
         $this->nodeStack = [$this->ast];
+        $this->statementOpen = false;
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
@@ -95,6 +118,15 @@ class JaslangParser implements Parser
             } catch (TransitionImpossibleException $e) {
                 throw new UnexpectedTokenException($input, $token);
             }
+        }
+        
+        $finalStatement = end($this->nodeStack);
+        
+        if ($finalStatement instanceof Statement) {
+            // If our stack still has a statement on it, this
+            // is an unterminated statement. This is fine,
+            // remove it before we conclude our checks. 
+            array_pop($this->nodeStack);
         }
 
         if (count($this->nodeStack) !== 1) {
@@ -107,6 +139,8 @@ class JaslangParser implements Parser
         } catch (NotAcceptedException $e) {
             throw new UnexpectedEndOfInputException($input);
         }
+        
+        $this->validator->validate($input, $this->ast);
         
         return $this->ast;
     }
@@ -180,6 +214,7 @@ class JaslangParser implements Parser
             ->whenEntering($operator, $createNode)
             ->whenEntering($parenClose, $closeNode)
             ->whenEntering($parenOpen, $createNode)
+            ->whenEntering($stateTerm, $closeNode)
             
             ->start($start)
             ->accept($literal)
@@ -197,7 +232,15 @@ class JaslangParser implements Parser
         $context = end($this->nodeStack);
 
         if (!($context instanceof ParentNode)) {
-            throw new RuntimeException('Cannot create node as no context is present');
+            throw new LogicException('Cannot create node as no context is present');
+        }
+        
+        if (!$this->statementOpen) {
+            $statement = new Statement();
+            array_push($this->nodeStack, $statement);
+            $context->addChild($statement);
+            $context = $statement;
+            $this->statementOpen = true;
         }
         
         if ($this->currentToken->isLiteral()) {
@@ -220,6 +263,10 @@ class JaslangParser implements Parser
                 $this->currentToken->getValue(),
                 $this->currentToken->getType()
             ));
+        }
+        
+        foreach ($this->nodeCreationObservers as $observer) {
+            $observer->onNodeCreated($node, $this->currentToken);
         }
         
         $context->addChild($node);
@@ -258,7 +305,24 @@ class JaslangParser implements Parser
 
     private function closeNode()
     {
-        if (count($this->nodeStack) <= 1) {
+        // How many nodes on the stack do we expect for valid
+        // closing of a node. 3 because root, statement, then
+        // the node we're closing.
+        $expectedOpen = 3;
+        
+        if ($this->currentToken->getType() === Lexer::TOKEN_STATETERM) {
+            if (!$this->statementOpen) {
+                throw new LogicException('Request to close a statement, but one is not open.');
+            }
+            
+            $this->statementOpen = false;
+            
+            // If we're closing a statement, any less than 2 nodes on
+            // the stack and something's gone wrong.
+            $expectedOpen = 2;
+        }
+        
+        if (count($this->nodeStack) < $expectedOpen) {
             // We've been asked to close a node that doesn't exist.
             // This means we're closing too many functions, e.g.
             // foo())

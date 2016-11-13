@@ -14,6 +14,10 @@ use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Core\JaslangFactory;
 use Ehimen\Jaslang\Core\Value\Num;
 use Ehimen\Jaslang\Core\Value\Str;
+use Ehimen\Jaslang\Engine\Lexer\Lexer;
+use Ehimen\Jaslang\Engine\Lexer\Token;
+use Ehimen\Jaslang\Engine\Parser\Exception\SyntaxErrorException;
+use Ehimen\Jaslang\Engine\Parser\Exception\UnexpectedTokenException;
 use Ehimen\JaslangTestResources\AndOperator;
 use Ehimen\JaslangTestResources\CustomType\ChildFunction;
 use Ehimen\JaslangTestResources\CustomType\ChildType;
@@ -381,6 +385,24 @@ CODE;
         $this->performRuntimeExceptionTest($input, $exception);
     }
 
+    public function testRepeatedIdentiifers()
+    {
+        $input = 'foo bar';
+        
+        $expected = new UnexpectedTokenException('foo bar', new Token('bar', Lexer::TOKEN_IDENTIFIER, 5));
+        
+        $this->performSyntaxErrorTest($input, $expected);
+    }
+
+    public function testRepeatedLiterals()
+    {
+        $input = '"foo" 1337';
+        
+        $expected = new UnexpectedTokenException('"foo" 1337', new Token('1337', Lexer::TOKEN_LITERAL, 7));
+        
+        $this->performSyntaxErrorTest($input, $expected);
+    }
+
     private function getEvaluatorWithCustomType()
     {
         $factory = new JaslangFactory();
@@ -405,6 +427,18 @@ CODE;
         $signature = OperatorSignature::binary($multiplicationPrecedence);
         $factory->registerOperator('test-multiply', new Multiplication(), $signature);
         $this->assertSame($expected, $factory->create()->evaluate($input));
+    }
+
+    private function performSyntaxErrorTest($input, SyntaxErrorException $expected)
+    {
+        try {
+            $this->getEvaluator()->evaluate($input);
+        } catch (SyntaxErrorException $actual) {
+            $this->assertEquals($expected, $actual);
+            return;
+        }
+
+        $this->fail('A syntax error was not thrown');
     }
 
     private function performRuntimeExceptionTest($input, RuntimeException $expected, Evaluator $evaluator = null)

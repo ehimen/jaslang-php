@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
+use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\FuncDef\Identity;
@@ -99,8 +100,11 @@ class JaslangFactory
                 $typeRepo->getConcreteTypeLiteralPatterns()
             ),
             $fnRepo,
-            $typeRepo
+            $typeRepo,
+            $validator = new JaslangValidator()
         );
+        
+        $parser->registerNodeCreationObserver($validator);
 
         $evaluator = new Evaluator($parser, $fnRepo, $invoker, $contextFactory);
 

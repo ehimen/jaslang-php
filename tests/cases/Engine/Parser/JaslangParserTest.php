@@ -2,14 +2,19 @@
 
 namespace Ehimen\JaslangTests\Engine\Parser;
 
+use Ehimen\Jaslang\Engine\Ast\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Operator;
 use Ehimen\Jaslang\Engine\Ast\Container;
 use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\Root;
+use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
+use Ehimen\Jaslang\Engine\Parser\NodeCreationObserver;
+use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Lexer\Lexer;
 use Ehimen\Jaslang\Engine\Parser\Exception\SyntaxErrorException;
@@ -188,21 +193,6 @@ class JaslangParserTest extends TestCase
                 $unexpected = $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 6),
             ],
             $this->unexpectedTokenException('"foo" "bar"', $unexpected)
-        );
-    }
-
-    public function testRepeatedLiterals()
-    {
-        $this->markTestSkipped('TODO: need to make this syntax error again, but how?');
-        
-        $this->performSyntaxErrorTest(
-            '"foo" 1337',
-            [
-                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 1),
-                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
-                $unexpected = $this->createToken(Lexer::TOKEN_LITERAL, '1337', 6),
-            ],
-            $this->unexpectedTokenException('"foo" 1337', $unexpected)
         );
     }
 
@@ -479,10 +469,10 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '4', 7),
             ],
             new Root([
-                $this->numberLiteral('1'),
-                $this->numberLiteral('2'),
-                $this->numberLiteral('3'),
-                $this->numberLiteral('4'),
+                $this->statement($this->numberLiteral('1')),
+                $this->statement($this->numberLiteral('2')),
+                $this->statement($this->numberLiteral('3')),
+                $this->statement($this->numberLiteral('4')),
             ])
         );
     }
@@ -507,14 +497,14 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '3', 13),
             ],
             new Root([
-                $this->binaryOperator(
+                $this->statement($this->binaryOperator(
                     '+',
                     [
                         $this->numberLiteral('1'),
                         $this->numberLiteral('1'),
                     ]
-                ),
-                $this->binaryOperator(
+                )),
+                $this->statement($this->binaryOperator(
                     '+',
                     [
                         $this->binaryOperator(
@@ -526,14 +516,14 @@ class JaslangParserTest extends TestCase
                         ),
                         $this->numberLiteral('2'),
                     ]
-                ),
-                $this->binaryOperator(
+                )),
+                $this->statement($this->binaryOperator(
                     '+',
                     [
                         $this->numberLiteral('3'),
                         $this->numberLiteral('3'),
                     ]
-                ),
+                )),
             ])
         );
     }
@@ -562,8 +552,8 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, '6', 21),
             ],
             new Root([
-                $this->numberLiteral('1'),
-                new FunctionCall(
+                $this->statement($this->numberLiteral('1')),
+                $this->statement(new FunctionCall(
                     'sum',
                     [
                         $this->numberLiteral('2'),
@@ -575,14 +565,14 @@ class JaslangParserTest extends TestCase
                             ]
                         ),
                     ]
-                ),
-                new FunctionCall(
+                )),
+                $this->statement(new FunctionCall(
                     'sum',
                     [
                         $this->numberLiteral('5'),
                         $this->numberLiteral('6'),
                     ]
-                ),
+                )),
             ])
         );
     }
@@ -985,10 +975,43 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testNotifiesOfNodeCreation()
+    {
+        $input  = '(foo + bar)';
+        
+        $tokens = [
+            $parenOpenToken = $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 1),
+            $fooToken = $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+            $ws1Token = $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+            $addToken = $this->createToken(Lexer::TOKEN_OPERATOR, '+', 6),
+            $ws2Token = $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+            $barToken = $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 8),
+            $parenCloseToken = $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 11),
+        ];
+        
+        $parser = $this->getParser($this->getLexer($input, $tokens));
+        
+        $observer = $this->createMock(NodeCreationObserver::class);
+        
+        $observer
+            ->expects($this->exactly(4))
+            ->method('onNodeCreated')
+            ->withConsecutive(
+                [$this->isInstanceOf(Container::class), $parenOpenToken],
+                [$this->isInstanceOf(Identifier::class), $fooToken],
+                [$this->isInstanceOf(Operator::class), $addToken],
+                [$this->isInstanceOf(Identifier::class), $barToken]
+            );
+        
+        $parser->registerNodeCreationObserver($observer);
+        
+        $parser->parse($input);
+    }
+
     private function performSyntaxErrorTest($input, array $tokens, $expected)
     {
         $parser = $this->getParser($this->getLexer($input, $tokens));
-            
+        
         try {
             $parser->parse($input);
         } catch (SyntaxErrorException $e) {
@@ -1001,10 +1024,9 @@ class JaslangParserTest extends TestCase
 
     private function performTest($input, $tokens, Node $expected)
     {
-        $actual = $this
-            ->getParser($this->getLexer($input, $tokens))
-            ->parse($input)
-            ->getFirstChild();
+        $result = $this->getParser($this->getLexer($input, $tokens))->parse($input);
+        
+        $actual = $this->getSingleStatement($result);
 
         $this->assertEquals($expected, $actual);
     }
@@ -1019,9 +1041,23 @@ class JaslangParserTest extends TestCase
     private function performTestWithOperators($input, $tokens, Node $expected, $operators)
     {
         $parser = $this->getParser($this->getLexer($input, $tokens), $this->getFunctionRepository($operators));
-        $actual = $parser->parse($input)->getFirstChild();
+        $root = $parser->parse($input);
 
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected, $this->getSingleStatement($root));
+    }
+
+    private function getSingleStatement(Root $root)
+    {
+        $statement = $root->getFirstChild();
+        
+        if (!($statement instanceof Statement)) {
+            $this->fail(sprintf(
+                'Expected parser to return a statement as first node, but got %s',
+                get_class($statement)
+            ));
+        }
+        
+        return $statement->getLastChild();
     }
 
     private function getLexer($input, array $tokens)
@@ -1050,24 +1086,6 @@ class JaslangParserTest extends TestCase
         return $repo;
     }
 
-    private function getTypeRepository(array $concreteTypes = [])
-    {
-        if (empty($concreteTypes)) {
-            $concreteTypes = [
-                new Type\Str(),
-                new Type\Num(),
-                new Type\Boolean(),
-            ];
-        }
-        
-        $repo = $this->createMock(TypeRepository::class);
-        
-        $repo->method('getConcreteTypes')
-            ->willReturn($concreteTypes);
-        
-        return $repo;
-    }
-
     private function unexpectedTokenException($input, $token)
     {
         return new UnexpectedTokenException($input, $token);
@@ -1083,43 +1101,6 @@ class JaslangParserTest extends TestCase
         $fnRepo   = $fnRepo ?: $this->getFunctionRepository();
         $typeRepo = $typeRepo ?: $this->getTypeRepository();
 
-        return new JaslangParser($lexer, $fnRepo, $typeRepo);
-    }
-
-    private function stringLiteral($value)
-    {
-        return new Literal(new Type\Str(), $value);
-    }
-
-    private function numberLiteral($value)
-    {
-        return new Literal(new Type\Num(), $value);
-    }
-
-    private function booleanLiteral($value)
-    {
-        return new Literal(new Type\Boolean(), $value);
-    }
-
-    /**
-     * @return Operator
-     */
-    private function binaryOperator(
-        $operator,
-        array $children,
-        $precedence = OperatorSignature::OPERATOR_PRECEDENCE_DEFAULT
-    ) {
-        return $this->operator($operator, $children, OperatorSignature::binary($precedence));
-    }
-
-    private function operator($operator, array $children, OperatorSignature $signature)
-    {
-        $operator = new Operator($operator, $signature);
-
-        foreach ($children as $child) {
-            $operator->addChild($child);
-        }
-
-        return $operator;
+        return new JaslangParser($lexer, $fnRepo, $typeRepo, $this->createMock(Validator::class));
     }
 }

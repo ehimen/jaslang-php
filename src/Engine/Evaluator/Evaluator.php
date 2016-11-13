@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\ParentNode;
+use Ehimen\Jaslang\Engine\Ast\Statement;
 use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Context\NullContext;
@@ -104,12 +105,10 @@ class Evaluator
      */
     private function evaluateNode(Node $node, EvaluationContext $context)
     {
-        if ($node instanceof Container) {
-            // Special case for a contained node, evaluate the wrapped
+        if (($node instanceof Container) || ($node instanceof Statement)) {
+            // Special case for a single-contained node, evaluate the wrapped
             // node, skipping any stack trace handling etc.
-            // A contained node only exists to greatly simplify
-            // parsing grouping parentheses.
-            // TODO: ideally it shouldn't be in the parsed AST?
+            // This handles parentheses grouping and language statements.
             return $this->evaluateNode($node->getLastChild(), $context);
         }
         

@@ -5,6 +5,7 @@ namespace Ehimen\Jaslang\Core;
 use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
+use Ehimen\Jaslang\Core\FuncDef\Negate;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
@@ -86,6 +87,7 @@ class JaslangFactory
         $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 2, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary(10));
+        $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

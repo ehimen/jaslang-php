@@ -355,6 +355,30 @@ CODE;
         $this->performTest($code, '37');
     }
 
+    public function testNegation()
+    {
+        $code = <<<CODE
+let boolean foo = false;
+
+!foo
+CODE;
+        
+        $this->performTest($code, 'true');
+    }
+
+    public function testDoubleNegationWithAssignment()
+    {
+        $code = <<<CODE
+let boolean foo = false;
+
+foo = !foo;
+
+!foo
+CODE;
+
+        $this->performTest($code, 'false');
+    }
+    
     public function testAssignmentTypeMismatchThrows()
     {
         $input = 'let number notnumber = "13"';

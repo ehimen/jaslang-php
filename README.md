@@ -73,8 +73,6 @@ The list of core functions is currently very limited due to focus on the engine.
 
 # TODO
 
-* Refine syntax checking/parsing. State machine has become very loose.
-* Unary operators (bool negation)
 * Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
 * Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
 * Ternary operator?

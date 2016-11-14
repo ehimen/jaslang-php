@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator;
 
+use Ehimen\Jaslang\Engine\Ast\Block;
 use Ehimen\Jaslang\Engine\Ast\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Operator;
 use Ehimen\Jaslang\Engine\Ast\Container;
@@ -12,7 +13,6 @@ use Ehimen\Jaslang\Engine\Ast\ParentNode;
 use Ehimen\Jaslang\Engine\Ast\Statement;
 use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\Evaluator\Context\NullContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedOperatorException;
@@ -21,15 +21,10 @@ use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
+use Ehimen\Jaslang\Engine\FuncDef\Arg;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Parser;
-use Ehimen\Jaslang\Engine\Value\Value;
 
 class Evaluator
 {
@@ -84,7 +79,9 @@ class Evaluator
 
         $result = '';
         
-        $context = $this->contextFactory->createContext();
+        $context = $this->contextFactory->createContext(function (Node $node, EvaluationContext $context) {
+            $this->evaluateNode($node, $context);
+        });
         
         try {
             foreach ($ast->getChildren() as $statement) {
@@ -101,7 +98,7 @@ class Evaluator
     }
 
     /**
-     * @return Argument
+     * @return Arg\Argument
      */
     private function evaluateNode(Node $node, EvaluationContext $context)
     {
@@ -110,6 +107,17 @@ class Evaluator
             // node, skipping any stack trace handling etc.
             // This handles parentheses grouping and language statements.
             return $this->evaluateNode($node->getLastChild(), $context);
+        }
+        
+        if ($node instanceof Block) {
+            // Return the last result of a block.
+            $result = null;
+            
+            foreach ($node->getChildren() as $child) {
+                $result = $this->evaluateNode($child, $context);
+            }
+            
+            return $result;
         }
         
         if ($node instanceof ParentNode) {
@@ -135,7 +143,7 @@ class Evaluator
                 $arguments[] = $this->resolveArgument($argument, $funcDef, $i, $context);
             }
             
-            $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $context);
+            $result = $this->invoker->invokeFunction($funcDef, new Arg\ArgList($arguments), $context);
         }
         
         if ($node instanceof Operator) {
@@ -151,7 +159,15 @@ class Evaluator
                 $arguments[] = $this->resolveArgument($argument, $operator, $i, $context);
             }
 
-            $result = $this->invoker->invokeFunction($operator, new ArgList($arguments), $context);
+            $result = $this->invoker->invokeFunction($operator, new Arg\ArgList($arguments), $context);
+        }
+
+        if ($node instanceof Identifier) {
+            try {
+                $result = $context->getSymbolTable()->get($node->getName());
+            } catch (OutOfBoundsException $e) {
+                throw new UndefinedSymbolException($node->getName());
+            }
         }
         
         if ($node instanceof ParentNode) {
@@ -163,7 +179,7 @@ class Evaluator
         }
         
         throw new InvalidArgumentException(sprintf(
-            'Evaluator cannot handle node of type %s',
+            'Evaluator cannot handle node of type %s, or it did not return a result',
             get_class($node)
         ));
     }
@@ -174,7 +190,7 @@ class Evaluator
      * @param                   $position
      * @param EvaluationContext $evaluationContext
      *
-     * @return Argument
+     * @return Arg\Argument
      */
     private function resolveArgument(Node $node, FuncDef $function, $position, EvaluationContext $evaluationContext)
     {
@@ -182,20 +198,23 @@ class Evaluator
             $parameters = $function->getParameters();
             $parameter  = isset($parameters[$position]) ? $parameters[$position] : null;
             
-            if ($parameter instanceof Parameter) {
+            if ($parameter instanceof Arg\Parameter) {
                 if ($parameter->isType()) {
-                    return new TypeIdentifier($node->getName());
+                    return new Arg\TypeIdentifier($node->getName());
                 }
                 
                 if ($parameter->isVariable()) {
-                    return new Variable($node->getName());
+                    return new Arg\Variable($node->getName());
                 }
             }
-
-            try {
-                return $evaluationContext->getSymbolTable()->get($node->getName());
-            } catch (OutOfBoundsException $e) {
-                throw new UndefinedSymbolException($node->getName());
+        }
+        
+        if ($node instanceof Block) {
+            $parameters = $function->getParameters();
+            $parameter  = isset($parameters[$position]) ? $parameters[$position] : null;
+            
+            if (($parameter instanceof Arg\Parameter) && $parameter->isBlock()) {
+                return new Arg\Block($node);
             }
         }
         

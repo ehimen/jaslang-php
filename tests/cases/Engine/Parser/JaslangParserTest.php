@@ -1114,6 +1114,25 @@ class JaslangParserTest extends TestCase
         );
     }
 
+    public function testMultipleBlocksCloseStatements()
+    {
+        $this->performMultiStatementTest(
+            '{foo}{bar}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 5),
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 6),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 7),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 10),
+            ],
+            $this->root([
+                $this->statement($this->block([$this->statement($this->identifier('foo'))])),
+                $this->statement($this->block([$this->statement($this->identifier('bar'))])),
+            ])
+        );
+    }
+
     public function testNotifiesOfNodeCreation()
     {
         $input  = '(foo + bar)';

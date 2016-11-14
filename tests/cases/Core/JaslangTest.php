@@ -464,6 +464,45 @@ CODE;
         $this->performSyntaxErrorTest($input, $expected);
     }
 
+    public function testIfPositive()
+    {
+        $code = <<<CODE
+let number a = 1;
+
+if true { a = 2 }
+
+a
+CODE;
+
+        $this->performTest($code, '2');
+    }
+
+    public function testIfNegative()
+    {
+        $code = <<<CODE
+let number a = 1;
+
+if !true { a = 2 }
+
+a
+CODE;
+
+        $this->performTest($code, '1');
+    }
+
+    public function testIfParens()
+    {
+        $code = <<<CODE
+let number a = 1;
+
+if (!true) { a = 2 }
+
+a
+CODE;
+
+        $this->performTest($code, '1');
+    }
+
     private function getEvaluatorWithCustomType()
     {
         $factory = new JaslangFactory();

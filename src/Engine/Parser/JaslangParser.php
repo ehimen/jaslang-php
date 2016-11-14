@@ -74,11 +74,11 @@ class JaslangParser implements Parser
     private $validator;
 
     /**
-     * @var int
+     * @var int[]
      * 
      * Tracks how many statements should be open at any one time.
      */
-    private $statementDepth = 0;
+    private $statementStack = [];
 
     /**
      * @var int
@@ -86,7 +86,7 @@ class JaslangParser implements Parser
      * Tracks how many blocks are open at any one time. Used to ensure that
      * all block nodes' immediate children are statements.
      */
-    private $blockDepth = 0;
+    private $blockDepth = 1;
 
     /**
      * @var NodeCreationObserver[]
@@ -121,7 +121,7 @@ class JaslangParser implements Parser
 
         $this->ast = new Root();
         $this->nodeStack = [$this->ast];
-        $this->statementDepth = $this->blockDepth = 0;
+        $this->statementStack = [0];
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
@@ -197,6 +197,8 @@ class JaslangParser implements Parser
             ->addRule($literal, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($literal, Lexer::TOKEN_LITERAL, $literal)
             ->addRule($literal, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($literal, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($literal, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_OPERATOR, $operator)
@@ -216,6 +218,7 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($parenClose, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($parenClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($comma, $literalTokens, $literal)
             ->addRule($comma, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($comma, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
@@ -227,6 +230,7 @@ class JaslangParser implements Parser
             ->addRule($parenOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($parenOpen, $literalTokens, $literal)
             ->addRule($parenOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($parenOpen, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($stateTerm, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($stateTerm, $literalTokens, $literal)
             ->addRule($stateTerm, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
@@ -238,6 +242,8 @@ class JaslangParser implements Parser
             ->addRule($blockOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($blockOpen, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($blockOpen, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($blockClose, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($blockClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -268,14 +274,33 @@ class JaslangParser implements Parser
             throw new LogicException('Cannot create node as no context is present');
         }
         
-        if ($this->blockDepth === $this->statementDepth) {
+        $insertStatement = true;
+        
+        foreach (array_reverse($this->nodeStack) as $nodeFromStack) {
+            if (($nodeFromStack instanceof Block) || ($nodeFromStack instanceof Root)) {
+                break;
+            }
+            
+            if ($nodeFromStack instanceof Statement) {
+                $insertStatement = false;
+            }
+        }
+        
+        if ($insertStatement) { 
             // This means we haven't created a statement for our current
             // block (including root) so create one now.
+            // Bring the statement depth up to our current block depth.
+            // This is unwound to this depth when the block is closed.
+            // TODO: Cleaner solution to this? Stack approach, or revisit
+            // TODO: root/block/statement concepts?
             $statement = new Statement();
             array_push($this->nodeStack, $statement);
             $context->addChild($statement);
             $context = $statement;
-            $this->statementDepth++;
+            
+            // Swap the stack frame to indicate that we've opened a statement.
+            array_pop($this->statementStack);
+            array_push($this->statementStack, 1);
         }
         
         if ($this->currentToken->isLiteral()) {
@@ -288,11 +313,10 @@ class JaslangParser implements Parser
             }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
             $node = $this->createOperator($context);
-        } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
-            $node = new Container();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_BRACE) {
             $node = new Block();
-            $this->blockDepth++;
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
+            $node = new Container();
         }
         
         if (!isset($node)) {
@@ -343,45 +367,32 @@ class JaslangParser implements Parser
 
     private function closeNode()
     {
-        if ($this->currentToken->getType() === Lexer::TOKEN_STATETERM) {
-            if (0 === $this->statementDepth) {
-                throw new LogicException('Request to close a statement, but one is not open.');
-            }
-            
-            // Decrement our statement depth to alter the minimum
-            // number of acceptable nodes in unexpected end check below.
-            $this->statementDepth--;
-        }
+        $type = $this->currentToken->getType();
         
-        if ($this->currentToken->getType() === Lexer::TOKEN_RIGHT_BRACE) {
-            
-            if (end($this->nodeStack) instanceof Statement) {
-                // Close any unterminated statements. Explicit termination
-                // at the end of a block is optional.
+        if ($type === Lexer::TOKEN_STATETERM) {
+            while (end($this->nodeStack) instanceof Statement) {
                 array_pop($this->nodeStack);
-                $this->statementDepth--;
             }
-            
-            if (0 === $this->blockDepth) {
-                throw new LogicException('Request to close a block, but one is not open');
+        } elseif ($type === Lexer::TOKEN_RIGHT_BRACE) {
+            while (end($this->nodeStack) instanceof Statement || end($this->nodeStack) instanceof Block) {
+                array_pop($this->nodeStack);
             }
-            
-            $this->blockDepth--;
-        }
-        
-        // How many nodes on the stack do we expect for valid
-        // closing of a node. 2+ because root, the node we're closing
-        // and statement(s), depending on how many are open.
-        $expectedOpen = 2 + $this->statementDepth;
-        
-        if (count($this->nodeStack) < $expectedOpen) {
-            // We've been asked to close a node that doesn't exist.
-            // This means we're closing too many functions, e.g.
-            // foo())
-            throw new UnexpectedTokenException($this->input, $this->currentToken);
-        }
+        } else {
+            // How many nodes on the stack do we expect for valid
+            // closing of a node. 2+ because root, the node we're closing
+            // and statement(s) in between.
+            // TODO: what about this check in nested statements/blocks.
+            $expectedOpen = 2;
 
-        array_pop($this->nodeStack);
+            if (count($this->nodeStack) <= $expectedOpen) {
+                // We've been asked to close a node that doesn't exist.
+                // This means we're closing too many functions, e.g.
+                // foo())
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+
+            array_pop($this->nodeStack);
+        }
     }
 
     /**

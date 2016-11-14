@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\IfDef;
 use Ehimen\Jaslang\Core\FuncDef\Increment;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
@@ -90,6 +91,7 @@ class JaslangFactory
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary(10));
         $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
+        $fnRepo->registerOperator('if', new IfDef(), new OperatorSignature(0, 2, 200)); // Control structures must have highest priority.
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

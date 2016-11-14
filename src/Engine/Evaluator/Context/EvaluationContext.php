@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
+use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Type\Type;
@@ -36,4 +37,11 @@ interface EvaluationContext
      * @return Value
      */
     public function getVariableOfTypeOrThrow($name, Type $type);
+
+    /**
+     * Evaluates $node in this context.
+     * 
+     * @param Node $node
+     */
+    public function evaluateInContext(Node $node);
 }

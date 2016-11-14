@@ -6,6 +6,7 @@ use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Block;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
@@ -60,8 +61,10 @@ class JaslangInvoker implements Invoker
                 $type = 'type-identifier';
             } elseif ($def->isVariable()) {
                 $type = 'variable';
+            } elseif ($def->isBlock()) {
+                $type = 'statement-or-block';
             } else {
-                throw new LogicException('Cannot handle definition as is not one of variable, type or value');
+                throw new LogicException('Cannot handle definition as is not one of variable, type, value or block');
             }
 
             if (null === $arg) {
@@ -87,6 +90,8 @@ class JaslangInvoker implements Invoker
             } elseif ($def->isType() && !($arg instanceof TypeIdentifier)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             } elseif ($def->isVariable() && !($arg instanceof Variable)) {
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+            } elseif ($def->isBlock() && !($arg instanceof Block)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
         }

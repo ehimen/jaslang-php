@@ -4,11 +4,15 @@ namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
 use Ehimen\Jaslang\Engine\Type\Type;
 
+/**
+ * The description of which parameters a function/operator expects.
+ */
 class Parameter
 {
     const TYPE_TYPE  = 'type';
     const TYPE_VAR   = 'val';
     const TYPE_VALUE = 'value';
+    const TYPE_BLOCK = 'block';
 
     /**
      * @var bool
@@ -56,6 +60,14 @@ class Parameter
         return new static(static::TYPE_VAR, null, $optional);
     }
 
+    /**
+     * Denotes a parameter which expects to receive statement(s).
+     */
+    public static function block($optional = false)
+    {
+        return new static(static::TYPE_BLOCK, null, $optional);
+    }
+
     public function isVariable()
     {
         return (static::TYPE_VAR === $this->type);
@@ -69,6 +81,11 @@ class Parameter
     public function isValue()
     {
         return (static::TYPE_VALUE === $this->type);
+    }
+
+    public function isBlock()
+    {
+        return (static::TYPE_BLOCK === $this->type);
     }
     
     public function getExpectedType()

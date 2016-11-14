@@ -173,6 +173,10 @@ class JaslangLexer implements Lexer
             $this->token(Lexer::TOKEN_LEFT_PAREN);
         } elseif (')' === $value) {
             $this->token(Lexer::TOKEN_RIGHT_PAREN);
+        } elseif ('{' === $value) {
+            $this->token(Lexer::TOKEN_LEFT_BRACE);
+        } elseif ('}' === $value) {
+            $this->token(Lexer::TOKEN_RIGHT_BRACE);
         } elseif (',' === $value) {
             $this->token(Lexer::TOKEN_COMMA);
         } elseif ('' === trim($value)) {

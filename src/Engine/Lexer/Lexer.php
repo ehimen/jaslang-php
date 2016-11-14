@@ -15,6 +15,9 @@ interface Lexer
     const TOKEN_BACKSLASH      = 'backslash';
     const TOKEN_UNKNOWN        = 'unknown';
     const TOKEN_STATETERM      = ';';
+    const TOKEN_LEFT_BRACE     = 'left-brace';
+    const TOKEN_RIGHT_BRACE    = 'right-brace';
+    
     
     const ESCAPE_CHAR = '\\';
     

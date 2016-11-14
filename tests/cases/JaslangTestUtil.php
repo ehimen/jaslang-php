@@ -2,6 +2,8 @@
 
 namespace Ehimen\JaslangTests;
 
+use Ehimen\Jaslang\Engine\Ast\Block;
+use Ehimen\Jaslang\Engine\Ast\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
@@ -44,6 +46,16 @@ trait JaslangTestUtil
     private function identifier($value)
     {
         return new Identifier($value);
+    }
+
+    private function block(array $statements)
+    {
+        return new Block($statements);
+    }
+
+    private function functionCall($name, array $arguments)
+    {
+        return new FunctionCall($name, $arguments);
     }
 
     private function statement($children)

@@ -426,6 +426,29 @@ class JaslangLexerTest extends TestCase
         );
     }
 
+    public function testBraces()
+    {
+        $this->performTestWithOperators(
+            '{foo = bar}',
+            ['='],
+            $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 5),
+            $this->createToken(Lexer::TOKEN_OPERATOR, '=', 6),
+            $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+            $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 8),
+            $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 11)
+        );
+    }
+
+    public function testQuotedSpecialChars()
+    {
+        $this->performTest(
+            '"{}(),"',
+            $this->createToken(Lexer::TOKEN_LITERAL_STRING, '{}(),', 1)
+        );
+    }
+
     private function performSyntaxErrorTest($input, $expected)
     {
         try {

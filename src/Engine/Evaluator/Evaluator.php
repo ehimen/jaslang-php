@@ -2,51 +2,33 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator;
 
-use Ehimen\Jaslang\Engine\Ast\Identifier;
-use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\Container;
-use Ehimen\Jaslang\Engine\Ast\FunctionCall;
-use Ehimen\Jaslang\Engine\Ast\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node;
-use Ehimen\Jaslang\Engine\Ast\ParentNode;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
-use Ehimen\Jaslang\Engine\Evaluator\Context\NullContext;
-use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\TraceEntry;
-use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
+use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
-use Ehimen\Jaslang\Engine\Parser\Parser;
 use Ehimen\Jaslang\Engine\Value\Value;
 
-class Evaluator
+class Evaluator implements Visitor
 {
-    /**
-     * @var Parser
-     */
-    private $parser;
-
-    /**
-     * @var FunctionRepository
-     */
-    private $repository;
-
-    /**
-     * @var Invoker
-     */
-    private $invoker;
+    // TODO: move most of interpreter here, provide this to funcdefs for node evaluation on while/if.
+    
+    private $argumentStack = [];
 
     /**
      * @var EvaluationTrace
@@ -54,151 +36,204 @@ class Evaluator
     private $trace;
 
     /**
+     * @var Invoker
+     */
+    private $invoker;
+
+    /**
+     * @var FunctionRepository
+     */
+    private $functionRepository;
+
+    /**
+     * @var EvaluationContext
+     */
+    private $context;
+
+    /**
      * @var ContextFactory
      */
     private $contextFactory;
 
-    public function __construct(
-        Parser $parser,
-        FunctionRepository $repository,
-        Invoker $invoker,
-        ContextFactory $contextFactory
-    ) {
-        $this->parser         = $parser;
-        $this->repository     = $repository;
-        $this->invoker        = $invoker;
+    public function __construct(Invoker $invoker, FunctionRepository $functionRepository, ContextFactory $contextFactory)
+    {
+        $this->invoker = $invoker;
+        $this->functionRepository = $functionRepository;
         $this->contextFactory = $contextFactory;
     }
 
-    /**
-     * @param $input
-     *
-     * @return string
-     * @throws RuntimeException
-     */
-    public function evaluate($input)
+    public function reset()
     {
-        $ast = $this->parser->parse($input);
-        
         $this->trace = new EvaluationTrace();
+        $this->argumentStack = [];
+        $this->context = $this->contextFactory->createContext();
+    }
 
-        $result = '';
+    public function getTrace()
+    {
+        return $this->trace;
+    }
+
+    /**
+     * @return Value
+     */
+    public function getResult()
+    {
+        if (!isset($this->argumentStack[0])) {
+            throw new LogicException('Evaluator does not have a result.');
+        }
         
-        $context = $this->contextFactory->createContext();
+        if (!(end($this->argumentStack[0]) instanceof Value)) {
+            throw new LogicException('Evaluator does not have a value result.');
+        }
+        
+        return end($this->argumentStack[0]);
+    }
+    
+    public function visitBlock(Node\Block $node)
+    {
+        $this->visitChildrenOf($node);
+    }
+
+    public function visitContainer(Node\Container $node)
+    {
+        $this->visitChildrenOf($node);
+    }
+
+    public function visitFunctionCall(Node\FunctionCall $node)
+    {
+        $this->pushTrace($node);
         
         try {
-            foreach ($ast->getChildren() as $statement) {
-                // The evaluator returns the string of the last evaluation.
-                $result = $this->evaluateNode($statement, $context)->toString();
-            }
-        } catch (RuntimeException $e) {
-            $e->setEvaluationTrace($this->trace);
-            $e->setInput($input);
-            throw $e;
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return Argument
-     */
-    private function evaluateNode(Node $node, EvaluationContext $context)
-    {
-        if (($node instanceof Container) || ($node instanceof Statement)) {
-            // Special case for a single-contained node, evaluate the wrapped
-            // node, skipping any stack trace handling etc.
-            // This handles parentheses grouping and language statements.
-            return $this->evaluateNode($node->getLastChild(), $context);
+            $funcDef = $this->functionRepository->getFunction($node->getName());
+        } catch (OutOfBoundsException $e) {
+            throw new UndefinedFunctionException($node->getName());
         }
         
-        if ($node instanceof ParentNode) {
-            $this->trace->push(new TraceEntry($node->debug()));
-        }
-        
-        if ($node instanceof Literal) {
-            $result = $node->getType()->createValue($node->getValue());
-        }
-        
-        if ($node instanceof FunctionCall) {
-            // Attempt to get the function definition before evaluating
-            // arguments as this allows for early failure.
-            try {
-                $funcDef = $this->repository->getFunction($node->getName());
-            } catch (OutOfBoundsException $e) {
-                throw new UndefinedFunctionException($node->getName());
-            }
+        $this->pushArgument();
 
-            $arguments = [];
+        $this->visitChildrenOf($node, $funcDef);
 
-            foreach ($node->getArguments() as $i => $argument) {
-                $arguments[] = $this->resolveArgument($argument, $funcDef, $i, $context);
-            }
-            
-            $result = $this->invoker->invokeFunction($funcDef, new ArgList($arguments), $context);
-        }
-        
-        if ($node instanceof Operator) {
-            try {
-                $operator = $this->repository->getOperator($node->getOperator());
-            } catch (OutOfBoundsException $e) {
-                throw new UndefinedOperatorException($node->getOperator());
-            }
+        $arguments = $this->popArgument();
 
-            $arguments = [];
-
-            foreach ($node->getChildren() as $i => $argument) {
-                $arguments[] = $this->resolveArgument($argument, $operator, $i, $context);
-            }
-
-            $result = $this->invoker->invokeFunction($operator, new ArgList($arguments), $context);
-        }
-        
-        if ($node instanceof ParentNode) {
-            $this->trace->pop();
-        }
-        
-        if (isset($result)) {
-            return $result;
-        }
-        
-        throw new InvalidArgumentException(sprintf(
-            'Evaluator cannot handle node of type %s',
-            get_class($node)
+        $this->pushArgument($this->invoker->invokeFunction(
+            $funcDef,
+            new ArgList($arguments),
+            $this->context,
+            $this
         ));
+        
+        $this->popTrace();
     }
 
-    /**
-     * @param Node              $node
-     * @param FuncDef           $function
-     * @param                   $position
-     * @param EvaluationContext $evaluationContext
-     *
-     * @return Argument
-     */
-    private function resolveArgument(Node $node, FuncDef $function, $position, EvaluationContext $evaluationContext)
+    public function visitIdentifier(Node\Identifier $node)
     {
-        if ($node instanceof Identifier) {
-            $parameters = $function->getParameters();
-            $parameter  = isset($parameters[$position]) ? $parameters[$position] : null;
+        try {
+            $this->pushArgument($this->context->getSymbolTable()->get($node->getName()));
+        } catch (OutOfBoundsException $e) {
+            throw new UndefinedSymbolException($node->getName());
+        }
+    }
+
+    public function visitLiteral(Node\Literal $node)
+    {
+        $this->pushArgument($node->getType()->createValue($node->getValue()));
+    }
+
+    public function visitOperator(Node\Operator $node)
+    {
+        $this->pushTrace($node);
+        
+        try {
+            $operator = $this->functionRepository->getOperator($node->getOperator());
+        } catch (OutOfBoundsException $e) {
+            throw new UndefinedOperatorException($node->getOperator());
+        }
+
+        $this->pushArgument();
+
+        $this->visitChildrenOf($node, $operator);
+
+        $arguments = $this->popArgument();
+
+        $this->pushArgument($this->invoker->invokeFunction(
+            $operator,
+            new ArgList($arguments),
+            $this->context,
+            $this
+        ));
+        
+        $this->popTrace();
+    }
+
+    public function visitRoot(Node\Root $node)
+    {
+        $this->visitChildrenOf($node);
+    }
+
+    public function visitStatement(Node\Statement $node)
+    {
+        $this->popArgument();
+        $this->visitChildrenOf($node);
+    }
+
+    private function pushTrace(Node\Node $node)
+    {
+        $this->trace->push(new TraceEntry($node->debug()));
+    }
+
+    private function popTrace()
+    {
+        $this->trace->pop();
+    }
+
+    private function visitChildrenOf(Node\ParentNode $node, FuncDef $function = null)
+    {
+        $parameters = $function ? $function->getParameters() : [];
+        
+        foreach ($node->getChildren() as $i => $child) {
+            $parameter = isset($parameters[$i]) ? $parameters[$i] : null;
             
             if ($parameter instanceof Parameter) {
-                if ($parameter->isType()) {
-                    return new TypeIdentifier($node->getName());
+                if ($parameter->isType() && ($child instanceof Node\Identifier)) {
+                    $this->pushArgument(new TypeIdentifier($child->getName()));
+                    continue;
                 }
-                
-                if ($parameter->isVariable()) {
-                    return new Variable($node->getName());
+
+                if ($parameter->isVariable() && ($child instanceof Node\Identifier)) {
+                    $this->pushArgument(new Variable($child->getName()));
+                    continue;
+                }
+
+                if ($parameter->isRoutine() && ($child instanceof Node\Routine)) {
+                    $this->pushArgument(new Routine($child));
+                    continue;
+                }
+
+                if ($parameter->isExpression() && ($child instanceof Node\Expression)) {
+                    $this->pushArgument(new Expression($child));
+                    continue;
                 }
             }
 
-            try {
-                return $evaluationContext->getSymbolTable()->get($node->getName());
-            } catch (OutOfBoundsException $e) {
-                throw new UndefinedSymbolException($node->getName());
-            }
+            $child->accept($this);
         }
-        
-        return $this->evaluateNode($node, $evaluationContext);
+    }
+
+    private function pushArgument(Argument $argument = null)
+    {
+        if ($argument) {
+            $this->argumentStack[0][] = $argument;
+        } else {
+            array_unshift($this->argumentStack, []);
+        }
+    }
+
+    /**
+     * @return Argument
+     */
+    private function popArgument()
+    {
+        return array_shift($this->argumentStack);
     }
 }

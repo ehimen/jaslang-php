@@ -2,14 +2,15 @@
 
 namespace Ehimen\Jaslang\Engine\Parser;
 
-use Ehimen\Jaslang\Engine\Ast\Identifier;
-use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\Container;
-use Ehimen\Jaslang\Engine\Ast\FunctionCall;
-use Ehimen\Jaslang\Engine\Ast\Literal;
-use Ehimen\Jaslang\Engine\Ast\ParentNode;
-use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Block;
+use Ehimen\Jaslang\Engine\Ast\Node\Identifier;
+use Ehimen\Jaslang\Engine\Ast\Node\Operator;
+use Ehimen\Jaslang\Engine\Ast\Node\Container;
+use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
+use Ehimen\Jaslang\Engine\Ast\Node\Literal;
+use Ehimen\Jaslang\Engine\Ast\Node\ParentNode;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
@@ -71,8 +72,21 @@ class JaslangParser implements Parser
      * @var Validator
      */
     private $validator;
-    
-    private $statementOpen = false;
+
+    /**
+     * @var int[]
+     * 
+     * Tracks how many statements should be open at any one time.
+     */
+    private $statementStack = [];
+
+    /**
+     * @var int
+     * 
+     * Tracks how many blocks are open at any one time. Used to ensure that
+     * all block nodes' immediate children are statements.
+     */
+    private $blockDepth = 1;
 
     /**
      * @var NodeCreationObserver[]
@@ -107,7 +121,7 @@ class JaslangParser implements Parser
 
         $this->ast = new Root();
         $this->nodeStack = [$this->ast];
-        $this->statementOpen = false;
+        $this->statementStack = [0];
         
         foreach ($tokens as $i => $token) {
             $this->currentToken = $token;
@@ -168,17 +182,23 @@ class JaslangParser implements Parser
         $parenClose = 'paren-close';
         $comma      = 'comma';
         $stateTerm  = 'state-term';
+        $blockOpen  = 'block-open';
+        $blockClose = 'block-close';
 
         $builder
             ->addRule($start, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($start, $literalTokens, $literal)
             ->addRule($start, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($start, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($start, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($literal, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($literal, Lexer::TOKEN_COMMA, $comma)
             ->addRule($literal, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($literal, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($literal, Lexer::TOKEN_LITERAL, $literal)
+            ->addRule($literal, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($literal, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($literal, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_OPERATOR, $operator)
@@ -189,6 +209,7 @@ class JaslangParser implements Parser
             ->addRule($identifier, Lexer::TOKEN_COMMA, $comma)
             ->addRule($identifier, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($identifier, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($identifier, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($fnOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($fnOpen, $literalTokens, $literal)
             ->addRule($fnOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -196,20 +217,36 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($parenClose, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($parenClose, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($parenClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($parenClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($parenClose, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($comma, $literalTokens, $literal)
             ->addRule($comma, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($comma, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($operator, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($parenOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($parenOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($parenOpen, $literalTokens, $literal)
             ->addRule($parenOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($parenOpen, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($stateTerm, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($stateTerm, $literalTokens, $literal)
             ->addRule($stateTerm, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($stateTerm, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($stateTerm, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($blockOpen, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($blockOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($blockOpen, $literalTokens, $literal)
+            ->addRule($blockOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($blockOpen, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($blockOpen, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($blockClose, Lexer::TOKEN_IDENTIFIER, $identifier)
+            ->addRule($blockClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($blockClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($blockClose, Lexer::TOKEN_OPERATOR, $operator)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -217,12 +254,15 @@ class JaslangParser implements Parser
             ->whenEntering($parenClose, $closeNode)
             ->whenEntering($parenOpen, $createNode)
             ->whenEntering($stateTerm, $closeNode)
+            ->whenEntering($blockOpen, $createNode)
+            ->whenEntering($blockClose, $closeNode)
             
             ->start($start)
             ->accept($literal)
             ->accept($parenClose)
             ->accept($operator)
             ->accept($identifier)
+            ->accept($blockClose)
         ;
         
         return $builder->build();
@@ -237,12 +277,33 @@ class JaslangParser implements Parser
             throw new LogicException('Cannot create node as no context is present');
         }
         
-        if (!$this->statementOpen) {
+        $insertStatement = true;
+        
+        foreach (array_reverse($this->nodeStack) as $nodeFromStack) {
+            if (($nodeFromStack instanceof Block) || ($nodeFromStack instanceof Root)) {
+                break;
+            }
+            
+            if ($nodeFromStack instanceof Statement) {
+                $insertStatement = false;
+            }
+        }
+        
+        if ($insertStatement) { 
+            // This means we haven't created a statement for our current
+            // block (including root) so create one now.
+            // Bring the statement depth up to our current block depth.
+            // This is unwound to this depth when the block is closed.
+            // TODO: Cleaner solution to this? Stack approach, or revisit
+            // TODO: root/block/statement concepts?
             $statement = new Statement();
             array_push($this->nodeStack, $statement);
             $context->addChild($statement);
             $context = $statement;
-            $this->statementOpen = true;
+            
+            // Swap the stack frame to indicate that we've opened a statement.
+            array_pop($this->statementStack);
+            array_push($this->statementStack, 1);
         }
         
         if ($this->currentToken->isLiteral()) {
@@ -255,6 +316,8 @@ class JaslangParser implements Parser
             }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
             $node = $this->createOperator($context);
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_BRACE) {
+            $node = new Block();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
         }
@@ -307,31 +370,41 @@ class JaslangParser implements Parser
 
     private function closeNode()
     {
-        // How many nodes on the stack do we expect for valid
-        // closing of a node. 3 because root, statement, then
-        // the node we're closing.
-        $expectedOpen = 3;
+        $type = $this->currentToken->getType();
         
-        if ($this->currentToken->getType() === Lexer::TOKEN_STATETERM) {
-            if (!$this->statementOpen) {
-                throw new LogicException('Request to close a statement, but one is not open.');
+        if ($type === Lexer::TOKEN_STATETERM) {
+            while (end($this->nodeStack) instanceof Statement) {
+                array_pop($this->nodeStack);
             }
-            
-            $this->statementOpen = false;
-            
-            // If we're closing a statement, any less than 2 nodes on
-            // the stack and something's gone wrong.
+        } elseif ($type === Lexer::TOKEN_RIGHT_BRACE) {
+            // State termination is optional in final statement of a block.
+            if (end($this->nodeStack) instanceof Statement) {
+                array_pop($this->nodeStack);
+            }
+            // Now close off our blocks.
+            if (end($this->nodeStack) instanceof Block) {
+                array_pop($this->nodeStack);
+            }
+            // Blocks don't need to be terminated explicitly, so close all statements.
+            while (end($this->nodeStack) instanceof Statement) {
+                array_pop($this->nodeStack);
+            }
+        } else {
+            // How many nodes on the stack do we expect for valid
+            // closing of a node. 2+ because root, the node we're closing
+            // and statement(s) in between.
+            // TODO: what about this check in nested statements/blocks.
             $expectedOpen = 2;
-        }
-        
-        if (count($this->nodeStack) < $expectedOpen) {
-            // We've been asked to close a node that doesn't exist.
-            // This means we're closing too many functions, e.g.
-            // foo())
-            throw new UnexpectedTokenException($this->input, $this->currentToken);
-        }
 
-        array_pop($this->nodeStack);
+            if (count($this->nodeStack) <= $expectedOpen) {
+                // We've been asked to close a node that doesn't exist.
+                // This means we're closing too many functions, e.g.
+                // foo())
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+
+            array_pop($this->nodeStack);
+        }
     }
 
     /**

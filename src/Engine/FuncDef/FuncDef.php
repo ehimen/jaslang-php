@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Engine\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
@@ -19,10 +20,11 @@ interface FuncDef
     /**
      * @param ArgList           $args
      * @param EvaluationContext $context
+     * @param Evaluator         $evaluator
      *
      * @return Argument
      */
-    public function invoke(ArgList $args, EvaluationContext $context);
+    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator);
     
     // TODO: return values!
 }

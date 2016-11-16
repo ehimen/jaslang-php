@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
+use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Type\Type;
@@ -32,6 +33,9 @@ interface EvaluationContext
      *
      * @throws UndefinedSymbolException
      * @throws TypeErrorException
+     * 
+     * TODO: Move this to a more useful place that can be accessed by funcdefs without
+     * TODO: the need to support their own validation.
      * 
      * @return Value
      */

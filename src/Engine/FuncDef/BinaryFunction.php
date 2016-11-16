@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Engine\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
@@ -25,11 +26,11 @@ abstract class BinaryFunction implements FuncDef
         ];
     }
 
-    public function invoke(ArgList $operands, EvaluationContext $context)
+    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         return $this->performOperation(
-            $operands->get(0),
-            $operands->get(1)
+            $args->get(0),
+            $args->get(1)
         );
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
 /**
  * A node of the AST that supports children.

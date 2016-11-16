@@ -1,10 +1,11 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 
-class Operator extends UnlimitedChildrenParentNode
+class Operator extends UnlimitedChildrenParentNode implements Expression
 {
     private $operator;
 
@@ -72,5 +73,11 @@ class Operator extends UnlimitedChildrenParentNode
     private function getExpectedArgCount()
     {
         return $this->signature->getLeftArgs() + $this->signature->getRightArgs();
+    }
+
+
+    public function accept(Visitor $visitor)
+    {
+        $visitor->visitOperator($this);
     }
 }

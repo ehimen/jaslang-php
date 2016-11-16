@@ -1,13 +1,15 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
+
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 
 /**
  * An identifier that doesn't have any meaning until evaluation time.
  * 
  * This is used to describe variables and types in input.
  */
-class Identifier implements Node
+class Identifier implements Expression
 {
     /**
      * @var string
@@ -27,5 +29,10 @@ class Identifier implements Node
     public function debug()
     {
         return $this->name;
+    }
+
+    public function accept(Visitor $visitor)
+    {
+        $visitor->visitIdentifier($this);
     }
 }

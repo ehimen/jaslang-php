@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
+
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 
 /**
  * A node in the AST.
@@ -13,4 +15,6 @@ interface Node
      * @return string
      */
     public function debug();
+
+    public function accept(Visitor $visitor);
 }

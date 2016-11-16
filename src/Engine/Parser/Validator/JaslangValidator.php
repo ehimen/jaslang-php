@@ -2,9 +2,9 @@
 
 namespace Ehimen\Jaslang\Engine\Parser\Validator;
 
-use Ehimen\Jaslang\Engine\Ast\Node;
-use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Node;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Lexer\Token;

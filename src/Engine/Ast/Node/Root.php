@@ -1,7 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 
 /**
@@ -21,5 +22,10 @@ class Root extends UnlimitedChildrenParentNode
         }
 
         return $child;
+    }
+
+    public function accept(Visitor $visitor)
+    {
+        return $visitor->visitRoot($this);
     }
 }

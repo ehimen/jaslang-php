@@ -1,10 +1,11 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
 
-class Literal implements Node
+class Literal implements Expression
 {
     private $value;
 
@@ -32,5 +33,10 @@ class Literal implements Node
     public function getType()
     {
         return $this->type;
+    }
+
+    public function accept(Visitor $visitor)
+    {
+        $visitor->visitLiteral($this);
     }
 }

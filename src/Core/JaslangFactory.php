@@ -3,12 +3,15 @@
 namespace Ehimen\Jaslang\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\IfDef;
 use Ehimen\Jaslang\Core\FuncDef\Increment;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
+use Ehimen\Jaslang\Core\FuncDef\WhileDef;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
+use Ehimen\Jaslang\Engine\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
@@ -35,7 +38,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
  * This is provided for convenience to bootstrap a default evaluator
  * and its dependencies, offering hooks to configure certain aspects.
  *
- * @see \Ehimen\Jaslang\Engine\Evaluator\Evaluator to construct manually if
+ * @see \Ehimen\Jaslang\Engine\Interpreter to construct manually if
  *                                          you need more control.
  */
 class JaslangFactory
@@ -88,8 +91,10 @@ class JaslangFactory
         $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binary());
         $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 2, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
-        $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary(10));
+        $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary());
         $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
+        $fnRepo->registerOperator('if', new IfDef(), new OperatorSignature(0, 2));
+        $fnRepo->registerOperator('while', new WhileDef(), new OperatorSignature(0, 2));
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());
@@ -110,7 +115,10 @@ class JaslangFactory
         
         $parser->registerNodeCreationObserver($validator);
 
-        $evaluator = new Evaluator($parser, $fnRepo, $invoker, $contextFactory);
+        $evaluator = new Interpreter(
+            $parser,
+            new Evaluator($invoker, $fnRepo, $contextFactory)
+        );
 
         // Reset our repository for subsequent create() calls.
         $this->functionRepository = null;

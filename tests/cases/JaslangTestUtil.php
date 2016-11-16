@@ -2,12 +2,14 @@
 
 namespace Ehimen\JaslangTests;
 
-use Ehimen\Jaslang\Engine\Ast\Identifier;
-use Ehimen\Jaslang\Engine\Ast\Literal;
-use Ehimen\Jaslang\Engine\Ast\Node;
-use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Block;
+use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
+use Ehimen\Jaslang\Engine\Ast\Node\Identifier;
+use Ehimen\Jaslang\Engine\Ast\Node\Literal;
+use Ehimen\Jaslang\Engine\Ast\Node\Node;
+use Ehimen\Jaslang\Engine\Ast\Node\Operator;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Lexer\Token;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
@@ -44,6 +46,16 @@ trait JaslangTestUtil
     private function identifier($value)
     {
         return new Identifier($value);
+    }
+
+    private function block(array $statements)
+    {
+        return new Block($statements);
+    }
+
+    private function functionCall($name, array $arguments)
+    {
+        return new FunctionCall($name, $arguments);
     }
 
     private function statement($children)

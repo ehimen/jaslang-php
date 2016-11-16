@@ -2,14 +2,14 @@
 
 namespace Ehimen\JaslangTests\Engine\Parser;
 
-use Ehimen\Jaslang\Engine\Ast\Identifier;
-use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\Container;
-use Ehimen\Jaslang\Engine\Ast\FunctionCall;
-use Ehimen\Jaslang\Engine\Ast\Literal;
-use Ehimen\Jaslang\Engine\Ast\Node;
-use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Identifier;
+use Ehimen\Jaslang\Engine\Ast\Node\Operator;
+use Ehimen\Jaslang\Engine\Ast\Node\Container;
+use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
+use Ehimen\Jaslang\Engine\Ast\Node\Literal;
+use Ehimen\Jaslang\Engine\Ast\Node\Node;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
@@ -38,7 +38,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 4),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 5),
             ],
-            new FunctionCall('foo', [])
+            $this->functionCall('foo', [])
         );
     }
     
@@ -52,7 +52,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'bar', 5),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10),
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'foo',
                 [$this->stringLiteral('bar')]
             )
@@ -72,7 +72,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'baz', 12),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 17),
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'foo',
                 [$this->stringLiteral('bar'), $this->stringLiteral('baz')]
             )
@@ -91,9 +91,9 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 9),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 10)
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'foo',
-                [new FunctionCall('bar', [])]
+                [$this->functionCall('bar', [])]
             )
         );
     }
@@ -115,9 +115,9 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 16),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 17)
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'foo',
-                [new FunctionCall('bar', []), new FunctionCall('baz', [])]
+                [$this->functionCall('bar', []), $this->functionCall('baz', [])]
             )
         );
     }
@@ -145,9 +145,9 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 23),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 24)
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'foo',
-                [new FunctionCall('bar', []), new FunctionCall('baz', [])]
+                [$this->functionCall('bar', []), $this->functionCall('baz', [])]
             )
         );
     }
@@ -279,7 +279,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '9', 17),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 18),
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'sum',
                 [
                     $this->binaryOperator(
@@ -345,7 +345,7 @@ class JaslangParserTest extends TestCase
             $this->binaryOperator(
                 '+',
                 [
-                    new FunctionCall(
+                    $this->functionCall(
                         'sum',
                         [
                             $this->numberLiteral('1'),
@@ -379,7 +379,7 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_LITERAL, '5', 18),
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 19),
             ],
-            new FunctionCall(
+            $this->functionCall(
                 'sum',
                 [
                     $this->numberLiteral('1'),
@@ -390,7 +390,7 @@ class JaslangParserTest extends TestCase
                                 '+',
                                 [
                                     $this->numberLiteral('2'),
-                                    new FunctionCall(
+                                    $this->functionCall(
                                         'sum',
                                         [
                                             $this->numberLiteral('3'),
@@ -553,7 +553,7 @@ class JaslangParserTest extends TestCase
             ],
             new Root([
                 $this->statement($this->numberLiteral('1')),
-                $this->statement(new FunctionCall(
+                $this->statement($this->functionCall(
                     'sum',
                     [
                         $this->numberLiteral('2'),
@@ -566,7 +566,7 @@ class JaslangParserTest extends TestCase
                         ),
                     ]
                 )),
-                $this->statement(new FunctionCall(
+                $this->statement($this->functionCall(
                     'sum',
                     [
                         $this->numberLiteral('5'),
@@ -857,7 +857,7 @@ class JaslangParserTest extends TestCase
                         ],
                         0
                     ),
-                    new FunctionCall(
+                    $this->functionCall(
                         'sum',
                         [
                             $this->binaryOperator(
@@ -972,6 +972,164 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 6),
             ],
             $this->unexpectedTokenException('foo(@)', $unexpected)
+        );
+    }
+
+    public function testEmptyBlock()
+    {
+        $this->performTest(
+            '{}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 2),
+            ],
+            $this->block([])
+        );
+    }
+
+    public function testBlock()
+    {
+        $this->performTest(
+            '{1337; "foo"}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL, '1337', 2),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 6),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 8),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 11),
+            ],
+            $this->block([
+                $this->statement($this->numberLiteral(1337)),
+                $this->statement($this->stringLiteral('foo')),
+            ])
+        );
+    }
+
+    public function testTerminatingStatementsInBlock()
+    {
+        $this->performTest(
+            '{1337; "foo";}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_LITERAL, '1337', 2),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 6),
+                $this->createToken(Lexer::TOKEN_WHITESPACE, ' ', 7),
+                $this->createToken(Lexer::TOKEN_LITERAL_STRING, 'foo', 8),
+                $this->createToken(Lexer::TOKEN_STATETERM, ';', 11),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 12),
+            ],
+            $this->block([
+                $this->statement($this->numberLiteral(1337)),
+                $this->statement($this->stringLiteral('foo')),
+            ])
+        );
+    }
+
+    public function testFunctionInBlock()
+    {
+        $this->performTest(
+            '{foo(bar)}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+                $this->createToken(Lexer::TOKEN_LEFT_PAREN, '(', 5),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 6),
+                $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 9),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 10),
+            ],
+            $this->block([
+                $this->statement($this->functionCall('foo', [$this->identifier('bar')])),
+            ])
+        );
+    }
+
+    public function testOperatorInBlock()
+    {
+        $this->performTestWithOperators(
+            '{foo+bar}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '+', 5),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 6),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 7),
+            ],
+            $this->block([
+                $this->statement($this->operator(
+                    '+',
+                    [$this->identifier('foo'), $this->identifier('bar')],
+                    OperatorSignature::binary()
+                )),
+            ]),
+            [
+                ['+', OperatorSignature::binary()],
+            ]
+        );
+    }
+
+    public function testPrefixOperatorInBlock()
+    {
+        $this->performTestWithOperators(
+            '{++foo}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 2),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 4),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 7),
+            ],
+            $this->block([
+                $this->statement($this->operator(
+                    '++',
+                    [$this->identifier('foo')],
+                    new OperatorSignature(0, 1)
+                )),
+            ]),
+            [
+                ['++', new OperatorSignature(0, 1)],
+            ]
+        );
+    }
+
+    public function testPostfixOperatorInBlock()
+    {
+        $this->performTestWithOperators(
+            '{foo++}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+                $this->createToken(Lexer::TOKEN_OPERATOR, '++', 5),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 7),
+            ],
+            $this->block([
+                $this->statement($this->operator(
+                    '++',
+                    [$this->identifier('foo')],
+                    new OperatorSignature(1, 0)
+                )),
+            ]),
+            [
+                ['++', new OperatorSignature(1, 0)],
+            ]
+        );
+    }
+
+    public function testMultipleBlocksCloseStatements()
+    {
+        $this->performMultiStatementTest(
+            '{foo}{bar}',
+            [
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 1),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'foo', 2),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 5),
+                $this->createToken(Lexer::TOKEN_LEFT_BRACE, '{', 6),
+                $this->createToken(Lexer::TOKEN_IDENTIFIER, 'bar', 7),
+                $this->createToken(Lexer::TOKEN_RIGHT_BRACE, '}', 10),
+            ],
+            $this->root([
+                $this->statement($this->block([$this->statement($this->identifier('foo'))])),
+                $this->statement($this->block([$this->statement($this->identifier('bar'))])),
+            ])
         );
     }
 

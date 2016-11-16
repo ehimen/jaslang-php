@@ -67,14 +67,32 @@ let number radius = 5;
 # Type safety
 let number foo = "bar"                  // Jaslang runtime exception! Assignment expected value of type number, but got "bar"
                                            #0 > let number foo = "bar"
+
+# Conditionals & loops (factorial)
+let number n = 4;
+let number total = 0;
+
+while (!(n === 0)) {
+    if (total === 0) {
+        total = 1;
+    }
+    
+    if (!(total === 0)) {
+        total = (total * n);
+    }
+    
+    n = (n - 1);
+}
+
+total                                   // 24
 ```
 
 The list of core functions is currently very limited due to focus on the engine.
 
 # TODO
 
+* Clean up block/root/statement node concepts, and clean up parser code.
 * Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
-* Passing references to functions would allow for non-engine implementation of increment operator, for e.g.
 * Ternary operator?
 * Clean up phar/build
 * Return types

@@ -2,15 +2,15 @@
 
 namespace Ehimen\Jaslang\Engine\Parser;
 
-use Ehimen\Jaslang\Engine\Ast\Block;
-use Ehimen\Jaslang\Engine\Ast\Identifier;
-use Ehimen\Jaslang\Engine\Ast\Operator;
-use Ehimen\Jaslang\Engine\Ast\Container;
-use Ehimen\Jaslang\Engine\Ast\FunctionCall;
-use Ehimen\Jaslang\Engine\Ast\Literal;
-use Ehimen\Jaslang\Engine\Ast\ParentNode;
-use Ehimen\Jaslang\Engine\Ast\Root;
-use Ehimen\Jaslang\Engine\Ast\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Block;
+use Ehimen\Jaslang\Engine\Ast\Node\Identifier;
+use Ehimen\Jaslang\Engine\Ast\Node\Operator;
+use Ehimen\Jaslang\Engine\Ast\Node\Container;
+use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
+use Ehimen\Jaslang\Engine\Ast\Node\Literal;
+use Ehimen\Jaslang\Engine\Ast\Node\ParentNode;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Validator\Validator;

@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Parser;
 
-use Ehimen\Jaslang\Engine\Ast\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
 
 interface Parser
 {

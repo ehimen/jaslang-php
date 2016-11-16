@@ -21,5 +21,5 @@ interface Invoker
      *
      * @return Value
      */
-    public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context);
+    public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator);
 }

@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Parser\Validator;
 
-use Ehimen\Jaslang\Engine\Ast\Root;
+use Ehimen\Jaslang\Engine\Ast\Node\Root;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Lexer\Lexer;
 use Ehimen\Jaslang\Engine\Lexer\Token;

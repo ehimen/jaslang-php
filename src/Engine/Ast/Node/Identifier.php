@@ -1,6 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
+
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 
 /**
  * An identifier that doesn't have any meaning until evaluation time.
@@ -27,5 +29,10 @@ class Identifier implements Node
     public function debug()
     {
         return $this->name;
+    }
+
+    public function accept(Visitor $visitor)
+    {
+        $visitor->visitIdentifier($this);
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
+use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 
 /**
@@ -52,5 +53,10 @@ class Container implements ParentNode
     public function removeLastChild()
     {
         $this->contained = null;
+    }
+
+    public function accept(Visitor $visitor)
+    {
+        $visitor->visitContainer($this);
     }
 }

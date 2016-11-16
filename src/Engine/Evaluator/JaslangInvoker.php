@@ -31,11 +31,11 @@ class JaslangInvoker implements Invoker
         $this->repository = $repository;
     }
 
-    public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context)
+    public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         $this->validateArgs($function->getParameters(), $args);
 
-        return $function->invoke($args, $context);
+        return $function->invoke($args, $context, $evaluator);
 
         // TODO: return type. Really need to validate this. Keep not returning wrapped values!
     }

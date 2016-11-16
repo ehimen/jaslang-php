@@ -32,7 +32,7 @@ if (strlen($jaslang) === 0) {
 }
 
 try {
-    echo (new JaslangFactory())->create()->evaluate($jaslang);
+    echo (new JaslangFactory())->create()->run($jaslang);
 } catch (RuntimeException $e) {
     echo $e->getMessage();
     echo PHP_EOL;

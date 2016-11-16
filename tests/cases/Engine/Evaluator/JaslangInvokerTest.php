@@ -3,6 +3,7 @@
 namespace Ehimen\JaslangTests\Engine\Evaluator;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
@@ -123,7 +124,7 @@ class JaslangInvokerTest extends TestCase
         $function   = $this->getFunction(new ArgList($args), $parameters, $context = $this->getContext());
         $repository = $this->getTypeRepository($types);
 
-        $this->getInvoker($repository)->invokeFunction($function, new ArgList($args), $context);
+        $this->getInvoker($repository)->invokeFunction($function, new ArgList($args), $context, $this->getEvaluator());
     }
 
     private function performInvalidArgTest(
@@ -137,7 +138,7 @@ class JaslangInvokerTest extends TestCase
         $invoker    = $this->getInvoker($repository);
 
         try {
-            $invoker->invokeFunction($function, new ArgList($args), $context);
+            $invoker->invokeFunction($function, new ArgList($args), $context, $this->getEvaluator());
         } catch (InvalidArgumentException $actual) {
             $this->assertEquals($expected, $actual);
             return;
@@ -202,5 +203,13 @@ class JaslangInvokerTest extends TestCase
             ->willReturn(true);
         
         return $type;
+    }
+
+    /**
+     * @return Evaluator
+     */
+    private function getEvaluator()
+    {
+        return $this->createMock(Evaluator::class);
     }
 }

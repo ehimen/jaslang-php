@@ -2,7 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
-use Ehimen\Jaslang\Engine\Ast\Node;
+use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
@@ -26,11 +26,10 @@ class JaslangContext implements EvaluationContext
      */
     private $evaluationFn;
     
-    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository, \Closure $evaluationFn)
+    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository)
     {
         $this->symbolTable    = $symbolTable;
         $this->typeRepository = $typeRepository;
-        $this->evaluationFn   = $evaluationFn;
     }
 
     /**
@@ -71,14 +70,5 @@ class JaslangContext implements EvaluationContext
         }
         
         return $value;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function evaluateInContext(Node $node)
-    {
-        $fn = $this->evaluationFn;
-        $fn($node, $this);
     }
 }

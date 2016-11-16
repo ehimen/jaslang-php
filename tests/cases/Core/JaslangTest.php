@@ -3,7 +3,7 @@
 namespace Ehimen\JaslangTests\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
-use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
+use Ehimen\Jaslang\Engine\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
@@ -104,7 +104,7 @@ JASLANG;
 
     public function testRandom()
     {
-        $actual = $this->getEvaluator()->evaluate('random()');
+        $actual = $this->getInterpreter()->run('random()');
         
         $this->assertGreaterThan(0, (int)$actual);
     }
@@ -225,7 +225,7 @@ JASLANG;
         $factory->registerFunction('foo', new FooFuncDef());
         $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binary());
         
-        $result = $factory->create()->evaluate('"foo" +-+-+-+-+ foo()');
+        $result = $factory->create()->run('"foo" +-+-+-+-+ foo()');
         $this->assertSame('true', $result);
     }
 
@@ -235,10 +235,10 @@ JASLANG;
         $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binary());
         $evaluator = $factory->create();
 
-        $result = $evaluator->evaluate('false AND true');
+        $result = $evaluator->run('false AND true');
         $this->assertSame('false', $result);
 
-        $result = $evaluator->evaluate('true AND true');
+        $result = $evaluator->run('true AND true');
         $this->assertSame('true', $result);
     }
 
@@ -281,7 +281,7 @@ JASLANG;
 
     public function testCustomType()
     {
-        $result = $this->getEvaluatorWithCustomType()->evaluate('testfunction(c, c)');
+        $result = $this->getEvaluatorWithCustomType()->run('testfunction(c, c)');
         
         $this->assertSame('true', $result);
     }
@@ -516,7 +516,7 @@ CODE;
     
     private function performTest($input, $expected)
     {
-        $actual = $this->getEvaluator()->evaluate($input);
+        $actual = $this->getInterpreter()->run($input);
 
         $this->assertSame($expected, $actual);
     }
@@ -526,13 +526,13 @@ CODE;
         $factory = new JaslangFactory();
         $signature = OperatorSignature::binary($multiplicationPrecedence);
         $factory->registerOperator('test-multiply', new Multiplication(), $signature);
-        $this->assertSame($expected, $factory->create()->evaluate($input));
+        $this->assertSame($expected, $factory->create()->run($input));
     }
 
     private function performSyntaxErrorTest($input, SyntaxErrorException $expected)
     {
         try {
-            $this->getEvaluator()->evaluate($input);
+            $this->getInterpreter()->run($input);
         } catch (SyntaxErrorException $actual) {
             $this->assertEquals($expected, $actual);
             return;
@@ -541,12 +541,12 @@ CODE;
         $this->fail('A syntax error was not thrown');
     }
 
-    private function performRuntimeExceptionTest($input, RuntimeException $expected, Evaluator $evaluator = null)
+    private function performRuntimeExceptionTest($input, RuntimeException $expected, Interpreter $evaluator = null)
     {
-        $evaluator = $evaluator ?: $this->getEvaluator();
+        $evaluator = $evaluator ?: $this->getInterpreter();
         
         try {
-            $evaluator->evaluate($input);
+            $evaluator->run($input);
         } catch (RuntimeException $actual) {
             $this->assertEquals($expected, $actual);
             return;
@@ -555,7 +555,7 @@ CODE;
         $this->fail('A runtime exception was not thrown');
     }
     
-    private function getEvaluator()
+    private function getInterpreter()
     {
         return (new JaslangFactory())->create();
     }

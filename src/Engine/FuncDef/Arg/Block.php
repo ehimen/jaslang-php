@@ -13,11 +13,11 @@ use Ehimen\Jaslang\Engine\Ast;
 class Block implements Argument
 {
     /**
-     * @var Ast\Block
+     * @var \Ehimen\Jaslang\Engine\Ast\Node\Block
      */
     private $block;
 
-    public function __construct(Ast\Block $block)
+    public function __construct(Ast\Node\Block $block)
     {
         $this->block = $block;
     }
@@ -31,7 +31,7 @@ class Block implements Argument
     }
 
     /**
-     * @return Ast\Block
+     * @return \Ehimen\Jaslang\Engine\Ast\Node\Block
      */
     public function getBlock()
     {

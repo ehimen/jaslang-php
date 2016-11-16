@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Ast;
+namespace Ehimen\Jaslang\Engine\Ast\Node;
 
 abstract class UnlimitedChildrenParentNode implements ParentNode
 {

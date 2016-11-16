@@ -16,8 +16,8 @@ class JaslangContextFactory implements ContextFactory
         $this->typeRepository = $typeRepository;
     }
     
-    public function createContext(\Closure $evaluationFn)
+    public function createContext()
     {
-        return new JaslangContext(new SymbolTable(), $this->typeRepository, $evaluationFn);
+        return new JaslangContext(new SymbolTable(), $this->typeRepository);
     }
 }

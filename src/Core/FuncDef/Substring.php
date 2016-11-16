@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
@@ -20,7 +21,7 @@ class Substring implements FuncDef
         ];
     }
 
-    public function invoke(ArgList $args, EvaluationContext $context)
+    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         /** @var Value\Str $string */
         $string = $args->get(0);

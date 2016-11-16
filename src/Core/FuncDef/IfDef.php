@@ -5,6 +5,7 @@ namespace Ehimen\Jaslang\Core\FuncDef;
 use Ehimen\Jaslang\Core\Type;
 use Ehimen\Jaslang\Core\Value;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Block;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
@@ -20,7 +21,7 @@ class IfDef implements FuncDef
         ];
     }
 
-    public function invoke(ArgList $args, EvaluationContext $context)
+    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         /** @var Value\Boolean $do */
         $do = $args->get(0);
@@ -28,7 +29,7 @@ class IfDef implements FuncDef
         $action = $args->get(1);
         
         if ($do->getValue()) {
-            $context->evaluateInContext($action->getBlock());
+            $action->getBlock()->accept($evaluator);
         }
         
         return new Value\Boolean($do);

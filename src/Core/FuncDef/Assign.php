@@ -4,6 +4,7 @@ namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Core\Type\Any;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
@@ -38,7 +39,7 @@ class Assign implements FuncDef
         ];
     }
 
-    public function invoke(ArgList $args, EvaluationContext $context)
+    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         /** @var Variable $variable */
         $variable = $args->get(0);

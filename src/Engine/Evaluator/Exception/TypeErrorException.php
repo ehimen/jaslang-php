@@ -20,4 +20,14 @@ class TypeErrorException extends RuntimeException
             $actual
         ));
     }
+    
+    public static function evaluationResultTypeMismatch($expected, Value $value)
+    {
+        // TODO: need to report actual type received.
+        return new static(sprintf(
+            'Expected evaluation to result in type %s but got "%s"',
+            $expected,
+            $value->toString()
+        ));
+    }
 }

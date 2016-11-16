@@ -219,6 +219,7 @@ class JaslangParser implements Parser
             ->addRule($parenClose, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($parenClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($parenClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($parenClose, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($comma, $literalTokens, $literal)
             ->addRule($comma, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($comma, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
@@ -244,6 +245,8 @@ class JaslangParser implements Parser
             ->addRule($blockOpen, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($blockClose, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($blockClose, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($blockClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($blockClose, Lexer::TOKEN_OPERATOR, $operator)
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -374,7 +377,16 @@ class JaslangParser implements Parser
                 array_pop($this->nodeStack);
             }
         } elseif ($type === Lexer::TOKEN_RIGHT_BRACE) {
-            while (end($this->nodeStack) instanceof Statement || end($this->nodeStack) instanceof Block) {
+            // State termination is optional in final statement of a block.
+            if (end($this->nodeStack) instanceof Statement) {
+                array_pop($this->nodeStack);
+            }
+            // Now close off our blocks.
+            if (end($this->nodeStack) instanceof Block) {
+                array_pop($this->nodeStack);
+            }
+            // Blocks don't need to be terminated explicitly, so close all statements.
+            while (end($this->nodeStack) instanceof Statement) {
                 array_pop($this->nodeStack);
             }
         } else {

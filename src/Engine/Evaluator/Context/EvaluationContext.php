@@ -34,6 +34,9 @@ interface EvaluationContext
      * @throws UndefinedSymbolException
      * @throws TypeErrorException
      * 
+     * TODO: Move this to a more useful place that can be accessed by funcdefs without
+     * TODO: the need to support their own validation.
+     * 
      * @return Value
      */
     public function getVariableOfTypeOrThrow($name, Type $type);

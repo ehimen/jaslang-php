@@ -15,12 +15,14 @@ use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Block;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 class Evaluator implements Visitor
 {
@@ -73,15 +75,19 @@ class Evaluator implements Visitor
     }
 
     /**
-     * @return Argument
+     * @return Value
      */
     public function getResult()
     {
-        if (!isset($this->argumentStack[0][0])) {
+        if (!isset($this->argumentStack[0])) {
             throw new LogicException('Evaluator does not have a result.');
         }
         
-        return $this->argumentStack[0][0];
+        if (!(end($this->argumentStack[0]) instanceof Value)) {
+            throw new LogicException('Evaluator does not have a value result.');
+        }
+        
+        return end($this->argumentStack[0]);
     }
     
     public function visitBlock(Node\Block $node)
@@ -199,9 +205,13 @@ class Evaluator implements Visitor
                     continue;
                 }
 
-                // TODO: this doesn't need to be block.
-                if ($parameter->isBlock() && ($child instanceof Node\Block)) {
-                    $this->pushArgument(new Block($child));
+                if ($parameter->isRoutine() && ($child instanceof Node\Routine)) {
+                    $this->pushArgument(new Routine($child));
+                    continue;
+                }
+
+                if ($parameter->isExpression() && ($child instanceof Node\Expression)) {
+                    $this->pushArgument(new Expression($child));
                     continue;
                 }
             }

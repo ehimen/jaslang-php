@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Engine\Ast\Visitor;
  * 
  * This is used to describe variables and types in input.
  */
-class Identifier implements Node
+class Identifier implements Expression
 {
     /**
      * @var string

@@ -5,7 +5,7 @@ namespace Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Type\ConcreteType;
 
-class Literal implements Node
+class Literal implements Expression
 {
     private $value;
 

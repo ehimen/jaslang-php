@@ -5,7 +5,7 @@ namespace Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 
-class Operator extends UnlimitedChildrenParentNode
+class Operator extends UnlimitedChildrenParentNode implements Expression
 {
     private $operator;
 

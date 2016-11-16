@@ -9,10 +9,11 @@ use Ehimen\Jaslang\Engine\Type\Type;
  */
 class Parameter
 {
-    const TYPE_TYPE  = 'type';
-    const TYPE_VAR   = 'val';
-    const TYPE_VALUE = 'value';
-    const TYPE_BLOCK = 'block';
+    const TYPE_TYPE       = 'type';
+    const TYPE_VAR        = 'val';
+    const TYPE_VALUE      = 'value';
+    const TYPE_ROUTINE    = 'routine';
+    const TYPE_EXPRESSION = 'expression';
 
     /**
      * @var bool
@@ -61,11 +62,16 @@ class Parameter
     }
 
     /**
-     * Denotes a parameter which expects to receive statement(s).
+     * Denotes a parameter which expects to receive executable statement(s).
      */
-    public static function block($optional = false)
+    public static function routine($optional = false)
     {
-        return new static(static::TYPE_BLOCK, null, $optional);
+        return new static(static::TYPE_ROUTINE, null, $optional);
+    }
+
+    public static function expression($optional = false)
+    {
+        return new static(static::TYPE_EXPRESSION, null, $optional);
     }
 
     public function isVariable()
@@ -83,9 +89,14 @@ class Parameter
         return (static::TYPE_VALUE === $this->type);
     }
 
-    public function isBlock()
+    public function isRoutine()
     {
-        return (static::TYPE_BLOCK === $this->type);
+        return (static::TYPE_ROUTINE === $this->type);
+    }
+
+    public function isExpression()
+    {
+        return (static::TYPE_EXPRESSION === $this->type);
     }
     
     public function getExpectedType()

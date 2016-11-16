@@ -10,7 +10,7 @@ use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
  *
  * This is output by our parser to signify parenthesis grouping.
  */
-class Container implements ParentNode
+class Container implements ParentNode, Expression
 {
     /**
      * @var Node

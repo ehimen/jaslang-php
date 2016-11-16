@@ -10,16 +10,16 @@ use Ehimen\Jaslang\Engine\Ast;
  * This allows for implementation of control structures
  * (e.g. if, while) as functions against the Jaslang engine.
  */
-class Block implements Argument
+class Routine implements Argument
 {
     /**
-     * @var \Ehimen\Jaslang\Engine\Ast\Node\Block
+     * @var Ast\Node\Routine
      */
-    private $block;
+    private $routine;
 
-    public function __construct(Ast\Node\Block $block)
+    public function __construct(Ast\Node\Routine $routine)
     {
-        $this->block = $block;
+        $this->routine = $routine;
     }
 
     /**
@@ -27,14 +27,14 @@ class Block implements Argument
      */
     public function toString()
     {
-        return $this->block->debug();
+        return $this->routine->debug();
     }
 
     /**
-     * @return \Ehimen\Jaslang\Engine\Ast\Node\Block
+     * @return Ast\Node\Routine
      */
-    public function getBlock()
+    public function getRoutine()
     {
-        return $this->block;
+        return $this->routine;
     }
 }

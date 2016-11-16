@@ -315,6 +315,8 @@ JASLANG;
 
     public function testVariableInitialisation()
     {
+        $this->markTestSkipped('Remove this once we have removed implicit returns.');
+        
         $this->performTest(
             'let string foo',
             '[variable] foo'
@@ -469,7 +471,7 @@ CODE;
         $code = <<<CODE
 let number a = 1;
 
-if true { a = 2 }
+if true a = 2;
 
 a
 CODE;
@@ -482,7 +484,7 @@ CODE;
         $code = <<<CODE
 let number a = 1;
 
-if !true { a = 2 }
+if !true a = 2;
 
 a
 CODE;
@@ -501,6 +503,63 @@ a
 CODE;
 
         $this->performTest($code, '1');
+    }
+
+    public function testWhile()
+    {
+        $code = <<<CODE
+let number a = 0;
+
+while (!(a === 10)) {
+    a++;
+}
+
+a
+CODE;
+        
+        $this->performTest($code, '10');
+    }
+
+    public function testWhileAndIf()
+    {
+        $code = <<<CODE
+let number a = 0;
+let number b = 0;
+
+while (!(a === 10)) {
+    a++;
+    if (a === 5) b = 1;
+    if (a === 11) b = 2;
+}
+
+b
+CODE;
+        
+        $this->performTest($code, '1');
+    }
+
+    public function testFactorial()
+    {
+        $code = <<<CODE
+let number n = 4;
+let number total = 0;
+
+while (!(n === 0)) {
+    if (total === 0) {
+        total = 1;
+    }
+    
+    if (!(total === 0)) {
+        total = (total * n);
+    }
+    
+    n = (n - 1);
+}
+
+total
+CODE;
+
+        $this->performTest($code, '24');
     }
 
     private function getEvaluatorWithCustomType()

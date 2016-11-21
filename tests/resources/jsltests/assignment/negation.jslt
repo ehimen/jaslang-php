@@ -1,0 +1,6 @@
+>>>EXPECTED
+true
+>>>CODE
+let boolean foo = false;
+
+!foo

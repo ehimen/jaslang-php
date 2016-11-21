@@ -1,0 +1,10 @@
+>>>EXPECTED
+5
+>>>CODE
+let number a = 1;
+let number b = a++;
+
+a++;
+b++;
+
+a + b

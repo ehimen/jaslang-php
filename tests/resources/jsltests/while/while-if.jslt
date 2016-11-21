@@ -1,0 +1,13 @@
+>>>EXPECTED
+1
+>>>CODE
+let number a = 0;
+let number b = 0;
+
+while (!(a === 10)) {
+    a++;
+    if (a === 5) b = 1;
+    if (a === 11) b = 2;
+}
+
+b

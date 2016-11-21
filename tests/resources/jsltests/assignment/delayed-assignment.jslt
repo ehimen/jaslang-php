@@ -1,0 +1,10 @@
+>>>EXPECTED
+37
+>>>CODE
+let number one;
+let number two;
+
+one = 13;
+two = 24;
+
+sum(one, two)

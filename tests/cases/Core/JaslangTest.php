@@ -48,58 +48,9 @@ class JaslangTest extends TestCase
         $this->performTest('sum(1, 3)', '4');
     }
     
-    public function testSubtract()
-    {
-        $this->performTest('subtract(15, 2)', '13');
-    }
-    
-    public function testSimpleArithmetic()
-    {
-        $this->performTest('sum(subtract(10, 4), sum(9, subtract(3, 1)))', '17');
-    }
-    
     public function testSubstring()
     {
         $this->performTest('substring("hello world", 2, 3)', 'llo');
-    }
-
-    public function testMultiline()
-    {
-        $input = <<<JASLANG
-sum(
-    sum(
-        sum(
-            sum(
-                sum(
-                    sum(
-                        sum(
-                            sum(
-                                sum(
-                                    sum(
-                                        1,
-                                        1
-                                    ),
-                                    1
-                                ),
-                                1
-                            ),
-                            1
-                        ),
-                        1
-                    ),
-                    1
-                ),
-                1
-            ),
-            1
-        ),
-        1
-    ),
-    2
-)
-JASLANG;
-        
-        $this->performTest($input, '12');
     }
 
     public function testRandom()
@@ -195,16 +146,6 @@ JASLANG;
         );
     }
 
-    public function testSubtractOperator()
-    {
-        $this->performTest('3 - 4', '-1');
-    }
-
-    public function testSignedNumbers()
-    {
-        $this->performTest('-3.5 - +4', '-7.5');
-    }
-
     public function getIdentityIdentical()
     {
         $this->performTest('1 === 1', 'true');
@@ -242,20 +183,6 @@ JASLANG;
         $this->assertSame('true', $result);
     }
 
-    public function testComplexFunctionOperatorNesting()
-    {
-        $this->performTest(
-            '1 - 2 + sum(sum(3, 4) + 5, 6 + 7 - sum(8, 9) + sum(10, 11)) + 12 + 13',
-            '53'
-        );
-    }
-
-    public function testParenGroupPrecedence()
-    {
-        $this->performTest('3 - 1 + 2 + sum(7 - 2 + 10, 5)', '24');
-        $this->performTest('3 - ((1 + 2) + sum(7 - (2 + 10), 5))', '0');
-    }
-
     public function testOperatorPrecedence()
     {
         // TODO: this test is really testing the engine.
@@ -272,11 +199,6 @@ JASLANG;
 
         $this->performMultiplicationTest($input, 10, '243');
         $this->performMultiplicationTest($input, -10, '340');
-    }
-
-    public function testMultiStatement()
-    {
-        $this->performTest("sum(1, 2); sum(4, 5)", '9');
     }
 
     public function testCustomType()
@@ -321,80 +243,6 @@ JASLANG;
             'let string foo',
             '[variable] foo'
         );
-    }
-
-    public function testVariableAssignment()
-    {
-        $this->performTest(
-            'let string foo = "bar"',
-            'bar'
-        );
-    }
-
-    public function testVariablesInFunction()
-    {
-        $code = <<<CODE
-let number one = 13;
-let number two = 24;
-
-sum(one, two)
-CODE;
-        
-        $this->performTest($code, '37');
-    }
-
-    public function testSeparateAssignment()
-    {
-        $code = <<<CODE
-let number one;
-let number two;
-
-one = 13;
-two = 24;
-
-sum(one, two)
-CODE;
-        
-        $this->performTest($code, '37');
-    }
-
-    public function testNegation()
-    {
-        $code = <<<CODE
-let boolean foo = false;
-
-!foo
-CODE;
-        
-        $this->performTest($code, 'true');
-    }
-
-    public function testDoubleNegationWithAssignment()
-    {
-        $code = <<<CODE
-let boolean foo = false;
-
-foo = !foo;
-
-!foo
-CODE;
-
-        $this->performTest($code, 'false');
-    }
-
-    public function testIncrement()
-    {
-        $code = <<<CODE
-let number a = 1;
-let number b = a++;
-
-a++;
-b++;
-
-a + b
-CODE;
-
-        $this->performTest($code, '5');
     }
 
     public function testIncrementFailsOnString()
@@ -464,102 +312,6 @@ CODE;
         $expected = new UnexpectedTokenException('"foo" 1337', new Token('1337', Lexer::TOKEN_LITERAL, 7));
         
         $this->performSyntaxErrorTest($input, $expected);
-    }
-
-    public function testIfPositive()
-    {
-        $code = <<<CODE
-let number a = 1;
-
-if true a = 2;
-
-a
-CODE;
-
-        $this->performTest($code, '2');
-    }
-
-    public function testIfNegative()
-    {
-        $code = <<<CODE
-let number a = 1;
-
-if !true a = 2;
-
-a
-CODE;
-
-        $this->performTest($code, '1');
-    }
-
-    public function testIfParens()
-    {
-        $code = <<<CODE
-let number a = 1;
-
-if (!true) { a = 2 }
-
-a
-CODE;
-
-        $this->performTest($code, '1');
-    }
-
-    public function testWhile()
-    {
-        $code = <<<CODE
-let number a = 0;
-
-while (!(a === 10)) {
-    a++;
-}
-
-a
-CODE;
-        
-        $this->performTest($code, '10');
-    }
-
-    public function testWhileAndIf()
-    {
-        $code = <<<CODE
-let number a = 0;
-let number b = 0;
-
-while (!(a === 10)) {
-    a++;
-    if (a === 5) b = 1;
-    if (a === 11) b = 2;
-}
-
-b
-CODE;
-        
-        $this->performTest($code, '1');
-    }
-
-    public function testFactorial()
-    {
-        $code = <<<CODE
-let number n = 4;
-let number total = 0;
-
-while (!(n === 0)) {
-    if (total === 0) {
-        total = 1;
-    }
-    
-    if (!(total === 0)) {
-        total = (total * n);
-    }
-    
-    n = (n - 1);
-}
-
-total
-CODE;
-
-        $this->performTest($code, '24');
     }
 
     private function getEvaluatorWithCustomType()

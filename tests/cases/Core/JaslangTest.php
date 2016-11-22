@@ -3,6 +3,7 @@
 namespace Ehimen\JaslangTests\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Engine\Exception\EvaluationException;
 use Ehimen\Jaslang\Engine\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
@@ -30,134 +31,81 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * High-level tests for Jaslang evaluation.
+ * 
+ * Runs test files (.jslt) in resources/jsltests
+ * 
+ * TODO: remove left-over tests that couldn't be moved to jslt.
  */
 class JaslangTest extends TestCase
 {
-    public function testStringLiteral()
+    const TESTDIR = __DIR__ . '/../../resources/jsltests';
+    const TESTFILEREGEX = '#\.jslt$#';
+
+    /**
+     * @dataProvider provideFiles
+     */
+    public function testFile($expected, $code, $error)
     {
-        $this->performTest('"foo"', 'foo');
-    }
-    
-    public function testNumberLiteral()
-    {
-        $this->performTest('13', '13');
-    }
-    
-    public function testSum()
-    {
-        $this->performTest('sum(1, 3)', '4');
-    }
-    
-    public function testSubstring()
-    {
-        $this->performTest('substring("hello world", 2, 3)', 'llo');
+        try {
+            $this->assertSame($expected, $this->getInterpreter()->run($code));
+        } catch (EvaluationException $e) {
+            if (is_string($error)) {
+                $this->assertSame(trim($error), trim((string)$e));
+                return;
+            } else {
+                throw $e;
+            }
+        }
+
+        if (is_string($error)) {
+            $this->fail('Expected Jaslang error, but one was not thrown');
+        }
     }
 
+    public function provideFiles()
+    {
+        $files = $this->getTestFiles();
+        $cases = [];
+
+        foreach ($files as $file) {
+            $contents = file_get_contents($file);
+
+            $tests = preg_split('/!>(\S+)\n/', $contents, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+
+            if (1 === count($tests)) {
+                $tests = ['', reset($tests)];
+            }
+
+            for ($i = 0; $i < count($tests); $i += 2) {
+                $case    = isset($tests[$i]) ? $tests[$i] : null;
+                $content = isset($tests[$i + 1]) ? $tests[$i + 1] : null;
+
+                if (!is_string($content) || !is_string($case)) {
+                    throw new \Exception('Invalid jsl test file contents in file: ' . $file);
+                }
+
+                $parts = preg_split('/>>>EXPECTED\n|\n?>>>CODE\n|\n?>>>ERROR\n/', $content);
+
+                $expected = isset($parts[1]) ? $parts[1] : null;
+                $code     = isset($parts[2]) ? $parts[2] : null;
+                $error    = isset($parts[3]) ? $parts[3] : null;
+
+                if (!is_string($expected) || !is_string($code)) {
+                    throw new \Exception('Invalid jsl test file contents in file: ' . $file);
+                }
+
+                $cases[$file . '#' . $case] = [$expected, $code, $error];
+            }
+        }
+
+        return $cases;
+    }
+    
     public function testRandom()
     {
         $actual = $this->getInterpreter()->run('random()');
         
         $this->assertGreaterThan(0, (int)$actual);
-    }
-
-    public function testAddition()
-    {
-        $this->performTest('subtract(13 + 24, 7 + 5)', '25');
-    }
-
-    public function testChainedAddition()
-    {
-        $this->performTest('1 + 2 + 3', '6');
-    }
-
-    /**
-     * TODO: ideally move this to a dedicated evaluator test.
-     */
-    public function testSubtractNoArgs()
-    {
-        $expected = InvalidArgumentException::invalidArgument(0, 'number');
-        
-        $expected->setInput('subtract()');
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('subtract()')
-        ]));
-        
-        $this->performRuntimeExceptionTest(
-            'subtract()',
-            $expected
-        );
-    }
-
-    /**
-     * TODO: ideally move this to a dedicated evaluator test.
-     */
-    public function testSubtractOneArg()
-    {
-        $expected = InvalidArgumentException::invalidArgument(1, 'number');
-        
-        $expected->setInput('subtract(100)');
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('subtract(100)')
-        ]));
-        
-        $this->performRuntimeExceptionTest(
-            'subtract(100)',
-            $expected
-        );
-    }
-
-    /**
-     * TODO: ideally move this to a dedicated evaluator test.
-     */
-    public function testSubtractNestedInvalidArg()
-    {
-        $expected = InvalidArgumentException::invalidArgument(0, 'number', new Str("foo"));
-        
-        $expected->setInput('sum(sum(1, 3), sum(1 + 3, subtract("foo")))');
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('sum(sum(1, 3), sum(1 + 3, subtract("foo")))'),
-            new TraceEntry('sum(1 + 3, subtract("foo"))'),
-            new TraceEntry('subtract("foo")'),
-        ]));
-        
-        $this->performRuntimeExceptionTest(
-            'sum(sum(1, 3), sum(1 + 3, subtract("foo")))',
-            $expected
-        );
-    }
-
-    /**
-     * TODO: ideally move this to a dedicated evaluator test.
-     */
-    public function testUndefinedFunction()
-    {
-        $expected = new UndefinedFunctionException('definitelynotacorefunction');
-        
-        $expected->setInput('sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))');
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))'),
-            new TraceEntry('random(sum(4, 3), definitelynotacorefunction("100"))'),
-            new TraceEntry('definitelynotacorefunction("100")'),
-        ]));
-        
-        $this->performRuntimeExceptionTest(
-            'sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))',
-            $expected
-        );
-    }
-
-    public function getIdentityIdentical()
-    {
-        $this->performTest('1 === 1', 'true');
-        $this->performTest('"foo" === "foo"', 'true');
-        $this->performTest('false === false', 'true');
-    }
-
-    public function testIdentityDifferent()
-    {
-        $this->performTest('1 === "1"', 'false');
-        $this->performTest('"foo" === "bar"', 'false');
-        $this->performTest('false === true', 'false');
     }
 
     public function testFunctionOperatorHooks()
@@ -225,16 +173,6 @@ class JaslangTest extends TestCase
         );
     }
 
-    public function testBooleanCaseSensitivity()
-    {
-        $this->performTest('True', 'true');
-        $this->performTest('TRUE', 'true');
-        $this->performTest('true', 'true');
-        $this->performTest('False', 'false');
-        $this->performTest('FALSE', 'false');
-        $this->performTest('True', 'true');
-    }
-
     public function testVariableInitialisation()
     {
         $this->markTestSkipped('Remove this once we have removed implicit returns.');
@@ -243,75 +181,6 @@ class JaslangTest extends TestCase
             'let string foo',
             '[variable] foo'
         );
-    }
-
-    public function testIncrementFailsOnString()
-    {
-        $code = <<<CODE
-let string a = 'foo';
-
-a++
-CODE;
-
-        $expected = TypeErrorException::valueTypeMismatch('number', 'string', new Str('foo'));
-        
-        $expected->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('a ++'),
-        ]));
-        $expected->setInput($code);
-        
-        $this->performRuntimeExceptionTest(
-            $code,
-            $expected
-        );
-    }
-    
-    public function testAssignmentTypeMismatchThrows()
-    {
-        $input = 'let number notnumber = "13"';
-        
-        $exception = Assign::typeMismatch('number', new Str('13'));
-        
-        $exception->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('let number notnumber = "13"'),
-        ]));
-        $exception->setInput($input);
-        
-        $this->performRuntimeExceptionTest(
-            $input,
-            $exception
-        );
-    }
-
-    public function testUndefinedVariableThrows()
-    {
-        $input = 'let string foo = "bar"; substring(bar, 0, 1)';
-        
-        $exception = new UndefinedSymbolException('bar');
-        $exception->setInput($input);
-        $exception->setEvaluationTrace(new EvaluationTrace([
-            new TraceEntry('substring(bar, 0, 1)'),
-        ]));
-        
-        $this->performRuntimeExceptionTest($input, $exception);
-    }
-
-    public function testRepeatedIdentiifers()
-    {
-        $input = 'foo bar';
-        
-        $expected = new UnexpectedTokenException('foo bar', new Token('bar', Lexer::TOKEN_IDENTIFIER, 5));
-        
-        $this->performSyntaxErrorTest($input, $expected);
-    }
-
-    public function testRepeatedLiterals()
-    {
-        $input = '"foo" 1337';
-        
-        $expected = new UnexpectedTokenException('"foo" 1337', new Token('1337', Lexer::TOKEN_LITERAL, 7));
-        
-        $this->performSyntaxErrorTest($input, $expected);
     }
 
     private function getEvaluatorWithCustomType()
@@ -340,18 +209,6 @@ CODE;
         $this->assertSame($expected, $factory->create()->run($input));
     }
 
-    private function performSyntaxErrorTest($input, SyntaxErrorException $expected)
-    {
-        try {
-            $this->getInterpreter()->run($input);
-        } catch (SyntaxErrorException $actual) {
-            $this->assertEquals($expected, $actual);
-            return;
-        }
-
-        $this->fail('A syntax error was not thrown');
-    }
-
     private function performRuntimeExceptionTest($input, RuntimeException $expected, Interpreter $evaluator = null)
     {
         $evaluator = $evaluator ?: $this->getInterpreter();
@@ -369,5 +226,19 @@ CODE;
     private function getInterpreter()
     {
         return (new JaslangFactory())->create();
+    }
+
+    private function getTestFiles()
+    {
+        $directory    = new \RecursiveDirectoryIterator(static::TESTDIR);
+        $iterator     = new \RecursiveIteratorIterator($directory);
+        $fileIterator = new \RegexIterator($iterator, static::TESTFILEREGEX);
+
+        return array_map(
+            function (\SplFileInfo $fileInfo) {
+                return $fileInfo->getRealPath();
+            },
+            iterator_to_array($fileIterator)
+        );
     }
 }

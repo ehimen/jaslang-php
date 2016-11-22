@@ -1,3 +1,13 @@
+!>literal-string
+>>>EXPECTED
+foo
+>>>CODE
+"foo"
+!>literal-number
+>>>EXPECTED
+13
+>>>CODE
+13
 !>multiline
 >>>EXPECTED
 12

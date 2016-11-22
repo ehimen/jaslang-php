@@ -1,0 +1,66 @@
+!>delayed-assignment
+>>>EXPECTED
+37
+>>>CODE
+let number one;
+let number two;
+
+one = 13;
+two = 24;
+
+sum(one, two)
+
+!>increment
+>>>EXPECTED
+5
+>>>CODE
+let number a = 1;
+let number b = a++;
+
+a++;
+b++;
+
+a + b
+
+!>negation
+>>>EXPECTED
+true
+>>>CODE
+let boolean foo = false;
+
+!foo
+
+!>double-negation
+>>>EXPECTED
+false
+>>>CODE
+let boolean foo = false;
+
+foo = !foo;
+
+!foo
+
+!>variables-in-function
+>>>EXPECTED
+37
+>>>CODE
+let number one = 13;
+let number two = 24;
+
+sum(one, two)
+
+!>assignment-type-mismatch
+>>>EXPECTED
+>>>CODE
+let number notnumber = "13"
+>>>ERROR
+Jaslang runtime exception! Assignment expected value of type number, but got "13"
+#0 > let number notnumber = "13"
+
+!>undefined-variable
+>>>EXPECTED
+>>>CODE
+let string foo = "bar"; substring(bar, 0, 1)
+>>>ERROR
+Jaslang runtime exception! Undefined symbol: bar
+#0 > substring(bar, 0, 1)

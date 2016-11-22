@@ -1,8 +1,0 @@
->>>EXPECTED
-2
->>>CODE
-let number a = 1;
-
-if true a = 2;
-
-a

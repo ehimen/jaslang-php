@@ -35,4 +35,14 @@ class RuntimeException extends EvaluationException
     {
         return $this->evaluationTrace;
     }
+    
+    public function __toString()
+    {
+        return sprintf(
+            '%s%s%s',
+            $this->getMessage(),
+            PHP_EOL,
+            $this->getEvaluationTrace()->getAsString()
+        );
+    }
 }

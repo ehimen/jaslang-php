@@ -1,0 +1,41 @@
+!>identical-bools
+>>>EXPECTED
+true
+>>>CODE
+true === true
+
+!>identical-strings
+>>>EXPECTED
+true
+>>>CODE
+"foo" === "foo"
+
+!>identical-numbers
+>>>EXPECTED
+true
+>>>CODE
+1 === 1
+
+!>different-bools
+>>>EXPECTED
+false
+>>>CODE
+true === false
+
+!>different-strings
+>>>EXPECTED
+false
+>>>CODE
+"foo" === "bar"
+
+!>different-numbers
+>>>EXPECTED
+false
+>>>CODE
+1 === 0
+
+!>case-sensitivity
+>>>EXPECTED
+true
+>>>CODE
+true === TRUE === True

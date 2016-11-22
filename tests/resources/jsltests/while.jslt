@@ -1,3 +1,16 @@
+!>while
+>>>EXPECTED
+10
+>>>CODE
+let number a = 0;
+
+while (!(a === 10)) {
+    a++;
+}
+
+a
+
+!>while-if
 >>>EXPECTED
 1
 >>>CODE

@@ -1,7 +1,0 @@
->>>EXPECTED
-37
->>>CODE
-let number one = 13;
-let number two = 24;
-
-sum(one, two)

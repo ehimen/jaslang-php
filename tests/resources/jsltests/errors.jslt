@@ -1,0 +1,61 @@
+!>subtract-no-arg
+>>>EXPECTED
+>>>CODE
+subtract()
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 0. Expected "number", got [empty]
+#0 > subtract()
+
+!>subtract-one-arg
+>>>EXPECTED
+>>>CODE
+subtract(100)
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 1. Expected "number", got [empty]
+#0 > subtract(100)
+
+!>subtract-invalid-arg-nested
+>>>EXPECTED
+>>>CODE
+sum(sum(1, 3), sum(1 + 3, subtract("foo")))
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 0. Expected "number", got foo
+#0 > sum(sum(1, 3), sum(1 + 3, subtract("foo")))
+#1 > sum(1 + 3, subtract("foo"))
+#2 > subtract("foo")
+
+!>undefined-function
+>>>EXPECTED
+>>>CODE
+sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))
+>>>ERROR
+Jaslang runtime exception! Undefined function: definitelynotacorefunction
+#0 > sum(sum(1, 3), random(sum(4, 3), definitelynotacorefunction("100")))
+#1 > random(sum(4, 3), definitelynotacorefunction("100"))
+#2 > definitelynotacorefunction("100")
+
+!>increment-fails-on-string
+>>>EXPECTED
+>>>CODE
+let string a = 'foo';
+
+a++
+>>>ERROR
+Jaslang runtime exception! Expected value of type number but got "foo" [type: string]
+#0 > a ++
+
+!>repeated-identifiers
+>>>EXPECTED
+>>>CODE
+foo bar
+>>>ERROR
+Jaslang syntax error! Input: foo bar
+Unexpected token: bar @5
+
+!>repeated-literals
+>>>EXPECTED
+>>>CODE
+"foo" 1337
+>>>ERROR
+Jaslang syntax error! Input: "foo" 1337
+Unexpected token: 1337 @7

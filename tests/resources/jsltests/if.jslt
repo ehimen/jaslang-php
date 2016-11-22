@@ -1,0 +1,29 @@
+!>negative-condition
+>>>EXPECTED
+1
+>>>CODE
+let number a = 1;
+
+if !true a = 2;
+
+a
+
+!>positive-condition
+>>>EXPECTED
+2
+>>>CODE
+let number a = 1;
+
+if true a = 2;
+
+a
+
+!>parens-condition
+>>>EXPECTED
+1
+>>>CODE
+let number a = 1;
+
+if (!true) { a = 2 }
+
+a

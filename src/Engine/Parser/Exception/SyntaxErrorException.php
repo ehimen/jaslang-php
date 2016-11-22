@@ -10,4 +10,12 @@ class SyntaxErrorException extends EvaluationException
     {
         parent::__construct($input, 'Jaslang syntax error! Input: ' . $input . PHP_EOL . $message);
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function __toString()
+    {
+        return $this->getMessage();
+    }
 }

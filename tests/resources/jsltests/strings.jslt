@@ -1,0 +1,5 @@
+!>substring
+>>>EXPECTED
+llo
+>>>CODE
+substring("hello world", 2, 3)

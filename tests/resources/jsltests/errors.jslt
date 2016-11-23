@@ -59,3 +59,12 @@ Unexpected token: bar @5
 >>>ERROR
 Jaslang syntax error! Input: "foo" 1337
 Unexpected token: 1337 @7
+
+!>void-return
+>>>EXPECTED
+foo
+>>>CODE
+let number n = print("foo")
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 1. Expected "any", got [void]
+#0 > let number n = print("foo")

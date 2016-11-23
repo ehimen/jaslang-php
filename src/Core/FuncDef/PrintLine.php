@@ -13,8 +13,10 @@ class PrintLine extends PrintDef
 {
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        parent::invoke($args, $context, $evaluator);
+        $return = parent::invoke($args, $context, $evaluator);
         
         $context->getOutputBuffer()->write(PHP_EOL);
+        
+        return $return;
     }
 }

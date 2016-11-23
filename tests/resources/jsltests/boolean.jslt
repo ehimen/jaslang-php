@@ -2,40 +2,40 @@
 >>>EXPECTED
 true
 >>>CODE
-true === true
+print(true === true)
 
 !>identical-strings
 >>>EXPECTED
 true
 >>>CODE
-"foo" === "foo"
+print("foo" === "foo")
 
 !>identical-numbers
 >>>EXPECTED
 true
 >>>CODE
-1 === 1
+print(1 === 1)
 
 !>different-bools
 >>>EXPECTED
 false
 >>>CODE
-true === false
+print(true === false)
 
 !>different-strings
 >>>EXPECTED
 false
 >>>CODE
-"foo" === "bar"
+print("foo" === "bar")
 
 !>different-numbers
 >>>EXPECTED
 false
 >>>CODE
-1 === 0
+print(1 === 0)
 
 !>case-sensitivity
 >>>EXPECTED
 true
 >>>CODE
-true === TRUE === True
+print(true === TRUE === True)

@@ -1,6 +1,6 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\Evaluator\Context;
+namespace Ehimen\Jaslang\Engine\Evaluator\SymbolTable;
 
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\Value\Value;

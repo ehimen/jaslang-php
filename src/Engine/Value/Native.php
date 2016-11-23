@@ -7,7 +7,7 @@ namespace Ehimen\Jaslang\Engine\Value;
  *
  * This is convenience for simple types which wrap a native value.
  */
-abstract class Native implements Value
+abstract class Native implements Printable
 {
     protected $value;
     
@@ -34,9 +34,19 @@ abstract class Native implements Value
         return ($this === $other);
     }
 
-
+    /**
+     * @inheritdoc
+     */
     public function toString()
     {
         return (string)$this->value;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function printValue()
+    {
+        return $this->toString();
     }
 }

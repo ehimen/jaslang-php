@@ -17,9 +17,4 @@ class Num extends Native
         
         parent::__construct($value);
     }
-    
-    public function castToString()
-    {
-        return new Str((string)$this->value);
-    }
 }

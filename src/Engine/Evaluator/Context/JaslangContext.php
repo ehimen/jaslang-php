@@ -5,6 +5,8 @@ namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
+use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
@@ -22,14 +24,15 @@ class JaslangContext implements EvaluationContext
     private $typeRepository;
 
     /**
-     * @var \Closure
+     * @var OutputBuffer
      */
-    private $evaluationFn;
+    private $outputBuffer;
     
-    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository)
+    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository, OutputBuffer $outputBuffer)
     {
         $this->symbolTable    = $symbolTable;
         $this->typeRepository = $typeRepository;
+        $this->outputBuffer   = $outputBuffer;
     }
 
     /**
@@ -70,5 +73,13 @@ class JaslangContext implements EvaluationContext
         }
         
         return $value;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getOutputBuffer()
+    {
+        return $this->outputBuffer;
     }
 }

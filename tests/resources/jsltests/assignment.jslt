@@ -8,7 +8,7 @@ let number two;
 one = 13;
 two = 24;
 
-sum(one, two)
+print(sum(one, two))
 
 !>increment
 >>>EXPECTED
@@ -20,7 +20,7 @@ let number b = a++;
 a++;
 b++;
 
-a + b
+print(a + b)
 
 !>negation
 >>>EXPECTED
@@ -28,7 +28,7 @@ true
 >>>CODE
 let boolean foo = false;
 
-!foo
+print(!foo)
 
 !>double-negation
 >>>EXPECTED
@@ -38,7 +38,7 @@ let boolean foo = false;
 
 foo = !foo;
 
-!foo
+print(!foo)
 
 !>variables-in-function
 >>>EXPECTED
@@ -47,7 +47,7 @@ foo = !foo;
 let number one = 13;
 let number two = 24;
 
-sum(one, two)
+print(sum(one, two))
 
 !>assignment-type-mismatch
 >>>EXPECTED

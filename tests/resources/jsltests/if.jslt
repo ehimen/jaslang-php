@@ -6,7 +6,7 @@ let number a = 1;
 
 if !true a = 2;
 
-a
+print(a)
 
 !>positive-condition
 >>>EXPECTED
@@ -16,7 +16,7 @@ let number a = 1;
 
 if true a = 2;
 
-a
+print(a)
 
 !>parens-condition
 >>>EXPECTED
@@ -26,4 +26,4 @@ let number a = 1;
 
 if (!true) { a = 2 }
 
-a
+print(a)

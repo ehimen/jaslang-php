@@ -5,6 +5,8 @@ namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
+use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -40,4 +42,9 @@ interface EvaluationContext
      * @return Value
      */
     public function getVariableOfTypeOrThrow($name, Type $type);
+
+    /**
+     * @return OutputBuffer
+     */
+    public function getOutputBuffer();
 }

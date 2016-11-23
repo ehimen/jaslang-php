@@ -26,8 +26,6 @@ use Ehimen\Jaslang\Engine\Value\Value;
 
 class Evaluator implements Visitor
 {
-    // TODO: move most of interpreter here, provide this to funcdefs for node evaluation on while/if.
-    
     private $argumentStack = [];
 
     /**
@@ -57,21 +55,32 @@ class Evaluator implements Visitor
 
     public function __construct(Invoker $invoker, FunctionRepository $functionRepository, ContextFactory $contextFactory)
     {
-        $this->invoker = $invoker;
+        $this->invoker            = $invoker;
         $this->functionRepository = $functionRepository;
-        $this->contextFactory = $contextFactory;
+        $this->contextFactory     = $contextFactory;
     }
 
     public function reset()
     {
-        $this->trace = new EvaluationTrace();
+        $this->trace         = new EvaluationTrace();
         $this->argumentStack = [];
-        $this->context = $this->contextFactory->createContext();
+        $this->context       = $this->contextFactory->createContext();
     }
 
+    /**
+     * @return EvaluationTrace
+     */
     public function getTrace()
     {
         return $this->trace;
+    }
+
+    /**
+     * @return EvaluationContext
+     */
+    public function getContext()
+    {
+        return $this->context;
     }
 
     /**

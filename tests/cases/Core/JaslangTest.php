@@ -4,7 +4,7 @@ namespace Ehimen\JaslangTests\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Engine\Exception\EvaluationException;
-use Ehimen\Jaslang\Engine\Interpreter;
+use Ehimen\Jaslang\Engine\Interpreter\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
@@ -46,20 +46,17 @@ class JaslangTest extends TestCase
      */
     public function testFile($expected, $code, $error)
     {
-        try {
-            $this->assertSame($expected, $this->getInterpreter()->run($code));
-        } catch (EvaluationException $e) {
-            if (is_string($error)) {
-                $this->assertSame(trim($error), trim((string)$e));
-                return;
-            } else {
-                throw $e;
-            }
-        }
+        $result = $this->getInterpreter()->run($code);
 
-        if (is_string($error)) {
-            $this->fail('Expected Jaslang error, but one was not thrown');
+        $actualError = $result->getError();
+
+        if ($error) {
+            $this->assertSame(trim($error), trim((string)$actualError));
+        } else {
+            $this->assertNull($actualError, 'Encountered unexpected error: ' . PHP_EOL . (string)$actualError);
         }
+        
+        $this->assertSame($expected, $result->getOut());
     }
 
     public function provideFiles()
@@ -94,7 +91,13 @@ class JaslangTest extends TestCase
                     throw new \Exception('Invalid jsl test file contents in file: ' . $file);
                 }
 
-                $cases[$file . '#' . $case] = [$expected, $code, $error];
+                if (strrev($case)[0] === '!') {
+                    // If the case ends in !, only run this test.
+                    $cases = [$file . '#' . $case => [$expected, $code, $error]];
+                    break 2;
+                } else {
+                    $cases[$file . '#' . $case] = [$expected, $code, $error];
+                }
             }
         }
 
@@ -114,7 +117,7 @@ class JaslangTest extends TestCase
         $factory->registerFunction('foo', new FooFuncDef());
         $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binary());
         
-        $result = $factory->create()->run('"foo" +-+-+-+-+ foo()');
+        $result = $factory->create()->run('print("foo" +-+-+-+-+ foo())')->getOut();
         $this->assertSame('true', $result);
     }
 
@@ -124,17 +127,17 @@ class JaslangTest extends TestCase
         $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binary());
         $evaluator = $factory->create();
 
-        $result = $evaluator->run('false AND true');
+        $result = $evaluator->run('print(false AND true)')->getOut();
         $this->assertSame('false', $result);
 
-        $result = $evaluator->run('true AND true');
+        $result = $evaluator->run('print(true AND true)')->getOut();
         $this->assertSame('true', $result);
     }
 
     public function testOperatorPrecedence()
     {
         // TODO: this test is really testing the engine.
-        $input = '3 + 5 test-multiply 2';
+        $input = 'print(3 + 5 test-multiply 2)';
 
         $this->performMultiplicationTest($input, 10, '13');
         $this->performMultiplicationTest($input, -10, '16');
@@ -143,7 +146,7 @@ class JaslangTest extends TestCase
     public function testOperatorPrecedenceComplex()
     {
         // TODO: this test is really testing the engine.
-        $input = '3 + sum(3 + 5 test-multiply 2, 2 + 3 test-multiply sum(1, 2)) test-multiply 10';
+        $input = 'print(3 + sum(3 + 5 test-multiply 2, 2 + 3 test-multiply sum(1, 2)) test-multiply 10)';
 
         $this->performMultiplicationTest($input, 10, '243');
         $this->performMultiplicationTest($input, -10, '340');
@@ -151,7 +154,7 @@ class JaslangTest extends TestCase
 
     public function testCustomType()
     {
-        $result = $this->getEvaluatorWithCustomType()->run('testfunction(c, c)');
+        $result = $this->getEvaluatorWithCustomType()->run('print(testfunction(c, c))')->getOut();
         
         $this->assertSame('true', $result);
     }
@@ -206,21 +209,20 @@ class JaslangTest extends TestCase
         $factory = new JaslangFactory();
         $signature = OperatorSignature::binary($multiplicationPrecedence);
         $factory->registerOperator('test-multiply', new Multiplication(), $signature);
-        $this->assertSame($expected, $factory->create()->run($input));
+        $this->assertSame($expected, $factory->create()->run($input)->getOut());
     }
 
     private function performRuntimeExceptionTest($input, RuntimeException $expected, Interpreter $evaluator = null)
     {
         $evaluator = $evaluator ?: $this->getInterpreter();
         
-        try {
-            $evaluator->run($input);
-        } catch (RuntimeException $actual) {
-            $this->assertEquals($expected, $actual);
-            return;
-        }
+        $result = $evaluator->run($input);
         
-        $this->fail('A runtime exception was not thrown');
+        if ($result->getError() instanceof RuntimeException) {
+            $this->assertEquals($expected, $result->getError());
+        } else {
+            $this->fail('A runtime exception was not encountered');
+        }
     }
     
     private function getInterpreter()

@@ -8,10 +8,11 @@ use Ehimen\Jaslang\Core\FuncDef\Increment;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
+use Ehimen\Jaslang\Core\FuncDef\PrintDef;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
-use Ehimen\Jaslang\Engine\Interpreter;
+use Ehimen\Jaslang\Engine\Interpreter\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
@@ -38,7 +39,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
  * This is provided for convenience to bootstrap a default evaluator
  * and its dependencies, offering hooks to configure certain aspects.
  *
- * @see \Ehimen\Jaslang\Engine\Interpreter to construct manually if
+ * @see \Ehimen\Jaslang\Engine\Interpreter\Interpreter to construct manually if
  *                                          you need more control.
  */
 class JaslangFactory
@@ -83,6 +84,7 @@ class JaslangFactory
         $fnRepo->registerFunction('subtract', $sub = new Subtract());
         $fnRepo->registerFunction('substring', new Substring());
         $fnRepo->registerFunction('random', new Random());
+        $fnRepo->registerFunction('print', new PrintDef());
 
         // Core operators.
         $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.

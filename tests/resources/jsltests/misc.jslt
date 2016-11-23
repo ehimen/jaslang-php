@@ -2,17 +2,17 @@
 >>>EXPECTED
 foo
 >>>CODE
-"foo"
+print("foo")
 !>literal-number
 >>>EXPECTED
 13
 >>>CODE
-13
+print(13)
 !>multiline
 >>>EXPECTED
 12
 >>>CODE
-sum(
+print(
     sum(
         sum(
             sum(
@@ -22,7 +22,10 @@ sum(
                             sum(
                                 sum(
                                     sum(
-                                        1,
+                                        sum(
+                                            1,
+                                            1
+                                        ),
                                         1
                                     ),
                                     1
@@ -39,7 +42,6 @@ sum(
             ),
             1
         ),
-        1
-    ),
-    2
+        2
+    )
 )

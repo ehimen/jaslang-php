@@ -91,6 +91,7 @@ The list of core functions is currently very limited due to focus on the engine.
 
 # TODO
 
+* Not identity, only ==.
 * Clean up block/root/statement node concepts, and clean up parser code.
 * Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
 * Ternary operator?

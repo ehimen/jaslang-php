@@ -4,6 +4,8 @@ namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 
 use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
+use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 
@@ -30,5 +32,10 @@ class NullContext implements EvaluationContext
     public function evaluateInContext(Node $node)
     {
         
+    }
+
+    public function getOutputBuffer()
+    {
+        return new OutputBuffer();
     }
 }

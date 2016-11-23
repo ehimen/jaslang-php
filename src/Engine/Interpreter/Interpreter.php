@@ -1,9 +1,10 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine;
+namespace Ehimen\Jaslang\Engine\Interpreter;
 
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Engine\Exception\EvaluationException;
 use Ehimen\Jaslang\Engine\Parser\Parser;
 
 class Interpreter
@@ -27,23 +28,28 @@ class Interpreter
     /**
      * @param $input
      *
-     * @return string
-     * @throws RuntimeException
+     * @return Result
      */
     public function run($input)
     {
-        $ast = $this->parser->parse($input);
-        
         $this->evaluator->reset();
         
+        $error = null;
+        
         try {
+            $ast = $this->parser->parse($input);
             $ast->accept($this->evaluator);
-        } catch (RuntimeException $e) {
-            $e->setEvaluationTrace($this->evaluator->getTrace());
-            $e->setInput($input);
-            throw $e;
+        } catch (EvaluationException $e) {
+            if ($e instanceof RuntimeException) {
+                $e->setEvaluationTrace($this->evaluator->getTrace());
+                $e->setInput($input);
+            }
+            $error = $e;
         }
-
-        return $this->evaluator->getResult()->toString();
+        
+        return new Result(
+            $this->evaluator->getContext()->getOutputBuffer()->get(),
+            $error
+        );
     }
 }

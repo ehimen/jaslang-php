@@ -2,4 +2,4 @@
 >>>EXPECTED
 llo
 >>>CODE
-substring("hello world", 2, 3)
+print(substring("hello world", 2, 3))

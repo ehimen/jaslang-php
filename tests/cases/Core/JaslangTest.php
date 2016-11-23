@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * High-level tests for Jaslang evaluation.
  * 
- * Runs test files (.jslt) in resources/jsltests
+ * Runs test files (.jslt) in tests/resources/jsltests
  * 
  * TODO: remove left-over tests that couldn't be moved to jslt.
  */

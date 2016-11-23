@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
 use Ehimen\Jaslang\Core\FuncDef\PrintDef;
+use Ehimen\Jaslang\Core\FuncDef\PrintLine;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
@@ -85,6 +86,7 @@ class JaslangFactory
         $fnRepo->registerFunction('substring', new Substring());
         $fnRepo->registerFunction('random', new Random());
         $fnRepo->registerFunction('print', new PrintDef());
+        $fnRepo->registerFunction('println', new PrintLine());
 
         // Core operators.
         $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.

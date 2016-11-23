@@ -24,3 +24,18 @@ while (!(a === 10)) {
 }
 
 print(b)
+
+!>while-print
+>>>EXPECTED
+0
+1
+2
+3
+4
+
+>>>CODE
+let number n = 0;
+
+while (!(n === 5)) {
+    println(n++);
+}

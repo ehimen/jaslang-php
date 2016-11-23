@@ -2,40 +2,46 @@
 >>>EXPECTED
 true
 >>>CODE
-print(true === true)
+print(true == true)
 
 !>identical-strings
 >>>EXPECTED
 true
 >>>CODE
-print("foo" === "foo")
+print("foo" == "foo")
 
 !>identical-numbers
 >>>EXPECTED
 true
 >>>CODE
-print(1 === 1)
+print(1 == 1)
 
 !>different-bools
 >>>EXPECTED
 false
 >>>CODE
-print(true === false)
+print(true == false)
 
 !>different-strings
 >>>EXPECTED
 false
 >>>CODE
-print("foo" === "bar")
+print("foo" == "bar")
 
 !>different-numbers
 >>>EXPECTED
 false
 >>>CODE
-print(1 === 0)
+print(1 == 0)
+
+!>different=types
+>>>EXPECTED
+false
+>>>CODE
+print(1 == "1")
 
 !>case-sensitivity
 >>>EXPECTED
 true
 >>>CODE
-print(true === TRUE === True)
+print(true == TRUE == True)

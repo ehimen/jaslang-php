@@ -19,7 +19,7 @@ use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
-use Ehimen\Jaslang\Core\FuncDef\Identity;
+use Ehimen\Jaslang\Core\FuncDef\Equality;
 use Ehimen\Jaslang\Core\FuncDef\Random;
 use Ehimen\Jaslang\Core\FuncDef\Substring;
 use Ehimen\Jaslang\Core\FuncDef\Subtract;
@@ -92,7 +92,7 @@ class JaslangFactory
         $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
-        $fnRepo->registerOperator('===', new Identity(), OperatorSignature::binary());
+        $fnRepo->registerOperator('==', new Equality(), OperatorSignature::binary());
         $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 2, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary());

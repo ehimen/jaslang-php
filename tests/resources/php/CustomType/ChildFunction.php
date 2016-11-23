@@ -21,6 +21,6 @@ class ChildFunction implements FuncDef
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        return new Boolean($args->get(0)->isIdenticalTo($args->get(1)));
+        return new Boolean($args->get(0) == $args->get(1));
     }
 }

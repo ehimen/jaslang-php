@@ -10,9 +10,4 @@ class ChildValue implements Value
     {
         return 'test-value';
     }
-
-    public function isIdenticalTo(Value $other)
-    {
-        return ($other instanceof $this);
-    }
 }

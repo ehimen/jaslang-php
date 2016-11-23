@@ -21,19 +21,6 @@ abstract class Native implements Printable
         return $this->value;
     }
 
-    public function isIdenticalTo(Value $other)
-    {
-        if (!is_a($other, self::class)) {
-            return false;
-        }
-        
-        if ($other instanceof static) {
-            return ($this->value === $other->value);
-        }
-        
-        return ($this === $other);
-    }
-
     /**
      * @inheritdoc
      */

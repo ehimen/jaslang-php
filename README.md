@@ -91,10 +91,11 @@ The list of core functions is currently very limited due to focus on the engine.
 
 # TODO
 
-* Not identity, only ==.
+* Update docs/examples.
 * Clean up block/root/statement node concepts, and clean up parser code.
-* Test foundation for simple, separate test classes (e.g. loading prebuilt Jaslang evaluators & loading .jsl files?)
 * Ternary operator?
+* User functions. Support for chaining operators, and revisiting arg list. Remove necessity for parser to differ
+between function calls and paren-grouping.
 * Clean up phar/build
 * Return types
 * Doc-generation tool.

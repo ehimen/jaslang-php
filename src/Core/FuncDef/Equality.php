@@ -8,11 +8,11 @@ use Ehimen\Jaslang\Core\Value\Boolean;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
- * Are two operands identical?
- *
- * This is the === operator in PHP.
+ * Are two operands equal?
+ * 
+ * This is only true if the two operands are the same type and value.
  */
-class Identity extends BinaryFunction
+class Equality extends BinaryFunction
 {
     protected function getLeftArgType()
     {
@@ -26,6 +26,6 @@ class Identity extends BinaryFunction
 
     protected function performOperation(Value $left, Value $right)
     {
-        return new Boolean($left->isIdenticalTo($right));
+        return new Boolean(($left instanceof $right) && ($right instanceof $left) && ($left->toString() === $right->toString()));
     }
 }

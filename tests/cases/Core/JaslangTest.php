@@ -176,16 +176,6 @@ class JaslangTest extends TestCase
         );
     }
 
-    public function testVariableInitialisation()
-    {
-        $this->markTestSkipped('Remove this once we have removed implicit returns.');
-        
-        $this->performTest(
-            'let string foo',
-            '[variable] foo'
-        );
-    }
-
     private function getEvaluatorWithCustomType()
     {
         $factory = new JaslangFactory();

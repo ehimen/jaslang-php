@@ -20,6 +20,26 @@ A simple imperative programming language.
 
 The list of core functions and operators is currently very limited due to focus on the engine.
 
+### Try it
+
+Get a copy of the Jaslang phar from the [releases page](/releases/latest).
+
+Write a JSL file:
+```bash
+$ echo "println('hello world')" > test.jsl
+```
+
+Make the phar executable and run it:
+```bash
+$ chmod 755 jaslang.phar
+$ ./jaslang.phar test.jsl
+```
+
+Or run the phar via PHP:
+```bash
+$ php jaslang.phar test.jsl
+```
+
 ### Examples
 
 ```

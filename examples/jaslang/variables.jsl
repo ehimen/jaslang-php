@@ -1,0 +1,4 @@
+let number pi = 3.142;
+let number radius = 5;
+
+println(2 * pi * radius)

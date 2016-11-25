@@ -13,11 +13,18 @@ if (!isset($argv[1])) {
     exit(1);
 }
 
-if ($argv[1][0] !== '/') {
-    $argv[1] = getcwd() . '/' . $argv[1];
-}
+$fromPhar = false; // Overwritten by phar build script.
+/* %FROM_PHAR% */
 
-$fileName = 'file://' . $argv[1];
+if ($fromPhar) {
+    if ($argv[1][0] !== '/') {
+        $argv[1] = getcwd() . '/' . $argv[1];
+    }
+
+    $fileName = 'file://' . $argv[1];
+} else {
+    $fileName = $argv[1];
+}
 
 if (false === ($fp = fopen($fileName, 'r'))) {
     echo "Cannot open " . $fileName . ' for reading' . PHP_EOL;
@@ -31,16 +38,22 @@ if (strlen($jaslang) === 0) {
     exit(0);
 }
 
-try {
-    echo (new JaslangFactory())->create()->run($jaslang);
-} catch (RuntimeException $e) {
-    echo $e->getMessage();
-    echo PHP_EOL;
-    echo $e->getEvaluationTrace()->getAsString();
-} catch (SyntaxErrorException $e) {
-    echo $e->getMessage();
-}
+$result = (new JaslangFactory())->create()->run($jaslang);
 
-echo PHP_EOL;
+$error = $result->getError();
+
+if ($error instanceof RuntimeException) {
+    echo $error->getMessage();
+    echo PHP_EOL;
+    echo $error->getEvaluationTrace()->getAsString();
+    echo PHP_EOL;
+    exit(1);
+} elseif ($error instanceof SyntaxErrorException) {
+    echo $error->getMessage();
+    echo PHP_EOL;
+    exit(1);
+} else {
+    echo $result->getOut();
+}
 
 exit(0);

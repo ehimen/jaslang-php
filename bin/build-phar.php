@@ -21,9 +21,16 @@ $phar->convertToExecutable(Phar::PHAR);
 // TODO: not include everything!
 $files = $phar->buildFromDirectory(__DIR__ . '/../');
 
-$phar['index.php'] = file_get_contents(__DIR__ . '/jaslang.php');
+$phar['index.php'] = str_replace('/* %FROM_PHAR% */', '$fromPhar = true;', file_get_contents(__DIR__ . '/jaslang.php'));
 
 $phar->setMetadata(['bootstrap' => 'index.php']);
 
+$stub = $phar->createDefaultStub('index.php');
+
+$phar->setStub('#!/usr/bin/php' . PHP_EOL . $stub);
+
 echo 'Writing ' . $pharFile . PHP_EOL;
 $phar->stopBuffering();
+
+// Make the produced file executable.
+chmod($pharFile, 0755);

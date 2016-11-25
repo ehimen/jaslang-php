@@ -1,0 +1,1 @@
+random(sum(1, random("hello world")))

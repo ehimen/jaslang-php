@@ -22,7 +22,7 @@ The list of core functions and operators is currently very limited due to focus 
 
 ### Try it
 
-Get a copy of the Jaslang phar from the [releases page](/releases/latest).
+Get a copy of the Jaslang phar from the releases page.
 
 Write a JSL file:
 ```bash

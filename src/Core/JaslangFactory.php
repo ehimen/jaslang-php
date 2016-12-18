@@ -3,8 +3,10 @@
 namespace Ehimen\Jaslang\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\GreaterThan;
 use Ehimen\Jaslang\Core\FuncDef\IfDef;
 use Ehimen\Jaslang\Core\FuncDef\Increment;
+use Ehimen\Jaslang\Core\FuncDef\LessThan;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
@@ -99,6 +101,8 @@ class JaslangFactory
         $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
         $fnRepo->registerOperator('if', new IfDef(), new OperatorSignature(0, 2));
         $fnRepo->registerOperator('while', new WhileDef(), new OperatorSignature(0, 2));
+        $fnRepo->registerOperator('<', new LessThan(), OperatorSignature::binary());
+        $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

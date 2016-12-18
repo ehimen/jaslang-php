@@ -1,0 +1,25 @@
+!>less-than
+>>>EXPECTED
+true
+false
+true
+false
+
+>>>CODE
+println(3 < 5);
+println(5 < 3);
+println(1 < 1.1);
+println(1.1 < 1)
+
+!>greater-than
+>>>EXPECTED
+true
+false
+true
+false
+
+>>>CODE
+println(5 > 3);
+println(3 > 5);
+println(1.1 > 1);
+println(1 > 1.1)

@@ -15,6 +15,7 @@ use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Collection;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
@@ -85,7 +86,7 @@ class Evaluator implements Visitor
     }
 
     /**
-     * @return Value
+     * @return Argument
      */
     public function getResult()
     {
@@ -93,11 +94,7 @@ class Evaluator implements Visitor
             throw new LogicException('Evaluator does not have a result.');
         }
         
-        if (!(end($this->argumentStack[0]) instanceof Value)) {
-            throw new LogicException('Evaluator does not have a value result.');
-        }
-        
-        return end($this->argumentStack[0]);
+        return current($this->popArgument());
     }
     
     public function visitBlock(Node\Block $node)
@@ -210,7 +207,7 @@ class Evaluator implements Visitor
                     continue;
                 }
 
-                if (($parameter->isVariable() || $parameter->isTypedVariable()) && ($child instanceof Node\Identifier)) {
+                if (($parameter->isVariable()) && ($child instanceof Node\Identifier)) {
                     $this->pushArgument(new Variable($child->getName()));
                     continue;
                 }
@@ -222,6 +219,18 @@ class Evaluator implements Visitor
 
                 if ($parameter->isExpression() && ($child instanceof Node\Expression)) {
                     $this->pushArgument(new Expression($child));
+                    continue;
+                }
+                
+                if ($parameter->isCollection() && ($child instanceof Node\Container)) {
+                    $collection = new Collection($child);
+                    if ($parameter->getParameterType() !== Parameter::TYPE_EXPRESSION) {
+                        throw new \RuntimeException('TODO: parameter collection beyond expression are not supported');
+                    }
+                    foreach ($child->getChildren() as $containerChild) {
+                        $collection->addArgument(new Expression($containerChild));
+                    }
+                    $this->pushArgument($collection);
                     continue;
                 }
             }
@@ -240,7 +249,7 @@ class Evaluator implements Visitor
     }
 
     /**
-     * @return Argument
+     * @return Argument[]
      */
     private function popArgument()
     {

@@ -6,6 +6,7 @@ use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Core\FuncDef\GreaterThan;
 use Ehimen\Jaslang\Core\FuncDef\IfDef;
 use Ehimen\Jaslang\Core\FuncDef\Increment;
+use Ehimen\Jaslang\Core\FuncDef\Lambda;
 use Ehimen\Jaslang\Core\FuncDef\LessThan;
 use Ehimen\Jaslang\Core\FuncDef\Let;
 use Ehimen\Jaslang\Core\FuncDef\Multiply;
@@ -92,6 +93,7 @@ class JaslangFactory
         $fnRepo->registerFunction('println', new PrintLine());
 
         // Core operators.
+        $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary());
         $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());

@@ -5,6 +5,7 @@ namespace Ehimen\Jaslang\Engine\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Collection;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
@@ -65,8 +66,8 @@ class JaslangInvoker implements Invoker
                 $type = 'routine';
             } elseif ($def->isExpression()) {
                 $type = 'expression';
-            } elseif ($def->isTypedVariable()) {
-                $type = 'typed-variable';
+            } elseif ($def->isCollection()) {
+                $type = 'collection';
             } else {
                 throw new LogicException('Cannot handle definition as is not one of variable, type, value or block');
             }
@@ -99,8 +100,9 @@ class JaslangInvoker implements Invoker
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             } elseif ($def->isExpression() && !($arg instanceof Expression)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
-            } elseif ($def->isTypedVariable() && !($arg instanceof TypedVariable)) {
+            } elseif ($def->isCollection() && !($arg instanceof Collection)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+                // TODO: validate what is in collection!?
             }
         }
     }

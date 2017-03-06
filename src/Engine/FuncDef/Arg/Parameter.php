@@ -14,7 +14,8 @@ class Parameter
     const TYPE_VALUE      = 'value';
     const TYPE_ROUTINE    = 'routine';
     const TYPE_EXPRESSION = 'expression';
-    const TYPE_TYPED_VAR = 'typed-var';
+    const TYPE_TYPED_VAR  = 'typed-var';
+    const TYPE_COLLECTION = 'collection';
 
     /**
      * @var bool
@@ -27,9 +28,16 @@ class Parameter
     private $type;
 
     /**
-     * @var TypeIdentifier
+     * @var Type
      */
     private $expectedType;
+
+    /**
+     * @var string
+     * 
+     * For collection type, one of the other types.
+     */
+    private $parameterType;
 
     private function __construct($type, Type $expectedType = null, $optional = false)
     {
@@ -62,9 +70,13 @@ class Parameter
         return new static(static::TYPE_VAR, null, $optional);
     }
 
-    public static function typedVariable($optional = false)
+    public static function collection($parmeterType, $optional = false)
     {
-        return new static(static::TYPE_TYPED_VAR, null, $optional);
+        $collection = new static(static::TYPE_COLLECTION, null, $optional);
+        
+        $collection->parameterType = $parmeterType;
+        
+        return $collection;
     }
 
     /**
@@ -105,14 +117,22 @@ class Parameter
         return (static::TYPE_EXPRESSION === $this->type);
     }
 
-    public function isTypedVariable()
+    public function isCollection()
     {
-        return (static::TYPE_TYPED_VAR === $this->type);
+        return (static::TYPE_COLLECTION === $this->type);
     }
     
     public function getExpectedType()
     {
         return $this->expectedType;
+    }
+
+    /**
+     * For collection type parameters, what is the type expected in that collection?
+     */
+    public function getParameterType()
+    {
+        return $this->parameterType;
     }
 
     public function isOptional()

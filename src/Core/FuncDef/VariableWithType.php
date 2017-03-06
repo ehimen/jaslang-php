@@ -11,25 +11,29 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 
-class Let implements FuncDef
+/**
+ * An operator that binds a variable identifier with a type.
+ * 
+ * let n : number = 13
+ *     ^________^
+ */
+class VariableWithType implements FuncDef
 {
     public function getParameters()
     {
         return [
-            Parameter::typedVariable()
+            Parameter::variable(),
+            Parameter::type(),
         ];
     }
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        /** @var TypedVariable $variable */
-        $variable = $args->get(0);
+        /** @var Variable $var */
+        $var = $args->get(0);
+        /** @var TypeIdentifier $type */
+        $type = $args->get(1);
         
-        // TODO: try, catch and throw??
-        $type = $context->getTypeRepository()->getTypeByName($variable->getType()->getIdentifier());
-        
-        $context->getSymbolTable()->set($variable->getIdentifier(), $type->createEmptyValue());
-        
-        return $variable;
+        return new TypedVariable($var->getIdentifier(), $type);
     }
 }

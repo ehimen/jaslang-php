@@ -37,7 +37,7 @@ Jaslang runtime exception! Undefined function: definitelynotacorefunction
 !>increment-fails-on-string
 >>>EXPECTED
 >>>CODE
-let string a = 'foo';
+let a : string = 'foo';
 
 a++
 >>>ERROR
@@ -64,7 +64,7 @@ Unexpected token: 1337 @7
 >>>EXPECTED
 foo
 >>>CODE
-let number n = print("foo")
+let n : number = print("foo")
 >>>ERROR
 Jaslang runtime exception! Invalid argument at position 1. Expected "any", got [void]
-#0 > let number n = print("foo")
+#0 > let n : number = print("foo")

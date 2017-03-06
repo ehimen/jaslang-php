@@ -12,6 +12,7 @@ use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
 use Ehimen\Jaslang\Core\FuncDef\PrintDef;
 use Ehimen\Jaslang\Core\FuncDef\PrintLine;
+use Ehimen\Jaslang\Core\FuncDef\VariableWithType;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
@@ -95,7 +96,7 @@ class JaslangFactory
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('==', new Equality(), OperatorSignature::binary());
-        $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 2, 100));
+        $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 1, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary());
         $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
@@ -103,6 +104,7 @@ class JaslangFactory
         $fnRepo->registerOperator('while', new WhileDef(), new OperatorSignature(0, 2));
         $fnRepo->registerOperator('<', new LessThan(), OperatorSignature::binary());
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
+        $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::binary(150));
         
         $typeRepo->registerType('any', new Any());
         $typeRepo->registerType('string', new Str());

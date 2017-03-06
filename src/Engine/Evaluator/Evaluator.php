@@ -18,6 +18,7 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
@@ -209,7 +210,7 @@ class Evaluator implements Visitor
                     continue;
                 }
 
-                if ($parameter->isVariable() && ($child instanceof Node\Identifier)) {
+                if (($parameter->isVariable() || $parameter->isTypedVariable()) && ($child instanceof Node\Identifier)) {
                     $this->pushArgument(new Variable($child->getName()));
                     continue;
                 }

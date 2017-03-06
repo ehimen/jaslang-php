@@ -81,14 +81,6 @@ class JaslangParser implements Parser
     private $statementStack = [];
 
     /**
-     * @var int
-     * 
-     * Tracks how many blocks are open at any one time. Used to ensure that
-     * all block nodes' immediate children are statements.
-     */
-    private $blockDepth = 1;
-
-    /**
      * @var NodeCreationObserver[]
      */
     private $nodeCreationObservers = [];

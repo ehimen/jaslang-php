@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
@@ -64,6 +65,8 @@ class JaslangInvoker implements Invoker
                 $type = 'routine';
             } elseif ($def->isExpression()) {
                 $type = 'expression';
+            } elseif ($def->isTypedVariable()) {
+                $type = 'typed-variable';
             } else {
                 throw new LogicException('Cannot handle definition as is not one of variable, type, value or block');
             }
@@ -95,6 +98,8 @@ class JaslangInvoker implements Invoker
             } elseif ($def->isRoutine() && !($arg instanceof Routine)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             } elseif ($def->isExpression() && !($arg instanceof Expression)) {
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+            } elseif ($def->isTypedVariable() && !($arg instanceof TypedVariable)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
         }

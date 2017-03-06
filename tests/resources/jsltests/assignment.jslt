@@ -1,9 +1,17 @@
+!>simple-assignment
+>>>EXPECTED
+13
+>>>CODE
+let num : number = 13;
+
+print(num)
+
 !>delayed-assignment
 >>>EXPECTED
 37
 >>>CODE
-let number one;
-let number two;
+let one : number;
+let two : number;
 
 one = 13;
 two = 24;
@@ -14,8 +22,8 @@ print(sum(one, two))
 >>>EXPECTED
 5
 >>>CODE
-let number a = 1;
-let number b = a++;
+let a : number = 1;
+let b : number = a++;
 
 a++;
 b++;
@@ -26,7 +34,7 @@ print(a + b)
 >>>EXPECTED
 true
 >>>CODE
-let boolean foo = false;
+let foo : boolean = false;
 
 print(!foo)
 
@@ -34,7 +42,7 @@ print(!foo)
 >>>EXPECTED
 false
 >>>CODE
-let boolean foo = false;
+let foo : boolean = false;
 
 foo = !foo;
 
@@ -44,23 +52,23 @@ print(!foo)
 >>>EXPECTED
 37
 >>>CODE
-let number one = 13;
-let number two = 24;
+let one : number = 13;
+let two : number= 24;
 
 print(sum(one, two))
 
 !>assignment-type-mismatch
 >>>EXPECTED
 >>>CODE
-let number notnumber = "13"
+let notnumber : number = "13"
 >>>ERROR
 Jaslang runtime exception! Assignment expected value of type number, but got "13"
-#0 > let number notnumber = "13"
+#0 > let notnumber : number = "13"
 
 !>undefined-variable
 >>>EXPECTED
 >>>CODE
-let string foo = "bar"; substring(bar, 0, 1)
+let foo : string = "bar"; substring(bar, 0, 1)
 >>>ERROR
 Jaslang runtime exception! Undefined symbol: bar
 #0 > substring(bar, 0, 1)
@@ -68,4 +76,4 @@ Jaslang runtime exception! Undefined symbol: bar
 !>declaration-only
 >>>EXPECTED
 >>>CODE
-let string foo
+let foo : string

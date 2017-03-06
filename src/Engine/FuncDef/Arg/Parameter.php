@@ -14,6 +14,7 @@ class Parameter
     const TYPE_VALUE      = 'value';
     const TYPE_ROUTINE    = 'routine';
     const TYPE_EXPRESSION = 'expression';
+    const TYPE_TYPED_VAR = 'typed-var';
 
     /**
      * @var bool
@@ -61,6 +62,11 @@ class Parameter
         return new static(static::TYPE_VAR, null, $optional);
     }
 
+    public static function typedVariable($optional = false)
+    {
+        return new static(static::TYPE_TYPED_VAR, null, $optional);
+    }
+
     /**
      * Denotes a parameter which expects to receive executable statement(s).
      */
@@ -97,6 +103,11 @@ class Parameter
     public function isExpression()
     {
         return (static::TYPE_EXPRESSION === $this->type);
+    }
+
+    public function isTypedVariable()
+    {
+        return (static::TYPE_TYPED_VAR === $this->type);
     }
     
     public function getExpectedType()

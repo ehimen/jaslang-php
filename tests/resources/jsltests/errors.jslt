@@ -68,3 +68,16 @@ let n : number = print("foo")
 >>>ERROR
 Jaslang runtime exception! Invalid argument at position 1. Expected "any", got [void]
 #0 > let n : number = print("foo")
+
+
+!>unterminated-block
+>>>EXPECTED
+>>>CODE
+
+let foo : lambda = () => {
+    print('foo');
+>>>ERROR
+Jaslang syntax error! Input: 
+let foo : lambda = () => {
+    print('foo');
+Unexpected end of input

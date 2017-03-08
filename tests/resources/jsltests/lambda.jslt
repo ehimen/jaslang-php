@@ -1,0 +1,36 @@
+!>simple-lambda
+>>>EXPECTED
+hello world
+>>>CODE
+let fn : lambda = () => {
+    print("hello world")
+}
+
+fn()
+
+!>empty-lambda
+>>>EXPECTED
+>>>CODE
+let fn : lambda;
+
+fn()
+
+!>with-parameters
+>>>EXPECTED
+7
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    print(a + b)
+}
+
+fn(3, 4)
+
+!>with-evaluated-args
+>>>EXPECTED
+19
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    print(a + b)
+}
+
+fn(3 - 4, 4 + 16)

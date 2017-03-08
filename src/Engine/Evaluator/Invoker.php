@@ -5,6 +5,7 @@ namespace Ehimen\Jaslang\Engine\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Engine\Value\CallableValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -15,11 +16,15 @@ use Ehimen\Jaslang\Engine\Value\Value;
 interface Invoker
 {
     /**
-     * @param FuncDef           $function
-     * @param ArgList           $args
-     * @param EvaluationContext $context
-     *
      * @return Value
      */
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator);
+
+    /**
+     * TODO: could merge this and invokeFunction(). Create interface for something that is invokable, whether it
+     * TODO: is a native function or a userland callable.
+     * 
+     * @return Value
+     */
+    public function invokeCallable(CallableValue $type, ArgList $args, EvaluationContext $context, Evaluator $evaluator);
 }

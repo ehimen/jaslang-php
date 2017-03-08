@@ -1,16 +1,16 @@
 <?php
 
-namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
+namespace Ehimen\Jaslang\Engine\FuncDef\Arg\Expected;
 
 use Ehimen\Jaslang\Engine\Type\Type;
 
 /**
- * The description of which parameters a function/operator expects.
+ * The description of which parameter(s) a function/operator expects.
  */
 class Parameter
 {
     const TYPE_TYPE       = 'type';
-    const TYPE_VAR        = 'val';
+    const TYPE_VAR        = 'var';
     const TYPE_VALUE      = 'value';
     const TYPE_ROUTINE    = 'routine';
     const TYPE_EXPRESSION = 'expression';
@@ -28,30 +28,26 @@ class Parameter
     private $type;
 
     /**
-     * @var Type
-     */
-    private $expectedType;
-
-    /**
      * @var string
      * 
      * For collection type, one of the other types.
      */
     private $parameterType;
 
-    private function __construct($type, Type $expectedType = null, $optional = false)
+    protected function __construct($type, $optional = false)
     {
         $this->type         = $type;
         $this->optional     = $optional;
-        $this->expectedType = $expectedType;
     }
-
+    
     /**
      * Denotes a parameter which expects to receive a value of a particular type.
+     * 
+     * TODO: move to TypedParameter
      */
     public static function value(Type $type, $optional = false)
     {
-        return new static(static::TYPE_VALUE, $type, $optional);
+        return new TypedParameter(static::TYPE_VALUE, $type, $optional);
     }
 
     /**
@@ -70,11 +66,11 @@ class Parameter
         return new static(static::TYPE_VAR, null, $optional);
     }
 
-    public static function collection($parmeterType, $optional = false)
+    public static function collection($parameterType, $optional = false)
     {
         $collection = new static(static::TYPE_COLLECTION, null, $optional);
         
-        $collection->parameterType = $parmeterType;
+        $collection->parameterType = $parameterType;
         
         return $collection;
     }
@@ -120,11 +116,6 @@ class Parameter
     public function isCollection()
     {
         return (static::TYPE_COLLECTION === $this->type);
-    }
-    
-    public function getExpectedType()
-    {
-        return $this->expectedType;
     }
 
     /**

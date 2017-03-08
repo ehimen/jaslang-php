@@ -7,7 +7,7 @@ use Ehimen\Jaslang\Core\Value;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 

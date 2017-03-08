@@ -32,10 +32,7 @@ use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\Lexer\JaslangLexer;
 use Ehimen\Jaslang\Engine\Parser\JaslangParser;
-use Ehimen\Jaslang\Core\Type\Any;
-use Ehimen\Jaslang\Core\Type\Boolean;
-use Ehimen\Jaslang\Core\Type\Num;
-use Ehimen\Jaslang\Core\Type\Str;
+use Ehimen\Jaslang\Core\Type as TypeDef;
 use Ehimen\Jaslang\Engine\Type\Type;
 
 /**
@@ -93,8 +90,8 @@ class JaslangFactory
         $fnRepo->registerFunction('println', new PrintLine());
 
         // Core operators.
-        $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary());
-        $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher priority than assignment.
+        $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary(75));      // Higher than assignment.
+        $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('==', new Equality(), OperatorSignature::binary());
@@ -108,10 +105,11 @@ class JaslangFactory
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
         $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::binary(150));
         
-        $typeRepo->registerType('any', new Any());
-        $typeRepo->registerType('string', new Str());
-        $typeRepo->registerType('number', new Num());
-        $typeRepo->registerType('boolean', new Boolean());
+        $typeRepo->registerType('any', new TypeDef\Any());
+        $typeRepo->registerType('string', new TypeDef\Str());
+        $typeRepo->registerType('number', new TypeDef\Num());
+        $typeRepo->registerType('boolean', new TypeDef\Boolean());
+        $typeRepo->registerType('lambda', new TypeDef\Lambda());
 
         $contextFactory = new JaslangContextFactory($typeRepo);
         $invoker        = new JaslangInvoker($typeRepo);

@@ -7,7 +7,7 @@ use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;

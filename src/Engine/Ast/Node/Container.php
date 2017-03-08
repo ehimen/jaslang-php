@@ -16,6 +16,13 @@ class Container implements ParentNode, Expression
      * @var Node[]
      */
     private $contained = [];
+
+    public function __construct(Node ...$children)
+    {
+        foreach ($children as $child) {
+            $this->addChild($child);
+        }
+    }
     
     public function debug()
     {

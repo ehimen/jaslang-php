@@ -1,6 +1,0 @@
-!>Simple lambda
->>>EXPECTED
->>>CODE
-(a : number, b : number) => {
-    print(a + b)
-}

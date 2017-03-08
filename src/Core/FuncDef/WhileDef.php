@@ -10,7 +10,7 @@ use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use phpDocumentor\Reflection\DocBlock\Tags\Param;
 
@@ -32,9 +32,7 @@ class WhileDef implements FuncDef
         $do = $args->get(1);
         
         while (true) {
-            $while->getExpression()->accept($evaluator);
-            
-            $result = $evaluator->getResult();
+            $result = $evaluator->evaluateInIsolation($while->getExpression());
             
             if (!($result instanceof Value\Boolean)) {
                 throw TypeErrorException::evaluationResultTypeMismatch('boolean', $result);

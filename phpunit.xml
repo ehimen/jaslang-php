@@ -27,6 +27,10 @@
         <testsuite name="jslt">
             <file>tests/cases/Core/JsltTest.php</file>
         </testsuite>
+        <testsuite name="unit">
+            <directory>tests/cases</directory>
+            <exclude>tests/cases/Core/JsltTest.php</exclude>
+        </testsuite>
     </testsuites>
 
 </phpunit>

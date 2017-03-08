@@ -4,7 +4,7 @@ namespace Ehimen\Jaslang\Engine\Ast\Node;
 
 use Ehimen\Jaslang\Engine\Ast\Visitor;
 
-class FunctionCall extends UnlimitedChildrenParentNode
+class FunctionCall extends UnlimitedChildrenParentNode implements Routine
 {
     /**
      * @var string

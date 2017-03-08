@@ -18,8 +18,6 @@ interface Validator
      * @param Root $ast
      * 
      * @throws SyntaxErrorException
-     *
-     * @return mixed
      */
     public function validate($input, Root $ast);
 }

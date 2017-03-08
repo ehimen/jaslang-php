@@ -1,0 +1,9 @@
+let printit : lambda = (what : string) => {
+    print(what)
+}
+
+let callit : lambda = (fn : lambda, with : string) => {
+    fn(with)
+}
+
+callit(printit, 'hello world')

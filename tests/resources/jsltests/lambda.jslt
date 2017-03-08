@@ -64,3 +64,11 @@ let callit : lambda = (fn : lambda, with : string) => {
 }
 
 callit(printit, 'hello world')
+
+!>one-line-lambda!
+>>>EXPECTED
+hello world
+>>>CODE
+let printit : lambda = (what : string) => print(what);
+
+printit('hello world')

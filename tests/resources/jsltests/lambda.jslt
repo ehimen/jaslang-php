@@ -65,10 +65,40 @@ let callit : lambda = (fn : lambda, with : string) => {
 
 callit(printit, 'hello world')
 
-!>one-line-lambda!
+!>one-line-lambda
 >>>EXPECTED
-hello world
+hello
 >>>CODE
 let printit : lambda = (what : string) => print(what);
 
-printit('hello world')
+printit(substring('hello world', 0, 5))
+
+!>returning-lambda
+>>>EXPECTED
+3
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    return a + b
+}
+
+print(fn(1, 2))
+
+!>not-returning-lambda
+>>>EXPECTED
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    a + b
+}
+
+print(fn(1, 2))
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 0. Expected "any", got [void]
+#0 > print(fn(1, 2))
+
+!>one-line-returning-lambda
+>>>EXPECTED
+26
+>>>CODE
+let fn : lambda = (num : number) => (num + 2);
+
+print(fn(24))

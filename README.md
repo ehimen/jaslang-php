@@ -17,6 +17,7 @@ A simple imperative programming language.
 * Conditionals (if),
 * Loops (while),
 * Syntax and runtime error checking.
+* Functions (first-class)
 
 The list of core functions and operators is currently very limited due to focus on the engine.
 
@@ -68,18 +69,18 @@ random(sum(1, random("hello world")))   // Jaslang runtime exception! Invalid ar
                                         // #2 > random("hello world")
                                         
 # Variables
-let number pi = 3.142;
-let number radius = 5;
+let pi : number = 3.142;
+let radius : number = 5;
 
 2 * pi * radius                         // 31.42
 
 # Type safety
-let number foo = "bar"                  // Jaslang runtime exception! Assignment expected value of type number, but got "bar"
-                                           #0 > let number foo = "bar"
+let foo : number = "bar"                  // Jaslang runtime exception! Assignment expected value of type number, but got "bar"
+                                             #0 > let foo : number = "bar"
 
 # Conditionals & loops (factorial)
-let number n = 4;
-let number total = 0;
+let n : number = 4;
+let total : number = 0;
 
 while (!(n === 0)) {
     if (total === 0) {
@@ -94,6 +95,17 @@ while (!(n === 0)) {
 }
 
 total                                   // 24
+
+# User-defined functions (lambdas)
+let printit : lambda = (what : string) => {
+    print(what)
+}
+
+let callit : lambda = (fn : lambda, with : string) => {
+    fn(with)
+}
+
+callit(printit, 'hello world')          // 'hello world'
 ```
 
 These examples can be found in [the examples directory](examples/jaslang).

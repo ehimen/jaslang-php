@@ -13,6 +13,7 @@ use Ehimen\Jaslang\Core\FuncDef\Multiply;
 use Ehimen\Jaslang\Core\FuncDef\Negate;
 use Ehimen\Jaslang\Core\FuncDef\PrintDef;
 use Ehimen\Jaslang\Core\FuncDef\PrintLine;
+use Ehimen\Jaslang\Core\FuncDef\ReturnVal;
 use Ehimen\Jaslang\Core\FuncDef\VariableWithType;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
@@ -90,7 +91,7 @@ class JaslangFactory
         $fnRepo->registerFunction('println', new PrintLine());
 
         // Core operators.
-        $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary(75));      // Higher than assignment.
+        $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary(75));      // Higher than assignment (should be evaluated before assignment; lower in the AST).
         $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
@@ -104,11 +105,13 @@ class JaslangFactory
         $fnRepo->registerOperator('<', new LessThan(), OperatorSignature::binary());
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
         $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::binary(150));
+        $fnRepo->registerOperator('return', new ReturnVal(), new OperatorSignature(0, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
         
         $typeRepo->registerType('any', new TypeDef\Any());
         $typeRepo->registerType('string', new TypeDef\Str());
         $typeRepo->registerType('number', new TypeDef\Num());
         $typeRepo->registerType('boolean', new TypeDef\Boolean());
+        $typeRepo->registerType('lambda', new TypeDef\Lambda());
         $typeRepo->registerType('lambda', new TypeDef\Lambda());
 
         $contextFactory = new JaslangContextFactory($typeRepo);

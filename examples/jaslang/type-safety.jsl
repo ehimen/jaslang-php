@@ -1,1 +1,1 @@
-let number foo = "bar"
+let foo : number = "bar"

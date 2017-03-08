@@ -50,3 +50,17 @@ let fn : lambda = (a : number, b : number) => {
 fn(2, 3);
 println(a);
 print(b)
+
+!>lambda-as-params
+>>>EXPECTED
+hello world
+>>>CODE
+let printit : lambda = (what : string) => {
+    print(what)
+}
+
+let callit : lambda = (fn : lambda, with : string) => {
+    fn(with)
+}
+
+callit(printit, 'hello world')

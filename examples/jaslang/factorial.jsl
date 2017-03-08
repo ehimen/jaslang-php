@@ -1,5 +1,5 @@
-let number n = 4;
-let number total = 0;
+let n : number = 4;
+let total : number = 0;
 
 while (!(n == 0)) {
     if (total == 0) {

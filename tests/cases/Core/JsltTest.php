@@ -19,9 +19,9 @@ class JsltTest extends TestCase
     /**
      * @dataProvider provideFiles
      */
-    public function testFile($expected, $code, $error)
+    public function testFile($expected, $code, $error, $input)
     {
-        $result = $this->getInterpreter()->run($code);
+        $result = $this->getInterpreter($input)->run($code);
 
         $actualError = $result->getError();
 
@@ -62,22 +62,48 @@ class JsltTest extends TestCase
                     throw new \Exception('Invalid jsl test file contents in file: ' . $file);
                 }
 
-                $parts = preg_split('/>>>EXPECTED\n|\n?>>>CODE\n|\n?>>>ERROR\n/', $content);
+                $lines = explode(PHP_EOL, $content);
 
-                $expected = isset($parts[1]) ? $parts[1] : null;
-                $code     = isset($parts[2]) ? $parts[2] : null;
-                $error    = isset($parts[3]) ? $parts[3] : null;
+                $buffer      = '';
+                $parts       = [];
+                $currentPart = null;
+                $lineCount  = count($lines);
+
+                foreach ($lines as $index => $line) {
+
+                    $isLastLine = ($index === ($lineCount -1));
+
+                    if (preg_match('/^>>>([A-Z]+)$/', $line, $matches) || $isLastLine) {
+
+                        if (isset($currentPart)) {
+                            $parts[$currentPart] = (strlen($buffer) > 0) ? substr($buffer, 0, -1) : $buffer;
+                        }
+
+                        $buffer = '';
+                        $currentPart = $matches[1];
+
+                    } else {
+                        $buffer .= $line.PHP_EOL;
+                    }
+                }
+
+                $expected = isset($parts['EXPECTED']) ? $parts['EXPECTED'] : null;
+                $code     = isset($parts['CODE']) ? $parts['CODE'] : null;
+                $error    = isset($parts['ERROR']) ? $parts['ERROR'] : null;
+                $input    = isset($parts['INPUT']) ? $parts['INPUT'] : null;
 
                 if (!is_string($expected) || !is_string($code)) {
                     throw new \Exception('Invalid jsl test file contents in file: ' . $file);
                 }
 
+                $testArgs = [$expected, $code, $error, $input];
+
                 if (is_string($case) && strrev($case)[0] === '!') {
                     // If the case ends in !, only run this test.
-                    $cases = [$file . '#' . $case => [$expected, $code, $error]];
+                    $cases = [$file . '#' . $case => $testArgs];
                     break 2;
                 } else {
-                    $cases[$file . '#' . $case] = [$expected, $code, $error];
+                    $cases[$file . '#' . $case] = $testArgs;
                 }
             }
             

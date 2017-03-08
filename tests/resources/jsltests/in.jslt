@@ -1,0 +1,7 @@
+!>reads-input
+>>>EXPECTED
+foo bar
+>>>CODE
+print(in())
+>>>INPUT
+foo bar

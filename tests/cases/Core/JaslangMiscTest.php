@@ -45,7 +45,7 @@ class JaslangMiscTest extends TestCase
 
     public function testFunctionOperatorHooks()
     {
-        $factory = new JaslangFactory();
+        $factory = JaslangFactory::createDefault();
         $factory->registerFunction('foo', new FooFuncDef());
         $factory->registerOperator('+-+-+-+-+', new FooOperator(), OperatorSignature::binary());
         
@@ -55,7 +55,7 @@ class JaslangMiscTest extends TestCase
 
     public function testAlphabeticOperator()
     {
-        $factory = new JaslangFactory();
+        $factory = JaslangFactory::createDefault();
         $factory->registerOperator('AND', new AndOperator(), OperatorSignature::binary());
         $evaluator = $factory->create();
 
@@ -110,7 +110,7 @@ class JaslangMiscTest extends TestCase
 
     private function getEvaluatorWithCustomType()
     {
-        $factory = new JaslangFactory();
+        $factory = JaslangFactory::createDefault();
 
         $factory->registerType('parenttype', new ParentType());
         $factory->registerType('childtype', new ChildType());
@@ -121,7 +121,7 @@ class JaslangMiscTest extends TestCase
 
     private function performMultiplicationTest($input, $multiplicationPrecedence, $expected)
     {
-        $factory = new JaslangFactory();
+        $factory = JaslangFactory::createDefault();
         $signature = OperatorSignature::binary($multiplicationPrecedence);
         $factory->registerOperator('test-multiply', new Multiplication(), $signature);
         $this->assertSame($expected, $factory->create()->run($input)->getOut());

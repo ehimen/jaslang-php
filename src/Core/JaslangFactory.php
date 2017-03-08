@@ -17,6 +17,7 @@ use Ehimen\Jaslang\Core\FuncDef\PrintLine;
 use Ehimen\Jaslang\Core\FuncDef\ReturnVal;
 use Ehimen\Jaslang\Core\FuncDef\VariableWithType;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
+use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Interpreter\Interpreter;
@@ -57,7 +58,30 @@ class JaslangFactory
      * @var TypeRepository
      */
     private $typeRepository;
-    
+
+    /**
+     * @var ContextFactory
+     */
+    private $contextFactory;
+
+    public function __construct(ContextFactory $contextFactory, TypeRepository $typeRepository)
+    {
+        $this->contextFactory = $contextFactory;
+        $this->typeRepository = $typeRepository;
+    }
+
+    /**
+     * Create a pre initialised factory.
+     *
+     * @return static
+     */
+    public static function createDefault()
+    {
+        $typeRepository = new TypeRepository();
+
+        return new static(new JaslangContextFactory($typeRepository), $typeRepository);
+    }
+
     public function registerFunction($identifier, FuncDef $function)
     {
         // TODO: validate identifier against language.
@@ -75,13 +99,13 @@ class JaslangFactory
 
     public function registerType($name, Type $type)
     {
-        $this->getTypeRepository()->registerType($name, $type);
+        $this->typeRepository->registerType($name, $type);
     }
     
     public function create()
     {
         $fnRepo = $this->getFunctionRepository();
-        $typeRepo = $this->getTypeRepository();
+        $typeRepo = $this->typeRepository;
 
         // Core functions.
         $fnRepo->registerFunction('sum', $sum = new Sum());
@@ -149,14 +173,5 @@ class JaslangFactory
         }
 
         return $this->functionRepository;
-    }
-
-    private function getTypeRepository()
-    {
-        if (!$this->typeRepository) {
-            $this->typeRepository = new TypeRepository();
-        }
-        
-        return $this->typeRepository;
     }
 }

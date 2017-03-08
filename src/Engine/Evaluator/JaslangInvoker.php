@@ -46,7 +46,6 @@ class JaslangInvoker implements Invoker
     public function invokeCallable(
         CallableValue $value,
         ArgList $args,
-        EvaluationContext $context,
         Evaluator $evaluator
     ) {
         $parameters = array_map(
@@ -60,7 +59,7 @@ class JaslangInvoker implements Invoker
         
         $this->validateArgs($parameters, $args);
         
-        return $value->invoke($args, $context, $evaluator);
+        return $value->invoke($args, $evaluator);
     }
 
 

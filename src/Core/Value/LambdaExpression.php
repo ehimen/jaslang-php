@@ -40,14 +40,17 @@ class LambdaExpression implements CallableValue
         return $this->parameters;
     }
 
-    public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
+    public function invoke(ArgList $args, Evaluator $evaluator)
     {
+        $evaluator->pushContext();
+        
         foreach ($this->parameters as $i => $parameter) {
             $value = $args->get($i);
-            $context->getSymbolTable()->set($parameter->getIdentifier(), $value);
+            $evaluator->getContext()->getSymbolTable()->set($parameter->getIdentifier(), $value);
         }
         
         $evaluator->evaluateInIsolation($this->body->getRoutine());
+        $evaluator->popContext();
     }
 
 

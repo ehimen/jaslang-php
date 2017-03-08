@@ -6,6 +6,7 @@ use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
@@ -45,9 +46,11 @@ class Evaluator implements Visitor
     private $functionRepository;
 
     /**
-     * @var EvaluationContext
+     * @var EvaluationContext[]
+     * 
+     * A stack of contexts which expands over time as new evaluation contexts are required.
      */
-    private $context;
+    private $contexts;
 
     /**
      * @var ContextFactory
@@ -65,7 +68,17 @@ class Evaluator implements Visitor
     {
         $this->trace         = new EvaluationTrace();
         $this->argumentStack = [];
-        $this->context       = $this->contextFactory->createContext();
+        $this->contexts      = [$this->contextFactory->createContext()];
+    }
+
+    public function pushContext()
+    {
+        $this->contexts[] = $this->contextFactory->extendContext($this->getContext());
+    }
+
+    public function popContext()
+    {
+        $this->contexts = array_slice($this->contexts, 0, -1);
     }
 
     /**
@@ -81,7 +94,7 @@ class Evaluator implements Visitor
      */
     public function getContext()
     {
-        return $this->context;
+        return end($this->contexts);
     }
 
     /**
@@ -137,7 +150,7 @@ class Evaluator implements Visitor
         // If we don't have a native function, see if we have
         // a callable with this function name in our symbol table.
         try {
-            $value = $this->context->getSymbolTable()->get($node->getName());
+            $value = $this->getContext()->getSymbolTable()->get($node->getName());
             
             if ($value instanceof CallableValue) {
                 $callable = $value;
@@ -159,16 +172,17 @@ class Evaluator implements Visitor
             $result = $this->invoker->invokeFunction(
                 $callable,
                 new ArgList($arguments),
-                $this->context,
+                $this->getContext(),
                 $this
             );
         } elseif ($callable instanceof CallableValue) {
             $result = $this->invoker->invokeCallable(
                 $callable,
                 new ArgList($arguments),
-                $this->context,
                 $this
             );
+        } else {
+            throw new RuntimeException('Unknown callable');
         }
         
         $this->pushArgument($result);
@@ -179,7 +193,7 @@ class Evaluator implements Visitor
     public function visitIdentifier(Node\Identifier $node)
     {
         try {
-            $this->pushArgument($this->context->getSymbolTable()->get($node->getName()));
+            $this->pushArgument($this->getContext()->getSymbolTable()->get($node->getName()));
         } catch (OutOfBoundsException $e) {
             throw new UndefinedSymbolException($node->getName());
         }
@@ -209,7 +223,7 @@ class Evaluator implements Visitor
         $this->pushArgument($this->invoker->invokeFunction(
             $operator,
             new ArgList($arguments),
-            $this->context,
+            $this->getContext(),
             $this
         ));
         

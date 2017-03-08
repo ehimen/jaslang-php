@@ -34,3 +34,19 @@ let fn : lambda = (a : number, b : number) => {
 }
 
 fn(3 - 4, 4 + 16)
+
+!>scope-isolation
+>>>EXPECTED
+5
+1
+2
+>>>CODE
+let a : number = 1;
+let b : number = 2;
+let fn : lambda = (a : number, b : number) => {
+    println(a + b);
+}
+
+fn(2, 3);
+println(a);
+print(b)

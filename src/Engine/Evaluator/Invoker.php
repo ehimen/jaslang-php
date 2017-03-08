@@ -26,5 +26,5 @@ interface Invoker
      * 
      * @return Value
      */
-    public function invokeCallable(CallableValue $type, ArgList $args, EvaluationContext $context, Evaluator $evaluator);
+    public function invokeCallable(CallableValue $type, ArgList $args, Evaluator $evaluator);
 }

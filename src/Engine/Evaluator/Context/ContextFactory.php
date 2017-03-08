@@ -10,4 +10,11 @@ interface ContextFactory
      * @return EvaluationContext
      */
     public function createContext();
+
+    /**
+     * Extends an evaluation context, returning a new context based on the provided.
+     *
+     * @return EvaluationContext
+     */
+    public function extendContext(EvaluationContext $base);
 }

@@ -6,6 +6,7 @@ use Ehimen\Jaslang\Engine\Ast\Node;
 use Ehimen\Jaslang\Engine\Ast\Visitor;
 use Ehimen\Jaslang\Engine\Evaluator\Context\ContextFactory;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedFunctionException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedOperatorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
@@ -15,14 +16,15 @@ use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Collection;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
-use Ehimen\Jaslang\Engine\Value\Value;
+use Ehimen\Jaslang\Engine\Value\CallableValue;
 
 class Evaluator implements Visitor
 {
@@ -44,9 +46,11 @@ class Evaluator implements Visitor
     private $functionRepository;
 
     /**
-     * @var EvaluationContext
+     * @var EvaluationContext[]
+     * 
+     * A stack of contexts which expands over time as new evaluation contexts are required.
      */
-    private $context;
+    private $contexts;
 
     /**
      * @var ContextFactory
@@ -64,7 +68,17 @@ class Evaluator implements Visitor
     {
         $this->trace         = new EvaluationTrace();
         $this->argumentStack = [];
-        $this->context       = $this->contextFactory->createContext();
+        $this->contexts      = [$this->contextFactory->createContext()];
+    }
+
+    public function pushContext()
+    {
+        $this->contexts[] = $this->contextFactory->extendContext($this->getContext());
+    }
+
+    public function popContext()
+    {
+        $this->contexts = array_slice($this->contexts, 0, -1);
     }
 
     /**
@@ -80,11 +94,30 @@ class Evaluator implements Visitor
      */
     public function getContext()
     {
-        return $this->context;
+        return end($this->contexts);
     }
 
     /**
-     * @return Value
+     * Creates a new stack frame, evaluates the node, clears the stack frame and returns any result
+     * from the evaluation.
+     * 
+     * Note this isn't strictly isolation (needs a better name) because:
+     * 1. Execution context is the same (symbol table, functions etc)
+     * 2. We just push on to the argument stack to make sure nothing that the 
+     *    evaluator is currently evaluating is effected by this evaluation.
+     * 
+     * This is useful when userland contexts (e.g. Jaslang Core) need to invoke the
+     * evaluator, such as evaluating the parameters of a lambda.
+     */
+    public function evaluateInIsolation(Node\Node $node)
+    {
+        $this->pushArgument();
+        $node->accept($this);
+        return $this->getResult();
+    }
+
+    /**
+     * @return Argument
      */
     public function getResult()
     {
@@ -92,11 +125,7 @@ class Evaluator implements Visitor
             throw new LogicException('Evaluator does not have a result.');
         }
         
-        if (!(end($this->argumentStack[0]) instanceof Value)) {
-            throw new LogicException('Evaluator does not have a value result.');
-        }
-        
-        return end($this->argumentStack[0]);
+        return current($this->popArgument());
     }
     
     public function visitBlock(Node\Block $node)
@@ -114,23 +143,49 @@ class Evaluator implements Visitor
         $this->pushTrace($node);
         
         try {
-            $funcDef = $this->functionRepository->getFunction($node->getName());
-        } catch (OutOfBoundsException $e) {
+            $callable = $this->functionRepository->getFunction($node->getName());
+            $parameters = $callable->getParameters();
+        } catch (OutOfBoundsException $e) { }
+        
+        // If we don't have a native function, see if we have
+        // a callable with this function name in our symbol table.
+        try {
+            $value = $this->getContext()->getSymbolTable()->get($node->getName());
+            
+            if ($value instanceof CallableValue) {
+                $callable = $value;
+                $parameters = $value->getExpectedParameters();
+            }
+        } catch (OutOfBoundsException $e) { }
+        
+        if (!isset($callable)) {
             throw new UndefinedFunctionException($node->getName());
         }
         
         $this->pushArgument();
 
-        $this->visitChildrenOf($node, $funcDef);
+        $this->visitChildrenOf($node, $parameters);
 
         $arguments = $this->popArgument();
 
-        $this->pushArgument($this->invoker->invokeFunction(
-            $funcDef,
-            new ArgList($arguments),
-            $this->context,
-            $this
-        ));
+        if ($callable instanceof FuncDef) {
+            $result = $this->invoker->invokeFunction(
+                $callable,
+                new ArgList($arguments),
+                $this->getContext(),
+                $this
+            );
+        } elseif ($callable instanceof CallableValue) {
+            $result = $this->invoker->invokeCallable(
+                $callable,
+                new ArgList($arguments),
+                $this
+            );
+        } else {
+            throw new RuntimeException('Unknown callable');
+        }
+        
+        $this->pushArgument($result);
         
         $this->popTrace();
     }
@@ -138,7 +193,7 @@ class Evaluator implements Visitor
     public function visitIdentifier(Node\Identifier $node)
     {
         try {
-            $this->pushArgument($this->context->getSymbolTable()->get($node->getName()));
+            $this->pushArgument($this->getContext()->getSymbolTable()->get($node->getName()));
         } catch (OutOfBoundsException $e) {
             throw new UndefinedSymbolException($node->getName());
         }
@@ -161,14 +216,14 @@ class Evaluator implements Visitor
 
         $this->pushArgument();
 
-        $this->visitChildrenOf($node, $operator);
+        $this->visitChildrenOf($node, $operator->getParameters());
 
         $arguments = $this->popArgument();
 
         $this->pushArgument($this->invoker->invokeFunction(
             $operator,
             new ArgList($arguments),
-            $this->context,
+            $this->getContext(),
             $this
         ));
         
@@ -196,10 +251,12 @@ class Evaluator implements Visitor
         $this->trace->pop();
     }
 
-    private function visitChildrenOf(Node\ParentNode $node, FuncDef $function = null)
+    /**
+     * @param Node\ParentNode $node
+     * @param Parameter[]     $parameters
+     */
+    private function visitChildrenOf(Node\ParentNode $node, array $parameters = [])
     {
-        $parameters = $function ? $function->getParameters() : [];
-        
         foreach ($node->getChildren() as $i => $child) {
             $parameter = isset($parameters[$i]) ? $parameters[$i] : null;
             
@@ -209,7 +266,7 @@ class Evaluator implements Visitor
                     continue;
                 }
 
-                if ($parameter->isVariable() && ($child instanceof Node\Identifier)) {
+                if (($parameter->isVariable()) && ($child instanceof Node\Identifier)) {
                     $this->pushArgument(new Variable($child->getName()));
                     continue;
                 }
@@ -221,6 +278,21 @@ class Evaluator implements Visitor
 
                 if ($parameter->isExpression() && ($child instanceof Node\Expression)) {
                     $this->pushArgument(new Expression($child));
+                    continue;
+                }
+                
+                if ($parameter->isCollection() && ($child instanceof Node\Container)) {
+                    $collection = new Collection($child);
+                    
+                    if ($parameter->getParameterType() !== Parameter::TYPE_EXPRESSION) {
+                        throw new \RuntimeException('TODO: parameter collection beyond expression are not supported');
+                    }
+                    
+                    foreach ($child->getChildren() as $containerChild) {
+                        $collection->addArgument(new Expression($containerChild));
+                    }
+                    
+                    $this->pushArgument($collection);
                     continue;
                 }
             }
@@ -239,7 +311,7 @@ class Evaluator implements Visitor
     }
 
     /**
-     * @return Argument
+     * @return Argument[]
      */
     private function popArgument()
     {

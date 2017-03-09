@@ -2,7 +2,7 @@
 >>>EXPECTED
 1
 >>>CODE
-let number a = 1;
+let a : number = 1;
 
 if !true a = 2;
 
@@ -12,7 +12,7 @@ print(a)
 >>>EXPECTED
 2
 >>>CODE
-let number a = 1;
+let a : number = 1;
 
 if true a = 2;
 
@@ -22,7 +22,7 @@ print(a)
 >>>EXPECTED
 1
 >>>CODE
-let number a = 1;
+let a : number = 1;
 
 if (!true) { a = 2 }
 

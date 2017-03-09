@@ -2,34 +2,31 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
-use Ehimen\Jaslang\Core\Type;
+use Ehimen\Jaslang\Core\Type\Any;
+use Ehimen\Jaslang\Core\Value\ExplicitReturn;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Void;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
-use Ehimen\Jaslang\Engine\Value\Printable;
 
 /**
- * Prints to the output buffer.
+ * Operator which simply wraps its sole argument in a special value.
+ * 
+ * This exists to distinguish between an expression returning its value implicitly
+ * and an explicit "return" statement.
  */
-class PrintDef implements FuncDef
+class ReturnVal implements FuncDef
 {
     public function getParameters()
     {
         return [
-            Parameter::value(new Type\Any()),
+            Parameter::value(new Any()),
         ];
     }
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        /** @var Printable $val */
-        $val = $args->get(0);
-        
-        $context->getOutputBuffer()->write($val->printValue());
-        
-        return new Void();
+        return new ExplicitReturn($args->get(0));
     }
 }

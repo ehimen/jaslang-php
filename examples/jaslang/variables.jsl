@@ -1,4 +1,4 @@
-let number pi = 3.142;
-let number radius = 5;
+let pi : number = 3.142;
+let radius : number = 5;
 
 println(2 * pi * radius)

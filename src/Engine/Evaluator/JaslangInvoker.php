@@ -5,14 +5,18 @@ namespace Ehimen\Jaslang\Engine\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Collection;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\TypedParameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
+use Ehimen\Jaslang\Engine\Value\CallableValue;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -39,6 +43,26 @@ class JaslangInvoker implements Invoker
         // TODO: return type. Really need to validate this. Keep not returning wrapped values!
     }
 
+    public function invokeCallable(
+        CallableValue $value,
+        ArgList $args,
+        Evaluator $evaluator
+    ) {
+        $parameters = array_map(
+            function (TypedVariable $variable) {
+                $type = $this->repository->getTypeByName($variable->getType()->getIdentifier());
+                
+                return TypedParameter::value($type);
+            },
+            $value->getExpectedParameters()
+        );
+        
+        $this->validateArgs($parameters, $args);
+        
+        return $value->invoke($args, $evaluator);
+    }
+
+
     /**
      * @param Parameter[] $argDefs
      * @param ArgList     $args
@@ -64,6 +88,8 @@ class JaslangInvoker implements Invoker
                 $type = 'routine';
             } elseif ($def->isExpression()) {
                 $type = 'expression';
+            } elseif ($def->isCollection()) {
+                $type = 'collection';
             } else {
                 throw new LogicException('Cannot handle definition as is not one of variable, type, value or block');
             }
@@ -96,6 +122,9 @@ class JaslangInvoker implements Invoker
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             } elseif ($def->isExpression() && !($arg instanceof Expression)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+            } elseif ($def->isCollection() && !($arg instanceof Collection)) {
+                throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+                // TODO: validate what is in collection!?
             }
         }
     }

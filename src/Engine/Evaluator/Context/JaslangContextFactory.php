@@ -22,4 +22,13 @@ class JaslangContextFactory implements ContextFactory
     {
         return new JaslangContext(new SymbolTable(), $this->typeRepository, new OutputBuffer());
     }
+
+    /**
+     * When we extend a context, we create a new symbol table, giving
+     * variable scope isolation.
+     */
+    public function extendContext(EvaluationContext $base)
+    {
+        return new JaslangContext(new SymbolTable(), $this->typeRepository, $base->getOutputBuffer());
+    }
 }

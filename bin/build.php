@@ -47,4 +47,4 @@ foreach ($iterator as $item) {
     echo PHP_EOL;
 }
 
-echo "Done." . PHP_BINARY;
+echo "Done." . PHP_EOL;

@@ -2,7 +2,7 @@
 >>>EXPECTED
 10
 >>>CODE
-let number a = 0;
+let a : number = 0;
 
 while (!(a == 10)) {
     a++;
@@ -14,8 +14,8 @@ print(a)
 >>>EXPECTED
 1
 >>>CODE
-let number a = 0;
-let number b = 0;
+let a : number = 0;
+let b : number = 0;
 
 while (!(a == 10)) {
     a++;
@@ -34,7 +34,7 @@ print(b)
 4
 
 >>>CODE
-let number n = 0;
+let n : number = 0;
 
 while (!(n == 5)) {
     println(n++);

@@ -1,0 +1,104 @@
+!>simple-lambda
+>>>EXPECTED
+hello world
+>>>CODE
+let fn : lambda = () => {
+    print("hello world")
+}
+
+fn()
+
+!>empty-lambda
+>>>EXPECTED
+>>>CODE
+let fn : lambda;
+
+fn()
+
+!>with-parameters
+>>>EXPECTED
+7
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    print(a + b)
+}
+
+fn(3, 4)
+
+!>with-evaluated-args
+>>>EXPECTED
+19
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    print(a + b)
+}
+
+fn(3 - 4, 4 + 16)
+
+!>scope-isolation
+>>>EXPECTED
+5
+1
+2
+>>>CODE
+let a : number = 1;
+let b : number = 2;
+let fn : lambda = (a : number, b : number) => {
+    println(a + b);
+}
+
+fn(2, 3);
+println(a);
+print(b)
+
+!>lambda-as-params
+>>>EXPECTED
+hello world
+>>>CODE
+let printit : lambda = (what : string) => {
+    print(what)
+}
+
+let callit : lambda = (fn : lambda, with : string) => {
+    fn(with)
+}
+
+callit(printit, 'hello world')
+
+!>one-line-lambda
+>>>EXPECTED
+hello
+>>>CODE
+let printit : lambda = (what : string) => print(what);
+
+printit(substring('hello world', 0, 5))
+
+!>returning-lambda
+>>>EXPECTED
+3
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    return a + b
+}
+
+print(fn(1, 2))
+
+!>not-returning-lambda
+>>>EXPECTED
+>>>CODE
+let fn : lambda = (a : number, b : number) => {
+    a + b
+}
+
+print(fn(1, 2))
+>>>ERROR
+Jaslang runtime exception! Invalid argument at position 0. Expected "any", got [void]
+#0 > print(fn(1, 2))
+
+!>one-line-returning-lambda
+>>>EXPECTED
+26
+>>>CODE
+let fn : lambda = (num : number) => (num + 2);
+
+print(fn(24))

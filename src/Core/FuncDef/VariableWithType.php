@@ -2,21 +2,28 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
-use Ehimen\Jaslang\Core\Type;
-use Ehimen\Jaslang\Core\Value;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 
-class Increment implements FuncDef
+/**
+ * An operator that binds a variable identifier with a type.
+ * 
+ * let n : number = 13
+ *     ^________^
+ */
+class VariableWithType implements FuncDef
 {
     public function getParameters()
     {
         return [
             Parameter::variable(),
+            Parameter::type(),
         ];
     }
 
@@ -24,12 +31,9 @@ class Increment implements FuncDef
     {
         /** @var Variable $var */
         $var = $args->get(0);
+        /** @var TypeIdentifier $type */
+        $type = $args->get(1);
         
-        /** @var Value\Num $value */
-        $value = $context->getVariableOfTypeOrThrow($var->getIdentifier(), new Type\Num());
-        
-        $context->getSymbolTable()->set($var->getIdentifier(), new Value\Num($value->getValue() + 1));
-        
-        return $value;
+        return new TypedVariable($var->getIdentifier(), $type);
     }
 }

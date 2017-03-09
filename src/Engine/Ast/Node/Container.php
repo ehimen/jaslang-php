@@ -13,46 +13,41 @@ use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 class Container implements ParentNode, Expression
 {
     /**
-     * @var Node
+     * @var Node[]
      */
-    private $contained;
+    private $contained = [];
 
-    public function __construct(Node $contained = null)
+    public function __construct(Node ...$children)
     {
-        $this->contained = $contained;
+        foreach ($children as $child) {
+            $this->addChild($child);
+        }
     }
     
     public function debug()
     {
-        return $this->contained->debug();
+        return implode(', ', array_map(function ($contained) { return $contained->debug(); }, $this->contained));
     }
 
     public function addChild(Node $child)
     {
-        if ($this->contained) {
-            throw new InvalidArgumentException('Cannot add child to a container as it already has one.');
-        }
-        
-        $this->contained = $child;
+        $this->contained[] = $child;
     }
 
     public function getChildren()
     {
-        if (!$this->contained) {
-            return [];
-        }
         
-        return [$this->contained];
+        return $this->contained;
     }
 
     public function getLastChild()
     {
-        return $this->contained;
+        return end($this->contained);
     }
 
     public function removeLastChild()
     {
-        $this->contained = null;
+        $this->contained = array_slice($this->contained, 0, -1);
     }
 
     public function accept(Visitor $visitor)

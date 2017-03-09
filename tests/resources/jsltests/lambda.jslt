@@ -83,7 +83,7 @@ let fn : lambda = (a : number, b : number) => {
 
 print(fn(1, 2))
 
-!>not-returning-lambda
+!>non-returning-lambda
 >>>EXPECTED
 >>>CODE
 let fn : lambda = (a : number, b : number) => {
@@ -102,3 +102,15 @@ Jaslang runtime exception! Invalid argument at position 0. Expected "any", got [
 let fn : lambda = (num : number) => (num + 2);
 
 print(fn(24))
+
+!>lambda-literal
+>>>EXPECTED
+hello world
+>>>CODE
+let callit : lambda = (fn : lambda) => {
+    fn('hello world');
+}
+
+callit((str: string) => {
+    print(str);
+})

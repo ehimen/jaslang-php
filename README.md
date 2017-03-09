@@ -50,7 +50,7 @@ subtract(-4.5, -3)                      // "-1.5"
 1 + 3 + 2 + 5 - 2                       // "9"
 
 # Boolean & strings
-"ello" === substring("hello", 1, 4)     // "true"
+"ello" == substring("hello", 1, 4)     // "true"
 
 # Controlling precendence
 3 - 3 + 1                               // "1"
@@ -82,12 +82,12 @@ let foo : number = "bar"                  // Jaslang runtime exception! Assignme
 let n : number = 4;
 let total : number = 0;
 
-while (!(n === 0)) {
-    if (total === 0) {
+while (!(n == 0)) {
+    if (total == 0) {
         total = 1;
     }
     
-    if (!(total === 0)) {
+    if (!(total == 0)) {
         total = (total * n);
     }
     

@@ -260,6 +260,7 @@ class JaslangParser implements Parser
             ->accept($operator)
             ->accept($identifier)
             ->accept($blockClose)
+            ->accept($stateTerm)
         ;
         
         return $builder->build();

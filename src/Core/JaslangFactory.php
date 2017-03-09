@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Core;
 
 use Ehimen\Jaslang\Core\FuncDef\Assign;
+use Ehimen\Jaslang\Core\FuncDef\Concatenate;
 use Ehimen\Jaslang\Core\FuncDef\GreaterThan;
 use Ehimen\Jaslang\Core\FuncDef\IfDef;
 use Ehimen\Jaslang\Core\FuncDef\Increment;
@@ -106,6 +107,7 @@ class JaslangFactory
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
         $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::binary(150));
         $fnRepo->registerOperator('return', new ReturnVal(), new OperatorSignature(0, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
+        $fnRepo->registerOperator('.', new Concatenate(), OperatorSignature::binary());
         
         $typeRepo->registerType('any', new TypeDef\Any());
         $typeRepo->registerType('string', new TypeDef\Str());

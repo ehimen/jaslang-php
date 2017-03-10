@@ -45,3 +45,9 @@ print(
         2
     )
 )
+!>semi-colon-terminator
+>>>EXPECTED
+foo bar
+>>>CODE
+print('foo bar');
+

@@ -3,3 +3,12 @@
 llo
 >>>CODE
 print(substring("hello world", 2, 3))
+
+!>concatenate
+>>>EXPECTED
+foobar
+>>>CODE
+let foo : string = 'foo';
+let bar : string = 'bar';
+
+print(foo.bar)

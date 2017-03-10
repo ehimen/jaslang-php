@@ -5,13 +5,15 @@ namespace Ehimen\Jaslang\Engine\Evaluator\Context;
 use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\TypeErrorException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\UndefinedSymbolException;
+use Ehimen\Jaslang\Engine\Evaluator\InputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\InputSteam\InputStream;
 use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
 use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 
-class JaslangContext implements EvaluationContext 
+class JaslangContext implements EvaluationContext
 {
     /**
      * @var SymbolTable
@@ -27,12 +29,18 @@ class JaslangContext implements EvaluationContext
      * @var OutputBuffer
      */
     private $outputBuffer;
-    
-    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository, OutputBuffer $outputBuffer)
+
+    /**
+     * @var  InputStream
+     */
+    private $inputStream;
+
+    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository, OutputBuffer $outputBuffer, InputStream $inputStream)
     {
         $this->symbolTable    = $symbolTable;
         $this->typeRepository = $typeRepository;
         $this->outputBuffer   = $outputBuffer;
+        $this->inputStream    = $inputStream;
     }
 
     /**
@@ -61,9 +69,9 @@ class JaslangContext implements EvaluationContext
         } catch (OutOfBoundsException $e) {
             throw new UndefinedSymbolException($name);
         }
-        
+
         $valueType = $this->typeRepository->getTypeByValue($value);
-        
+
         if (!$valueType->isA($type)) {
             throw TypeErrorException::valueTypeMismatch(
                 $this->typeRepository->getTypeName($type),
@@ -71,7 +79,7 @@ class JaslangContext implements EvaluationContext
                 $value
             );
         }
-        
+
         return $value;
     }
 
@@ -81,5 +89,13 @@ class JaslangContext implements EvaluationContext
     public function getOutputBuffer()
     {
         return $this->outputBuffer;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getInputStream()
+    {
+        return $this->inputStream;
     }
 }

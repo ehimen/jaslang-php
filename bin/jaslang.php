@@ -38,7 +38,7 @@ if (strlen($jaslang) === 0) {
     exit(0);
 }
 
-$result = (new JaslangFactory())->create()->run($jaslang);
+$result = JaslangFactory::createDefault()->create()->run($jaslang);
 
 $error = $result->getError();
 

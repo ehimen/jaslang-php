@@ -21,7 +21,7 @@ class OperatorSignature
      */
     private $precedence;
 
-    public function __construct($leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    private function __construct($leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
         $this->leftArgs   = $leftArgs;
         $this->rightArgs  = $rightArgs;
@@ -39,7 +39,21 @@ class OperatorSignature
      */
     public static function binary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return new static(1, 1, $precedence);
+        return static::arbitrary(1, 1, $precedence);
+    }
+
+    /**
+     * Create a signature for an operator with arbitrary left and right args.
+     *
+     * @param int $leftArgs
+     * @param int $rightArgs
+     * @param int $precedence
+     *
+     * @return static
+     */
+    public static function arbitrary($leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    {
+        return new static($leftArgs, $rightArgs, $precedence);
     }
 
     /**

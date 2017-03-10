@@ -44,4 +44,17 @@ class ArgList
     {
         return count($this->args);
     }
+
+    public function slice($start)
+    {
+        return new static(array_slice($this->args, $start));
+    }
+
+    /**
+     * @return Argument|null
+     */
+    public function getLast()
+    {
+        return $this->get(count($this->args) - 1);
+    }
 }

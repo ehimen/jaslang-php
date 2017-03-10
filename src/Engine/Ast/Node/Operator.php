@@ -3,9 +3,10 @@
 namespace Ehimen\Jaslang\Engine\Ast\Node;
 
 use Ehimen\Jaslang\Engine\Ast\Visitor;
+use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 
-class Operator extends UnlimitedChildrenParentNode implements Expression
+class Operator extends UnlimitedChildrenParentNode implements Expression, PrecedenceRespectingNode
 {
     private $operator;
 
@@ -79,5 +80,10 @@ class Operator extends UnlimitedChildrenParentNode implements Expression
     public function accept(Visitor $visitor)
     {
         $visitor->visitOperator($this);
+    }
+
+    public function getSignatureFromRepository(FunctionRepository $repository)
+    {
+        return $repository->getOperatorSignature($this->operator);
     }
 }

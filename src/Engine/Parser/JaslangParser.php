@@ -9,10 +9,13 @@ use Ehimen\Jaslang\Engine\Ast\Node\Container;
 use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Node\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node\ParentNode;
+use Ehimen\Jaslang\Engine\Ast\Node\PrecedenceRespectingNode;
 use Ehimen\Jaslang\Engine\Ast\Node\Root;
 use Ehimen\Jaslang\Engine\Ast\Node\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Tuple;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
+use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
@@ -164,6 +167,8 @@ class JaslangParser implements Parser
         };
 
         $literalTokens = Lexer::LITERAL_TOKENS;
+        $tupleOpenTokens   = Lexer::TUPLE_OPEN_TOKENS;
+        $tupleCloseTokens   = Lexer::TUPLE_CLOSE_TOKENS;
 
         $start      = 0;
         $literal    = 'literal';
@@ -176,6 +181,8 @@ class JaslangParser implements Parser
         $stateTerm  = 'state-term';
         $blockOpen  = 'block-open';
         $blockClose = 'block-close';
+        $tupleOpen  = 'tuple-open';
+        $tupleClose = 'tuple-close';
 
         $builder
             ->addRule($start, Lexer::TOKEN_IDENTIFIER, $identifier)
@@ -183,6 +190,7 @@ class JaslangParser implements Parser
             ->addRule($start, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($start, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($start, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($start, $tupleOpenTokens, $tupleOpen)
             ->addRule($literal, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($literal, Lexer::TOKEN_COMMA, $comma)
             ->addRule($literal, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -191,11 +199,13 @@ class JaslangParser implements Parser
             ->addRule($literal, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($literal, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($literal, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($literal, $tupleCloseTokens, $tupleClose)
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($operator, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($operator, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($operator, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN, $fnOpen)
             ->addRule($identifier, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($identifier, Lexer::TOKEN_OPERATOR, $operator)
@@ -203,6 +213,7 @@ class JaslangParser implements Parser
             ->addRule($identifier, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($identifier, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($identifier, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($identifier, $tupleOpenTokens, $tupleOpen)
             ->addRule($fnOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($fnOpen, $literalTokens, $literal)
             ->addRule($fnOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -243,7 +254,13 @@ class JaslangParser implements Parser
             ->addRule($blockClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($blockClose, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($blockClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($operator, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($tupleOpen, $tupleOpenTokens, $tupleOpen)
+            ->addRule($tupleOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($tupleOpen, $literalTokens, $literal)
+            ->addRule($tupleOpen, $tupleCloseTokens, $tupleClose)
+            ->addRule($tupleClose, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($tupleClose, $tupleCloseTokens, $tupleClose)
+            
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -253,6 +270,8 @@ class JaslangParser implements Parser
             ->whenEntering($stateTerm, $closeNode)
             ->whenEntering($blockOpen, $createNode)
             ->whenEntering($blockClose, $closeNode)
+            ->whenEntering($tupleOpen, $createNode)
+            ->whenEntering($tupleClose, $closeNode)
             
             ->start($start)
             ->accept($literal)
@@ -261,6 +280,7 @@ class JaslangParser implements Parser
             ->accept($identifier)
             ->accept($blockClose)
             ->accept($stateTerm)
+            ->accept($tupleClose)
         ;
         
         return $builder->build();
@@ -313,11 +333,19 @@ class JaslangParser implements Parser
                 $node = new Identifier($this->currentToken->getValue());
             }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
-            $node = $this->createOperator($context);
+            $node = $this->adjustForPrecedence($context, new Operator(
+                $this->currentToken->getValue(),
+                $this->functionRepository->getOperatorSignature($this->currentToken->getValue())
+            ));
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_BRACE) {
             $node = new Block();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
+        } elseif (in_array($this->currentToken->getType(), Lexer::TUPLE_OPEN_TOKENS, true)) {
+            $node = $this->adjustForPrecedence(
+                $context,
+                new Tuple($this->functionRepository->getListOperatorSignature($this->currentToken->getValue()))
+            );
         }
         
         if (!isset($node)) {
@@ -369,7 +397,7 @@ class JaslangParser implements Parser
     private function closeNode()
     {
         $type = $this->currentToken->getType();
-        
+
         if ($type === Lexer::TOKEN_STATETERM) {
             while (end($this->nodeStack) instanceof Statement) {
                 array_pop($this->nodeStack);
@@ -387,6 +415,12 @@ class JaslangParser implements Parser
             while (end($this->nodeStack) instanceof Statement) {
                 array_pop($this->nodeStack);
             }
+        } elseif (in_array($type, Lexer::TUPLE_CLOSE_TOKENS, true)) {
+            if (!(end($this->nodeStack) instanceof Tuple)) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+
+            array_pop($this->nodeStack);
         } else {
             // How many nodes on the stack do we expect for valid
             // closing of a node. 2+ because root, the node we're closing
@@ -414,19 +448,18 @@ class JaslangParser implements Parser
      *
      * @param ParentNode $context
      *
-     * @return Operator
+     * @return PrecedenceRespectingNode
      */
-    private function createOperator(ParentNode &$context)
+    private function adjustForPrecedence(ParentNode &$context, PrecedenceRespectingNode $current)
     {
-        $signature = $this->functionRepository->getOperatorSignature($this->currentToken->getValue());
-        $node      = new Operator($this->currentToken->getValue(), $signature);
+        $signature = $current->getSignature();
         $children  = [];
 
         for ($i = 0; $i < $signature->getLeftArgs(); $i++) {
             $lastChild = $context->getLastChild();
 
-            if ($lastChild instanceof Operator) {
-                $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
+            if ($lastChild instanceof PrecedenceRespectingNode) {
+                $previousSignature = $lastChild->getSignature();
 
                 if ($signature->takesPrecedenceOver($previousSignature)) {
                     array_unshift($children, $lastChild->getLastChild());
@@ -442,10 +475,10 @@ class JaslangParser implements Parser
         }
 
         foreach ($children as $child) {
-            $node->addChild($child);
+            $current->addChild($child);
         }
         
-        return $node;
+        return $current;
     }
 
     /**

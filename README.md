@@ -48,7 +48,7 @@ Available on [the wiki](https://github.com/ehimen/jaslang/wiki/Examples).
 ## Jaslang Engine
 
 A lexer, parser and evaluator. Development of the engine is driven
-by requirements of the core language. Whilst this imposes some constraints
+by requirements of the core language. Whilst this imposes some consbbtraints
 on the kinds of languages that can be defined, the engine aims to be
 abstracted and extensible enough to define languages beyond Jaslang.
 It comprises of:

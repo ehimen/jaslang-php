@@ -12,6 +12,8 @@ interface ConcreteType extends Type
 {
     /**
      * @param $value
+     * 
+     * TODO: only applies to literals? Don't need for lambda, arrays etc.
      *
      * @return Value
      */
@@ -43,6 +45,8 @@ interface ConcreteType extends Type
      * Describes the value as would be interpreted by the type.
      *
      * Used for debugging/error reporting.
+     *
+     * TODO: only applies to literals? Don't need for lambda, arrays etc.
      *
      * @param mixed $value
      *

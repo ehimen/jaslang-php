@@ -35,10 +35,7 @@ class Let implements FuncDef
             throw new TypeErrorException('Excepted variable with type');
         }
         
-        // TODO: try, catch and throw??
-        $type = $context->getTypeRepository()->getTypeByName($result->getType()->getIdentifier());
-        
-        $context->getSymbolTable()->set($result->getIdentifier(), $type->createEmptyValue());
+        $context->getSymbolTable()->set($result->getIdentifier(), $result->getType()->createEmptyValue());
         
         return $result;
     }

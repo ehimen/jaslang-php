@@ -35,4 +35,14 @@ interface Type
      * @return bool
      */
     public function isA(Type $other);
+
+    /**
+     * Should return true if this type will return true for all arguments to isA().
+     * 
+     * This allows for short-circuiting validation if we have a type that matches
+     * everything.
+     * 
+     * @return bool
+     */
+    public function matchesEverything();
 }

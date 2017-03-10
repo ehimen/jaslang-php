@@ -21,4 +21,6 @@ interface Visitor
     public function visitRoot(Node\Root $node);
 
     public function visitStatement(Node\Statement $node);
+
+    public function visitTuple(Node\Tuple $node);
 }

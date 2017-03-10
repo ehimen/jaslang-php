@@ -1,0 +1,15 @@
+!>define-empty-array
+>>>EXPECTED
+[]
+>>>CODE
+let nums : number[];
+
+print(nums)
+
+!>define-array
+>>>EXPECTED
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+>>>CODE
+let nums : number[10];
+
+print(nums)

@@ -11,4 +11,9 @@ class ParentType implements Type
     {
         return ($other instanceof ParentType);
     }
+
+    public function matchesEverything()
+    {
+        return false;
+    }
 }

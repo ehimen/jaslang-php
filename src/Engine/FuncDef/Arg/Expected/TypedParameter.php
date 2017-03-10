@@ -15,15 +15,14 @@ use Ehimen\Jaslang\Engine\Type\Type;
  */
 class TypedParameter extends Parameter
 {
-
     /**
      * @var Type
      */
     private $expectedType;
 
-    protected function __construct($type, Type $expectedType, $optional = false)
+    protected function __construct($type, Type $expectedType)
     {
-        parent::__construct($type, $optional);
+        parent::__construct($type);
         $this->expectedType = $expectedType;
     }
     

@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\Evaluator;
 
+use Ehimen\Jaslang\Core\Type\Any;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
@@ -15,6 +16,8 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Engine\FuncDef\VariableArgFuncDef;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Value\CallableValue;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -36,7 +39,14 @@ class JaslangInvoker implements Invoker
 
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        $this->validateArgs($function->getParameters(), $args);
+        $expectedParameters = $function->getParameters();
+
+        if ($function instanceof VariableArgFuncDef) {
+            // If we have a variable-length expectation, only validate the args that we require.
+            $this->validateArgs($expectedParameters, $args->slice(-count($expectedParameters)));
+        } else {
+            $this->validateArgs($expectedParameters, $args);
+        }
 
         return $function->invoke($args, $context, $evaluator);
 
@@ -50,7 +60,7 @@ class JaslangInvoker implements Invoker
     ) {
         $parameters = array_map(
             function (TypedVariable $variable) {
-                $type = $this->repository->getTypeByName($variable->getType()->getIdentifier());
+                $type = $this->repository->getTypeByName($variable->getTypeIdentifier());
                 
                 return TypedParameter::value($type);
             },
@@ -102,9 +112,15 @@ class JaslangInvoker implements Invoker
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
 
-            if ($def->isValue()) {
+            if ($def instanceof TypedParameter) {
                 if (!($arg instanceof Value)) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
+                }
+                
+                if ($def->getExpectedType()->matchesEverything()) {
+                    // If our definition type matches everything, no need to proceed
+                    // with validation.
+                    continue;
                 }
 
                 $argType = ($arg instanceof Value)

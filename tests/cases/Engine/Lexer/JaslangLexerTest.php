@@ -449,6 +449,15 @@ class JaslangLexerTest extends TestCase
         );
     }
 
+    public function testBrackets()
+    {
+        $this->performTest(
+            '[]',
+            $this->createToken(Lexer::TOKEN_LEFT_BRACKET, '[', 1),
+            $this->createToken(Lexer::TOKEN_RIGHT_BRACKET, ']', 2)
+        );
+    }
+
     private function performSyntaxErrorTest($input, $expected)
     {
         try {

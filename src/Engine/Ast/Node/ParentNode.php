@@ -9,12 +9,15 @@ interface ParentNode extends Node
 {
     /**
      * Adds a child to this node.
+     * 
+     * If $replacePrevious is true, the last child should be removed.
      *
      * @param Node $child
+     * @param bool $replacePrevious
      *
      * @return mixed
      */
-    public function addChild(Node $child);
+    public function addChild(Node $child, $replacePrevious = false);
 
     /**
      * @return Node[]

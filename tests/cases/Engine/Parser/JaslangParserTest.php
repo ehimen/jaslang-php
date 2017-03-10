@@ -2,6 +2,7 @@
 
 namespace Ehimen\JaslangTests\Engine\Parser;
 
+use Ehimen\Jaslang\Engine\Ast\Node\Block;
 use Ehimen\Jaslang\Engine\Ast\Node\Identifier;
 use Ehimen\Jaslang\Engine\Ast\Node\Operator;
 use Ehimen\Jaslang\Engine\Ast\Node\Container;
@@ -10,6 +11,7 @@ use Ehimen\Jaslang\Engine\Ast\Node\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node\Node;
 use Ehimen\Jaslang\Engine\Ast\Node\Root;
 use Ehimen\Jaslang\Engine\Ast\Node\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Tuple;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
@@ -425,7 +427,7 @@ class JaslangParserTest extends TestCase
                 [
                     $this->numberLiteral('1'),
                     new Container(
-                        $this->binaryOperator('+', [$this->numberLiteral('2'), $this->numberLiteral('3')])
+                        [$this->binaryOperator('+', [$this->numberLiteral('2'), $this->numberLiteral('3')])]
                     ),
                 ]
             )
@@ -446,11 +448,11 @@ class JaslangParserTest extends TestCase
                 $this->createToken(Lexer::TOKEN_RIGHT_PAREN, ')', 7),
             ],
             new Container(
-                new Container(
-                    new Container(
-                        $this->numberLiteral('3')
-                    )
-                )
+                [new Container(
+                    [new Container(
+                        [$this->numberLiteral('3')]
+                    )]
+                )]
             )
         );
     }
@@ -596,7 +598,7 @@ class JaslangParserTest extends TestCase
 
     public function testPrefixBinaryOperator()
     {
-        $signature = new OperatorSignature(0, 2);
+        $signature = OperatorSignature::arbitrary(0, 2);
 
         $this->performTestWithOperators(
             '++ 3 4',
@@ -637,7 +639,7 @@ class JaslangParserTest extends TestCase
 
     public function testPostfixBinaryOperator()
     {
-        $signature = new OperatorSignature(2, 0);
+        $signature = OperatorSignature::arbitrary(2, 0);
 
         $this->performTestWithOperators(
             '4 3 ++',
@@ -661,7 +663,7 @@ class JaslangParserTest extends TestCase
 
     public function testNaryOperator()
     {
-        $signature = new OperatorSignature(3, 2);
+        $signature = OperatorSignature::arbitrary(3, 2);
 
         $this->performTestWithOperators(
             '4 3 2 ++ 5 6',
@@ -696,8 +698,8 @@ class JaslangParserTest extends TestCase
 
     public function testNaryOperatorPrecedence()
     {
-        $prefix  = new OperatorSignature(0, 2, 0);
-        $postfix = new OperatorSignature(3, 0, 10);
+        $prefix  = OperatorSignature::arbitrary(0, 2, 0);
+        $postfix = OperatorSignature::arbitrary(3, 0, 10);
         
         $this->performTestWithOperators(
             '++ 3 2 1 -- 4',        // Should be interpreted: ++ (3 2 1 --) 4
@@ -739,8 +741,8 @@ class JaslangParserTest extends TestCase
 
     public function testNaryOperatorDefaultPrecedence()
     {
-        $prefix  = new OperatorSignature(0, 2);
-        $postfix = new OperatorSignature(3, 0);
+        $prefix  = OperatorSignature::arbitrary(0, 2);
+        $postfix = OperatorSignature::arbitrary(3, 0);
         
         $this->performTestWithOperators(
             '4 ++ 3 2 1 --',        // Should be interpreted: 4 (++ 3 2) 1 --
@@ -1082,11 +1084,11 @@ class JaslangParserTest extends TestCase
                 $this->statement($this->operator(
                     '++',
                     [$this->identifier('foo')],
-                    new OperatorSignature(0, 1)
+                    OperatorSignature::arbitrary(0, 1)
                 )),
             ]),
             [
-                ['++', new OperatorSignature(0, 1)],
+                ['++', OperatorSignature::arbitrary(0, 1)],
             ]
         );
     }
@@ -1105,11 +1107,11 @@ class JaslangParserTest extends TestCase
                 $this->statement($this->operator(
                     '++',
                     [$this->identifier('foo')],
-                    new OperatorSignature(1, 0)
+                    OperatorSignature::arbitrary(1, 0)
                 )),
             ]),
             [
-                ['++', new OperatorSignature(1, 0)],
+                ['++', OperatorSignature::arbitrary(1, 0)],
             ]
         );
     }
@@ -1164,6 +1166,39 @@ class JaslangParserTest extends TestCase
         $parser->registerNodeCreationObserver($observer);
         
         $parser->parse($input);
+    }
+
+    public function testListOperation()
+    {
+        $input = '[3]';
+        
+        $tokens = [
+            $this->createToken(Lexer::TOKEN_LEFT_BRACKET, '[', 1),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3', 2),
+            $this->createToken(Lexer::TOKEN_RIGHT_BRACKET, ']', 3),
+        ];
+        
+        $expected = $this->root([
+            $this->statement(new Tuple('[', ']', [$this->numberLiteral(3)])),
+        ]);
+        
+        $ast = $this->getParser($this->getLexer($input, $tokens))->parse($input);
+        
+        $this->assertEquals($expected, $ast);
+    }
+
+    public function testListOperationThrowsIfNotClosed()
+    {
+        $input = '[3]]';
+
+        $tokens = [
+            $this->createToken(Lexer::TOKEN_LEFT_BRACKET, '[', 1),
+            $this->createToken(Lexer::TOKEN_LITERAL, '3', 2),
+            $this->createToken(Lexer::TOKEN_RIGHT_BRACKET, ']', 3),
+            $unexpected = $this->createToken(Lexer::TOKEN_RIGHT_BRACKET, ']', 4),
+        ];
+        
+        $this->performSyntaxErrorTest($input, $tokens, new UnexpectedTokenException($input, $unexpected));
     }
 
     private function performSyntaxErrorTest($input, array $tokens, $expected)

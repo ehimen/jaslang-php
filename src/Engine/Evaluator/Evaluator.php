@@ -108,6 +108,8 @@ class Evaluator implements Visitor
      * 
      * This is useful when userland contexts (e.g. Jaslang Core) need to invoke the
      * evaluator, such as evaluating the parameters of a lambda.
+     * 
+     * @return Argument
      */
     public function evaluateInIsolation(Node\Node $node)
     {
@@ -136,6 +138,38 @@ class Evaluator implements Visitor
     public function visitContainer(Node\Container $node)
     {
         $this->visitChildrenOf($node);
+    }
+
+    public function visitTuple(Node\Tuple $node)
+    {
+        $this->pushTrace($node);
+        
+        try {
+            $operation = $this->functionRepository->getListOperation($node->getSignature()->getEnclosureStart());
+        } catch (OutOfBoundsException $e) {
+            throw new RuntimeException(sprintf(
+                'Unknown enclosing syntax: %s %s',
+                $node->getEnclosureStart(),
+                $node->getEnclosureEnd()
+            ));
+        }
+        
+        $this->pushArgument();
+        
+        $this->visitChildrenOf($node);
+        
+        $arguments = $this->popArgument();
+        
+        $result = $this->invoker->invokeFunction(
+            $operation,
+            new ArgList($arguments),
+            $this->getContext(),
+            $this
+        );
+        
+        $this->pushArgument($result);
+        
+        $this->popTrace();
     }
 
     public function visitFunctionCall(Node\FunctionCall $node)

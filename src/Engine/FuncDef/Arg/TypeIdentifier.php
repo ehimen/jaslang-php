@@ -2,7 +2,9 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
-class TypeIdentifier implements Argument
+use Ehimen\Jaslang\Engine\Type\TypeRepository;
+
+class TypeIdentifier implements TypeResolvingArg
 {
     /**
      * @var string
@@ -22,5 +24,10 @@ class TypeIdentifier implements Argument
     public function getIdentifier()
     {
         return $this->identifier;
+    }
+
+    public function resolve(TypeRepository $typeRepository)
+    {
+        return $typeRepository->getTypeByName($this->identifier);
     }
 }

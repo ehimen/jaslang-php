@@ -45,9 +45,9 @@ class ArgList
         return count($this->args);
     }
 
-    public function slice($start)
+    public function slice($amount)
     {
-        return new static(array_slice($this->args, $start));
+        return new static(array_slice($this->args, 0, $amount));
     }
 
     /**

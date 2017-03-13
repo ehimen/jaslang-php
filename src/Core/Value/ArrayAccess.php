@@ -3,7 +3,6 @@
 namespace Ehimen\Jaslang\Core\Value;
 
 use Ehimen\Jaslang\Engine\Exception\LogicException;
-use Ehimen\Jaslang\Engine\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -40,7 +39,7 @@ class ArrayAccess implements Value
     public function getInitialArraySize()
     {
         if (!$this->isArrayInitialisation()) {
-            throw new LogicException('Cannot request initial array size from array access that is not initialiation');
+            throw new LogicException('Cannot request initial array size from array access that is not initialisation');
         }
         
         if ($this->values[0] instanceof Num) {

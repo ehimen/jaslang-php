@@ -117,7 +117,7 @@ class JaslangFactory
             ']',
             1,
             0,
-            200     // Higher than var-type binding (:)
+            200     // Higher than let; less than :
         ));
         
         $typeRepo->registerType('any', new TypeDef\Any());

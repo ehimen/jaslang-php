@@ -12,8 +12,10 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\Routine;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Type;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeResolvingArg;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
 use Ehimen\Jaslang\Engine\FuncDef\VariableArgFuncDef;
@@ -43,7 +45,7 @@ class JaslangInvoker implements Invoker
 
         if ($function instanceof VariableArgFuncDef) {
             // If we have a variable-length expectation, only validate the args that we require.
-            $this->validateArgs($expectedParameters, $args->slice(-count($expectedParameters)));
+            $this->validateArgs($expectedParameters, $args->slice(count($expectedParameters)));
         } else {
             $this->validateArgs($expectedParameters, $args);
         }
@@ -130,7 +132,7 @@ class JaslangInvoker implements Invoker
                 if ($argType && !$argType->isA($def->getExpectedType())) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
                 }
-            } elseif ($def->isType() && !($arg instanceof TypeIdentifier)) {
+            } elseif ($def->isType() && !($arg instanceof TypeResolvingArg)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             } elseif ($def->isVariable() && !($arg instanceof Variable)) {
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);

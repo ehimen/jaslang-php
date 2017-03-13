@@ -2,12 +2,13 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
-use Ehimen\Jaslang\Core\Type\Any;
 use Ehimen\Jaslang\Core\Type\Arr;
-use Ehimen\Jaslang\Core\Value\ArrayAccess;
+use Ehimen\Jaslang\Core\Value\ArrayInitialisation;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
+use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
+use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
@@ -35,24 +36,20 @@ class VariableWithType implements FuncDef
     {
         /** @var Variable $var */
         $var = $args->get(0);
-        /** @var TypeIdentifier $typeIdentifier */
-        $typeIdentifier = $args->get(1);
-        $type           = $context->getTypeRepository()->getTypeByName($typeIdentifier->getIdentifier());
+
+        $type = $args->get(1);
         
-        if ($args->has(2)) {
-            $value = $args->get(2);
-            
-            if (!($value instanceof ArrayAccess) || !$value->isArrayInitialisation()) {
-                throw new RuntimeException(sprintf(
-                    'Illegal type modifier for variable "%s": %s',
-                    $var->getIdentifier(),
-                    $value->toString()
-                ));
-            }
-            
-            $type = new Arr($type, $value->getInitialArraySize());
+        $typeIdentifier = null;
+
+        if ($type instanceof ArrayInitialisation) {
+            $type = $type->getAsType();
+        } elseif ($type instanceof TypeIdentifier) {
+            $typeIdentifier = $type;
+            $type = $context->getTypeRepository()->getTypeByName($typeIdentifier->getIdentifier());
+        } else {
+            throw InvalidArgumentException::invalidArgument(1, 'type', $args->get(1));
         }
         
-        return new TypedVariable($var->getIdentifier(), $typeIdentifier, $type);
+        return new TypedVariable($var->getIdentifier(), $type, $typeIdentifier);
     }
 }

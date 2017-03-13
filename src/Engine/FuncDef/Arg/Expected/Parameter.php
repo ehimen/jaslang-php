@@ -119,9 +119,4 @@ class Parameter
     {
         return $this->parameterType;
     }
-
-    public function isOptional()
-    {
-        return $this->optional;
-    }
 }

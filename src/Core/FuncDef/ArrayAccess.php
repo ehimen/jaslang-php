@@ -2,12 +2,13 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
+use Ehimen\Jaslang\Core\Type\Arr;
 use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
 use Ehimen\Jaslang\Engine\FuncDef\VariableArgFuncDef;
 use Ehimen\Jaslang\Core\Value;
 
@@ -22,18 +23,17 @@ class ArrayAccess implements VariableArgFuncDef
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        $values = [];
+        $firstArg = $args->get(0);
         
-        for ($i = 0; $i < $args->count(); $i++) {
-            $arg = $args->get($i);
-            
-            if (!($arg instanceof \Ehimen\Jaslang\Engine\Value\Value)) {
-                throw new RuntimeException(sprintf('Illegal array access: %s', $arg->toString()));
-            }
-            
-            $values[] = $arg;
+        if ($firstArg instanceof TypeIdentifier) {
+            // Handle array initialisation, i.e.: type[size].
+            $second = $args->get(1);
+            $size = ($second instanceof Value\Num) ? $second->getValue() : 0;
+            $type = $context->getTypeRepository()->getTypeByName($firstArg->getIdentifier());
+
+            return new Value\ArrayInitialisation($type, $size);
         }
         
-        return new Value\ArrayAccess($values);
+        throw new \Exception('TODO: not implemented');
     }
 }

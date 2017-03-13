@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
 
+use Ehimen\Jaslang\Engine\Evaluator\Exception\RuntimeException;
 use Ehimen\Jaslang\Engine\Type\Type;
 
 /**
@@ -15,7 +16,7 @@ class TypedVariable extends Variable
     
     private $type;
     
-    public function __construct($identifier, TypeIdentifier $typeIdentifier, Type $type)
+    public function __construct($identifier, Type $type, TypeIdentifier $typeIdentifier = null)
     {
         parent::__construct($identifier);
         
@@ -25,6 +26,10 @@ class TypedVariable extends Variable
 
     public function getTypeIdentifier()
     {
+        if (!$this->typeIdentifier) {
+            throw new RuntimeException('Cannot get get identifier for variable as one does not exist');
+        }
+        
         return $this->typeIdentifier->getIdentifier();
     }
 

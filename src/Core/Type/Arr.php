@@ -58,5 +58,4 @@ class Arr extends BaseType implements ConcreteType
     {
         // TODO: Implement getLiteralPattern() method.
     }
-
 }

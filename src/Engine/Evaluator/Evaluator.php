@@ -156,7 +156,7 @@ class Evaluator implements Visitor
         
         $this->pushArgument();
         
-        $this->visitChildrenOf($node);
+        $this->visitChildrenOf($node, $operation->getParameters());
         
         $arguments = $this->popArgument();
         

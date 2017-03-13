@@ -41,7 +41,7 @@ class Operator extends UnlimitedChildrenParentNode implements Expression, Preced
             }
         }
 
-        // TODO: should be exactly equal? Should to isValid() or something?
+        // TODO: should be exactly equal? Should be isValid() or something?
         return count($this->getChildren()) >= $this->getExpectedArgCount();
     }
 

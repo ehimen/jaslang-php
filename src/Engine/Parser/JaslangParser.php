@@ -15,7 +15,6 @@ use Ehimen\Jaslang\Engine\Ast\Node\Statement;
 use Ehimen\Jaslang\Engine\Ast\Node\Tuple;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
-use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\Exception\RuntimeException;
@@ -360,18 +359,15 @@ class JaslangParser implements Parser
             $observer->onNodeCreated($node, $this->currentToken);
         }
         
-        $context->addChild($node);
+        // TODO: Need to handle broken case, e.g. "print(subtract(13 + 24, 7 + 5))"
+        // We've removed the closing of node on creation and moved it to statement/block
+        // closing, but maybe we need to add this to when we encounter the next non-precedence
+        // respecting node; when we encounter that we can close operator that are hanging
+        // around. Note: we moved the closing from node creation because in array init,
+        // we had a problem where "nums : number[]" would mean ":" is closed off iteratively after
+        // "number" being encountered, so our "[]" could not override precendence and consume "number".
         
-        // Creation of nodes can imply a closing of operator nodes.
-        // E.g. for the term "3 + 4", we'd close the operator on the
-        // final token, "4".
-        // This loop closes all operators that we can in case termination
-        // of this operator implies termination of other.e.g. "3 + 4 + 5".
-        // The "5" terminates both operator nodes.
-        while (($context instanceof Operator) && $context->canBeClosed()) {
-            $this->closeNode();
-            $context = end($this->nodeStack);
-        }
+        $context->addChild($node);
         
         if ($node instanceof ParentNode) {
             // If we have a node that can have children,
@@ -394,27 +390,37 @@ class JaslangParser implements Parser
         }
     }
 
+    private function isHeadClosableOperator()
+    {
+        $head = end($this->nodeStack);
+        
+        return ($head instanceof Operator && $head->canBeClosed());
+    }
+
+    private function closeStatements()
+    {
+        while ($this->isHeadClosableOperator() || end($this->nodeStack) instanceof Statement) {
+            array_pop($this->nodeStack);
+        }
+    }
+
     private function closeNode()
     {
         $type = $this->currentToken->getType();
 
         if ($type === Lexer::TOKEN_STATETERM) {
-            while (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
-            }
+            $this->closeStatements();
         } elseif ($type === Lexer::TOKEN_RIGHT_BRACE) {
             // State termination is optional in final statement of a block.
-            if (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
-            }
+            $this->closeStatements();
+            
             // Now close off our blocks.
             if (end($this->nodeStack) instanceof Block) {
                 array_pop($this->nodeStack);
             }
+            
             // Blocks don't need to be terminated explicitly, so close all statements.
-            while (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
-            }
+            $this->closeStatements();
         } elseif (in_array($type, Lexer::TUPLE_CLOSE_TOKENS, true)) {
             if (!(end($this->nodeStack) instanceof Tuple)) {
                 throw new UnexpectedTokenException($this->input, $this->currentToken);

@@ -271,6 +271,7 @@ class JaslangParser implements Parser
             ->whenEntering($blockClose, $closeNode)
             ->whenEntering($tupleOpen, $createNode)
             ->whenEntering($tupleClose, $closeNode)
+            ->whenEntering($comma, $closeNode)
             
             ->start($start)
             ->accept($literal)
@@ -390,11 +391,26 @@ class JaslangParser implements Parser
         }
     }
 
-    private function isHeadClosableOperator()
+    private function isHeadClosableOperator($failIfCantBeClosed = true)
     {
         $head = end($this->nodeStack);
         
-        return ($head instanceof Operator && $head->canBeClosed());
+        if ($head instanceof Operator) {
+            if ($failIfCantBeClosed && !$head->canBeClosed()) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function closeOperators($failIfCantBeClosed = true)
+    {
+        while ($this->isHeadClosableOperator($failIfCantBeClosed)) {
+            array_pop($this->nodeStack);
+        }
     }
 
     private function closeStatements()
@@ -425,6 +441,13 @@ class JaslangParser implements Parser
             if (!(end($this->nodeStack) instanceof Tuple)) {
                 throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
+
+            array_pop($this->nodeStack);
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_COMMA) {
+            // A comma implies any operators prior to it are complete; close them.
+            $this->closeOperators();
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_RIGHT_PAREN) {
+            $this->closeOperators();
 
             array_pop($this->nodeStack);
         } else {
@@ -467,6 +490,14 @@ class JaslangParser implements Parser
             if ($lastChild instanceof PrecedenceRespectingNode) {
                 $previousSignature = $lastChild->getSignature();
 
+                // TODO: We have two cases here.
+                // 1: 3 - 1 + 2
+                // "3 - 1", + wants to overwrite the - as parent, to result in (3 - 1) + 1 to ensure 3 - 1 is evaluated first.
+                // 2: nums : number[]
+                // [] wants to overwrite number as the second child of :, to result in nums : (number[])
+                // Could we interrogate expected parameter count of current node an only overwrite parent
+                // if we expected >1 parameters (covers + case), else only consume last child if expected parameter
+                // count === 1 (covers [] case).
                 if ($signature->takesPrecedenceOver($previousSignature)) {
                     array_unshift($children, $lastChild->getLastChild());
                     $lastChild->removeLastChild();

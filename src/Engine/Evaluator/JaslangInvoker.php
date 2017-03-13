@@ -107,10 +107,6 @@ class JaslangInvoker implements Invoker
             }
 
             if (null === $arg) {
-                if ($def->isOptional()) {
-                    continue;
-                }
-
                 throw InvalidArgumentException::invalidArgument($i, $type, $arg);
             }
 

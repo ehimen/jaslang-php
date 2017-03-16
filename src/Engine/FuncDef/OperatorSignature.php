@@ -7,9 +7,9 @@ class OperatorSignature
     const OPERATOR_PRECEDENCE_DEFAULT = 0;
 
     /**
-     * @var int
+     * @var bool
      */
-    private $leftArgs;
+    private $leftArg;
 
     /**
      * @var int
@@ -21,9 +21,9 @@ class OperatorSignature
      */
     private $precedence;
 
-    private function __construct($leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    private function __construct($leftArg, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        $this->leftArgs   = $leftArgs;
+        $this->leftArg    = (bool)$leftArg;
         $this->rightArgs  = $rightArgs;
         $this->precedence = $precedence;
     }
@@ -39,21 +39,21 @@ class OperatorSignature
      */
     public static function binary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return static::arbitrary(1, 1, $precedence);
+        return static::arbitrary(true, 1, $precedence);
     }
 
     /**
      * Create a signature for an operator with arbitrary left and right args.
      *
-     * @param int $leftArgs
+     * @param int $leftArg
      * @param int $rightArgs
      * @param int $precedence
      *
      * @return static
      */
-    public static function arbitrary($leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    public static function arbitrary($leftArg, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return new static($leftArgs, $rightArgs, $precedence);
+        return new static($leftArg, $rightArgs, $precedence);
     }
 
     /**
@@ -67,7 +67,7 @@ class OperatorSignature
      */
     public static function postfixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return new static(1, 0, $precedence);
+        return new static(true, 0, $precedence);
     }
 
 
@@ -82,15 +82,15 @@ class OperatorSignature
      */
     public static function prefixUnary($precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        return new static(0, 1, $precedence);
+        return new static(false, 1, $precedence);
     }
 
     /**
      * @return int
      */
-    public function getLeftArgs()
+    public function hasLeftArg()
     {
-        return $this->leftArgs;
+        return $this->leftArg;
     }
 
     /**
@@ -99,6 +99,11 @@ class OperatorSignature
     public function getRightArgs()
     {
         return $this->rightArgs;
+    }
+
+    public function hasRightArgs()
+    {
+        return ($this->rightArgs > 0);
     }
 
     /**

@@ -147,16 +147,16 @@ class JaslangParser implements Parser
         } catch (NotAcceptedException $e) {
             throw new UnexpectedEndOfInputException($input);
         }
-        
+
         $this->validator->validate($input, $this->ast);
-        
+
         return $this->ast;
     }
 
     private function getDfa()
     {
         $builder = new DfaBuilder();
-         
+
         $createNode = function () {
             $this->createNode();
         };
@@ -367,8 +367,13 @@ class JaslangParser implements Parser
         // around. Note: we moved the closing from node creation because in array init,
         // we had a problem where "nums : number[]" would mean ":" is closed off iteratively after
         // "number" being encountered, so our "[]" could not override precendence and consume "number".
-        
-        $context->addChild($node);
+
+        if ($context !== $node) {
+            // It may be that precedence readjustment means that our context has shifted
+            // to the node we've just created. Only add the child node if this is not
+            // the case.
+            $context->addChild($node);
+        }
         
         if ($node instanceof ParentNode) {
             // If we have a node that can have children,
@@ -388,8 +393,14 @@ class JaslangParser implements Parser
                 $this->closeNode();
                 $node = end($this->nodeStack);
             }
+        } elseif (!($this->lastNode instanceof ParentNode)) {
+            $this->closeOperators(false);
         }
+
+        $this->lastNode = $node;
     }
+
+    private $lastNode;
 
     private function isHeadClosableOperator($failIfCantBeClosed = true)
     {
@@ -482,9 +493,52 @@ class JaslangParser implements Parser
     private function adjustForPrecedence(ParentNode &$context, PrecedenceRespectingNode $current)
     {
         $signature = $current->getSignature();
-        $children  = [];
 
-        for ($i = 0; $i < $signature->getLeftArgs(); $i++) {
+        if ($signature->hasLeftArg()) {
+
+            while (true) {
+                $parentOfContext = isset($this->nodeStack[count($this->nodeStack) - 2])
+                    ? $this->nodeStack[count($this->nodeStack) - 2]
+                    : null;
+
+                if ($parentOfContext instanceof PrecedenceRespectingNode && !$signature->takesPrecedenceOver($parentOfContext->getSignature())) {
+                    array_pop($this->nodeStack);
+                    $context = end($this->nodeStack);
+                } else {
+                    break;
+                }
+            }
+
+            if ($context instanceof PrecedenceRespectingNode) {
+                if ($signature->takesPrecedenceOver($context->getSignature())) {
+                    // This token has greater precedence, which means it should
+                    // appear lower down in the AST. Simply take the last
+                    // child from the context and add it as a child of this
+                    // node. This node will be added to context later.
+                    $current->addChild($context->getLastChild());
+                    $context->removeLastChild();
+                } else {
+                    // This token has less precedence, which means it should
+                    // appear higher up the AST. Replace context with this
+                    // node and add the old context as a child of this node.
+                    array_pop($this->nodeStack);
+                    $current->addChild($context);
+                    $context = end($this->nodeStack);
+                    $context->removeLastChild();
+                }
+            } elseif (!($context instanceof PrecedenceRespectingNode)) {
+                // TODO: wtf is this case?
+                if ($signature->hasLeftArg()) {
+                    $child = $context->getLastChild();
+                    $context->removeLastChild();
+                    $current->addChild($child);
+                }
+            }
+        }
+
+        return $current;
+
+        for ($i = 0; $i < $signature->hasLeftArg(); $i++) {
             $lastChild = $context->getLastChild();
 
             if ($lastChild instanceof PrecedenceRespectingNode) {

@@ -51,10 +51,10 @@ class Operator extends UnlimitedChildrenParentNode implements Expression, Preced
         $rightParts = [];
 
         foreach ($this->getChildren() as $i => $child) {
-            if ($i >= $this->getSignature()->getLeftArgs()) {
-                $rightParts[] = $child->debug();
-            } else {
+            if (($i === 0) && $this->getSignature()->hasLeftArg()) {
                 $leftParts[] = $child->debug();
+            } else {
+                $rightParts[] = $child->debug();
             }
         }
 
@@ -73,17 +73,12 @@ class Operator extends UnlimitedChildrenParentNode implements Expression, Preced
      */
     private function getExpectedArgCount()
     {
-        return $this->signature->getLeftArgs() + $this->signature->getRightArgs();
+        return $this->signature->hasLeftArg() + $this->signature->getRightArgs();
     }
 
 
     public function accept(Visitor $visitor)
     {
         $visitor->visitOperator($this);
-    }
-
-    public function getSignatureFromRepository(FunctionRepository $repository)
-    {
-        return $repository->getOperatorSignature($this->operator);
     }
 }

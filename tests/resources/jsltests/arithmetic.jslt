@@ -47,7 +47,7 @@ print(-3.5 - +4)
 sum(1, 2);
 print(sum(4, 5))
 
-!>paren_grouping1!
+!>paren_grouping1
 >>>EXPECTED
 24
 >>>CODE

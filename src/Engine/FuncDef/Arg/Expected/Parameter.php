@@ -16,6 +16,7 @@ class Parameter
     const TYPE_EXPRESSION = 'expression';
     const TYPE_TYPED_VAR  = 'typed-var';
     const TYPE_COLLECTION = 'collection';
+    const TYPE_ANY        = 'anything';
 
     /**
      * @var string
@@ -81,6 +82,11 @@ class Parameter
     {
         return new static(static::TYPE_EXPRESSION);
     }
+    
+    public static function any()
+    {
+        return new static(static::TYPE_ANY);
+    }
 
     public function isVariable()
     {
@@ -110,6 +116,11 @@ class Parameter
     public function isCollection()
     {
         return (static::TYPE_COLLECTION === $this->type);
+    }
+    
+    public function isAny()
+    {
+        return (static::TYPE_ANY === $this->type);
     }
 
     /**

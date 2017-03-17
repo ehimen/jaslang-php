@@ -28,6 +28,7 @@ interface EvaluationContext
      * @return TypeRepository
      */
     public function getTypeRepository();
+    
 
     /**
      * @param string $name

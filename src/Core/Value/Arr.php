@@ -29,10 +29,16 @@ class Arr implements Printable
         $this->type = $type;
     }
 
-    public function set($index, $type)
+    public function set($index, $value)
     {
         // TODO: assert in bounds.
-        $this->elements[$index] = $type;
+        $this->elements[$index] = $value;
+    }
+
+    public function get($index)
+    {
+        // TODO: assert in bounds.
+        return $this->elements[$index];
     }
 
     public function toString()

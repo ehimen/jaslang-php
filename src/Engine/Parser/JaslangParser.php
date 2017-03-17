@@ -263,6 +263,8 @@ class JaslangParser implements Parser
             ->addRule($tupleOpen, $tupleCloseTokens, $tupleClose)
             ->addRule($tupleClose, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($tupleClose, $tupleCloseTokens, $tupleClose)
+            ->addRule($tupleClose, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($tupleClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             
             
             ->whenEntering($identifier, $createNode)

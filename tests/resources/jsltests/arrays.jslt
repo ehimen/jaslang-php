@@ -13,3 +13,11 @@ print(nums)
 let nums : number[10];
 
 print(nums)
+
+!>get-element
+>>>EXPECTED
+0
+>>>CODE
+let nums : number[1];
+
+print(nums[0])

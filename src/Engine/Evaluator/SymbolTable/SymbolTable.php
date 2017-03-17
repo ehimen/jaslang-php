@@ -30,4 +30,9 @@ class SymbolTable
         
         return $this->values[$identifier];
     }
+
+    public function has($identifier)
+    {
+        return isset($this->values[$identifier]);
+    }
 }

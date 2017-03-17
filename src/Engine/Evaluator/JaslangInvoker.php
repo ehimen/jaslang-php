@@ -102,6 +102,8 @@ class JaslangInvoker implements Invoker
                 $type = 'expression';
             } elseif ($def->isCollection()) {
                 $type = 'collection';
+            } elseif ($def->isAny()) {
+                $type = 'any';
             } else {
                 throw new LogicException('Cannot handle definition as is not one of variable, type, value or block');
             }

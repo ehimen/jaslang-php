@@ -112,13 +112,7 @@ class JaslangFactory
         $fnRepo->registerOperator('.', new Concatenate(), OperatorSignature::binary());
         
         // List operations.
-        $fnRepo->registerListOperation(new ArrayAccess(), ListOperatorSignature::create(
-            '[',
-            ']',
-            1,
-            0,
-            200     // Higher than let; less than :
-        ));
+        $fnRepo->registerListOperation(new ArrayAccess(), ListOperatorSignature::create('[', ']', true, 0, 200));
         
         $typeRepo->registerType('any', new TypeDef\Any());
         $typeRepo->registerType('string', new TypeDef\Str());

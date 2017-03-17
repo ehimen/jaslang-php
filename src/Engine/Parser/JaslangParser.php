@@ -128,6 +128,10 @@ class JaslangParser implements Parser
             }
         }
         
+        // Close any operators that are expecting to be closed
+        // as this is the end of input.
+        $this->closeOperators();
+        
         $finalStatement = end($this->nodeStack);
         
         if ($finalStatement instanceof Statement) {
@@ -368,6 +372,11 @@ class JaslangParser implements Parser
         // we had a problem where "nums : number[]" would mean ":" is closed off iteratively after
         // "number" being encountered, so our "[]" could not override precendence and consume "number".
 
+        if (!($node instanceof ParentNode) && !($this->lastNode instanceof ParentNode)) {
+            $this->closeOperators(false);
+            $context = end($this->nodeStack);
+        }
+
         if ($context !== $node) {
             // It may be that precedence readjustment means that our context has shifted
             // to the node we've just created. Only add the child node if this is not
@@ -393,8 +402,6 @@ class JaslangParser implements Parser
                 $this->closeNode();
                 $node = end($this->nodeStack);
             }
-        } elseif (!($this->lastNode instanceof ParentNode)) {
-            $this->closeOperators(false);
         }
 
         $this->lastNode = $node;
@@ -407,11 +414,11 @@ class JaslangParser implements Parser
         $head = end($this->nodeStack);
         
         if ($head instanceof Operator) {
-            if ($failIfCantBeClosed && !$head->canBeClosed()) {
+            if ($head->canBeClosed()) {
+                return true;
+            } elseif ($failIfCantBeClosed) {
                 throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
-
-            return true;
         }
 
         return false;
@@ -419,9 +426,14 @@ class JaslangParser implements Parser
 
     private function closeOperators($failIfCantBeClosed = true)
     {
+        $closed = 0;
+        
         while ($this->isHeadClosableOperator($failIfCantBeClosed)) {
             array_pop($this->nodeStack);
+            $closed++;
         }
+        
+        return $closed;
     }
 
     private function closeStatements()
@@ -459,7 +471,13 @@ class JaslangParser implements Parser
             $this->closeOperators();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_RIGHT_PAREN) {
             $this->closeOperators();
-
+            
+            $head = end($this->nodeStack);
+            
+            if (!($head instanceof Container) && !($head instanceof FunctionCall)) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+            
             array_pop($this->nodeStack);
         } else {
             // How many nodes on the stack do we expect for valid
@@ -494,7 +512,7 @@ class JaslangParser implements Parser
     {
         $signature = $current->getSignature();
 
-        if ($signature->hasLeftArg()) {
+        if ($signature->hasLeftArg() && ($context instanceof PrecedenceRespectingNode)) {
 
             while (true) {
                 $parentOfContext = isset($this->nodeStack[count($this->nodeStack) - 2])
@@ -526,13 +544,13 @@ class JaslangParser implements Parser
                     $context = end($this->nodeStack);
                     $context->removeLastChild();
                 }
-            } elseif (!($context instanceof PrecedenceRespectingNode)) {
-                // TODO: wtf is this case?
-                if ($signature->hasLeftArg()) {
-                    $child = $context->getLastChild();
-                    $context->removeLastChild();
-                    $current->addChild($child);
-                }
+            }
+        } elseif (!($context instanceof PrecedenceRespectingNode)) {
+            // TODO: wtf is this case?
+            if ($signature->hasLeftArg()) {
+                $child = $context->getLastChild();
+                $context->removeLastChild();
+                $current->addChild($child);
             }
         }
 

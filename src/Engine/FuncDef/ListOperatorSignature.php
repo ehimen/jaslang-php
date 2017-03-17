@@ -21,9 +21,9 @@ class ListOperatorSignature extends OperatorSignature
      */
     private $enclosureEnd;
 
-    public static function create($enclosureStart, $enclosureEnd, $leftArgs, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
+    public static function create($enclosureStart, $enclosureEnd, $leftArg, $rightArgs, $precedence = self::OPERATOR_PRECEDENCE_DEFAULT)
     {
-        $operation = static::arbitrary($leftArgs, $rightArgs, $precedence);
+        $operation = static::arbitrary($leftArg, $rightArgs, $precedence);
 
         $operation->enclosureStart = $enclosureStart;
         $operation->enclosureEnd   = $enclosureEnd;

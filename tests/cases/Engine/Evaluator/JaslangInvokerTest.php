@@ -55,17 +55,6 @@ class JaslangInvokerTest extends TestCase
         );
     }
 
-    public function testInvokeOptionalArg()
-    {
-        $string = $this->createMock(Type::class);
-        
-        $this->performTest(
-            [Parameter::value($string, true)],
-            [],
-            []
-        );
-    }
-
     public function testInvokeMissingArg()
     {
         $string      = $this->createMock(Type::class);

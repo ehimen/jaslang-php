@@ -95,20 +95,20 @@ class JaslangFactory
 
         // Core operators.
         $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary(75));      // Higher than assignment (should be evaluated before assignment; lower in the AST).
-        $fnRepo->registerOperator('++', new Increment(), OperatorSignature::arbitrary(1, 0, 75)); // Higher than assignment.
+        $fnRepo->registerOperator('++', new Increment(), OperatorSignature::arbitrary(true, 0, 75)); // Higher than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('==', new Equality(), OperatorSignature::binary());
-        $fnRepo->registerOperator('let', new Let(), OperatorSignature::arbitrary(0, 1, 100));
+        $fnRepo->registerOperator('let', new Let(), OperatorSignature::arbitrary(false, 1, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary());
-        $fnRepo->registerOperator('!', new Negate(), OperatorSignature::arbitrary(0, 1));
-        $fnRepo->registerOperator('if', new IfDef(), OperatorSignature::arbitrary(0, 2));
-        $fnRepo->registerOperator('while', new WhileDef(), OperatorSignature::arbitrary(0, 2));
+        $fnRepo->registerOperator('!', new Negate(), OperatorSignature::arbitrary(false, 1));
+        $fnRepo->registerOperator('if', new IfDef(), OperatorSignature::arbitrary(false, 2));
+        $fnRepo->registerOperator('while', new WhileDef(), OperatorSignature::arbitrary(false, 2));
         $fnRepo->registerOperator('<', new LessThan(), OperatorSignature::binary());
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
-        $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::arbitrary(1, 1, 150));
-        $fnRepo->registerOperator('return', new ReturnVal(), OperatorSignature::arbitrary(0, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
+        $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::arbitrary(true, 1, 150));
+        $fnRepo->registerOperator('return', new ReturnVal(), OperatorSignature::arbitrary(false, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
         $fnRepo->registerOperator('.', new Concatenate(), OperatorSignature::binary());
         
         // List operations.

@@ -17,20 +17,9 @@ class ArrayAccess implements Value
 {
     private $values = [];
     
-    public function __construct(array $arguments)
+    public function __construct(Arr $array, $index)
     {
-        foreach ($arguments as $argument) {
-            $this->addArgument($argument);
-        }
-    }
-
-    public function isArrayInitialisation()
-    {
-        if (count($this->values) === 0) {
-            return true;
-        }
-        
-        return (count($this->values) === 1) && ($this->values[0] instanceof Num);
+        $this->array = $array;
     }
 
     /**

@@ -36,4 +36,9 @@ class Substring implements FuncDef
             $length->getValue()
         ));
     }
+
+    public function substring(Evaluator $evaluator, Value\Str $string, Value\Num $start, Value\Num $length)
+    {
+        return new Value\Str(substr($string->getValue(), $start->getValue(), $length->getValue()));
+    }
 }

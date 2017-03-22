@@ -32,4 +32,11 @@ class PrintDef implements FuncDef
         
         return new Void();
     }
+    
+    public function write(Evaluator $evaluator, Printable $printable)
+    {
+        $evaluator->getContext()->getOutputBuffer()->write($printable->printValue());
+        
+        return new Void();
+    }
 }

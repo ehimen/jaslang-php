@@ -14,7 +14,6 @@ use Ehimen\Jaslang\Engine\Evaluator\Trace\EvaluationTrace;
 use Ehimen\Jaslang\Engine\Evaluator\Trace\TraceEntry;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Any;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Argument;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Collection;
@@ -296,6 +295,7 @@ class Evaluator implements Visitor
             $parameter = isset($parameters[$i]) ? $parameters[$i] : null;
             
             if ($parameter instanceof Parameter) {
+                
                 if ($parameter->isType() && ($child instanceof Node\Identifier)) {
                     $this->pushArgument(new TypeIdentifier($child->getName()));
                     continue;
@@ -328,11 +328,6 @@ class Evaluator implements Visitor
                     }
                     
                     $this->pushArgument($collection);
-                    continue;
-                }
-                
-                if ($parameter->isAny()) {
-                    $this->pushArgument(new Any($child));
                     continue;
                 }
             }

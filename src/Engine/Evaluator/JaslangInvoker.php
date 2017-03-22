@@ -41,18 +41,55 @@ class JaslangInvoker implements Invoker
 
     public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        $expectedParameters = $function->getParameters();
-
-        if ($function instanceof VariableArgFuncDef) {
-            // If we have a variable-length expectation, only validate the args that we require.
-            $this->validateArgs($expectedParameters, $args->slice(count($expectedParameters)));
-        } else {
-            $this->validateArgs($expectedParameters, $args);
+        $signature = new \ReflectionClass($function);
+        $methods = $signature->getMethods(\ReflectionMethod::IS_PUBLIC);
+        
+        foreach ($methods as $method) {
+            $parameters = $method->getParameters();
+            
+            if (empty($parameters)) {
+                // TODO: Could actually make the requirement for evaluator to be optional.
+                // Would make it less explicit, but cleaner FuncDef implementations.
+                continue;
+            }
+            
+            $first = current($parameters);
+            
+            if (!$first->getClass() || !is_a($first->getClass()->getName(), Evaluator::class, true)) {
+                continue;
+            }
+            
+            $toApply = [];
+            
+            foreach (array_slice($parameters, 1) as $i => $parameter) {
+                /** @var \ReflectionParameter $parameter */
+                $arg = $args->get($i);
+                
+                if ($parameter->allowsNull() && ($arg === null)) {
+                    // TODO: what about default values etc?
+                    $toApply[] = null;
+                    continue;
+                }
+                
+                if (is_a($arg, $parameter->getClass()->getName(), true)) {
+                    $toApply[] = $arg;
+                    continue;
+                }
+                
+                // This method is not compatible with the provided arguments;
+                // move on to the next.
+                continue 2;
+            }
+            
+            return $method->invoke($function, $evaluator, ...$args->all());
         }
-
-        return $function->invoke($args, $context, $evaluator);
-
+        
+        // TODO: defer to funcdef to print something more useful?
+        throw new InvalidArgumentException('Could not resolve arguments to an operation');
+        
         // TODO: return type. Really need to validate this. Keep not returning wrapped values!
+        // TODO: Move to PHP7, then interrogate the return type to make sure that it is an Argument
+        // TODO: If not, skip it in the reflection checks.
     }
 
     public function invokeCallable(
@@ -115,12 +152,6 @@ class JaslangInvoker implements Invoker
             if ($def instanceof TypedParameter) {
                 if (!($arg instanceof Value)) {
                     throw InvalidArgumentException::invalidArgument($i, $type, $arg);
-                }
-                
-                if ($def->getExpectedType()->matchesEverything()) {
-                    // If our definition type matches everything, no need to proceed
-                    // with validation.
-                    continue;
                 }
 
                 $argType = ($arg instanceof Value)

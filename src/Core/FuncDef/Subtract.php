@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\Value\Num;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -23,6 +24,11 @@ class Subtract extends BinaryFunction
     {
         /** @var Num $left */
         /** @var Num $right */
+        return new Num($left->getValue() - $right->getValue());
+    }
+
+    public function subtract(Evaluator $evaluator, Num $left, Num $right)
+    {
         return new Num($left->getValue() - $right->getValue());
     }
 }

@@ -92,7 +92,7 @@ let fn : lambda = (a : number, b : number) => {
 
 print(fn(1, 2))
 >>>ERROR
-Jaslang runtime exception! Invalid argument at position 0. Expected "any", got [void]
+Jaslang runtime exception! Could not resolve arguments to an operation
 #0 > print(fn(1, 2))
 
 !>one-line-returning-lambda

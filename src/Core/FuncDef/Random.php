@@ -32,4 +32,15 @@ class Random implements FuncDef
         
         return new Num($result);
     }
+
+    public function unbounded(Evaluator $evaluator)
+    {
+        return new Num(rand());
+    }
+
+    public function bounded(Evaluator $evaluator, Num $lower, Num $upper)
+    {
+        // TODO: don't support just one param anymore. Okay?
+        return new Num(rand($lower->getValue(), $upper->getValue()));
+    }
 }

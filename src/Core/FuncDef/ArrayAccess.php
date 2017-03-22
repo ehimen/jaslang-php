@@ -7,11 +7,11 @@ use Ehimen\Jaslang\Engine\Evaluator\Context\EvaluationContext;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\Evaluator\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
-use Ehimen\Jaslang\Engine\FuncDef\Arg\Any;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expression;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypeIdentifier;
+use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\VariableArgFuncDef;
 use Ehimen\Jaslang\Core\Value;
 
@@ -20,44 +20,32 @@ class ArrayAccess implements VariableArgFuncDef
     public function getParameters()
     {
         return [
-            Parameter::any(),
+            Parameter::variable(),
         ];
+    }
+
+    public function initialisation(Evaluator $evaluator, TypeIdentifier $identifier, Value\Num $index = null)
+    {
+        $index = ($index instanceof Value\Num) ? $index->getValue() : 0;
+        $type  = $evaluator->getContext()->getTypeRepository()->getTypeByName($identifier->getIdentifier());
+        
+        return new Value\ArrayInitialisation($type, $index);
+    }
+
+    public function access(Evaluator $evaluator, Variable $variable, Value\Num $index)
+    {
+        /** @var Value\Arr $array */
+        $array = $evaluator->getContext()->getSymbolTable()->get($variable->getIdentifier());
+
+        return $array->get($index->getValue());
     }
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        /** @var Any $firstArg */
+        /** @var Variable $firstArg */
         $firstArg = $args->get(0);
-        
-        $node = $firstArg->getNode();
-        
-        if (!($node instanceof Identifier)) {
-            // TODO: test this!
-            throw new InvalidArgumentException('Array access expects identifier');
-        }
-        
-        if ($context->getTypeRepository()->hasTypeByName($node->getName())) {
-            // Handle array initialisation, i.e.: type[size].
-            $second = $args->get(1);
-            $size = ($second instanceof Value\Num) ? $second->getValue() : 0;
-            $type = $context->getTypeRepository()->getTypeByName($node->getName());
 
-            return new Value\ArrayInitialisation($type, $size);
-        }
-        
-        if ($context->getSymbolTable()->has($node->getName())) {
-            // Handle array access.
-            $second = $args->get(1);
-            
-            if (!($second instanceof Value\Num)) {
-                $this->illegalArrayAccess();
-            }
-            
-            /** @var Value\Arr $array */
-            $array = $context->getSymbolTable()->get($node->getName());
-            
-            return $array->get($second->getValue());
-        }
+        $identifier = $firstArg->getIdentifier();
         
         $this->illegalArrayAccess();
     }

@@ -40,6 +40,23 @@ class Assign implements FuncDef
         ];
     }
 
+    public function assign(Evaluator $evaluator, Variable $variable, Value $value)
+    {
+        $context = $evaluator->getContext();
+        
+        $existing = $context->getSymbolTable()->get($variable->getIdentifier());
+        
+        $type = $context->getTypeRepository()->getTypeByValue($existing);
+        
+        if (!$type->appliesToValue($value)) {
+            throw static::typeMismatch($context->getTypeRepository()->getTypeName($type), $value);
+        }
+        
+        $context->getSymbolTable()->set($variable->getIdentifier(), $value);
+        
+        return $value;
+    }
+
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         /** @var Variable $variable */

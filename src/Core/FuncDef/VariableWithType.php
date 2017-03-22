@@ -32,6 +32,23 @@ class VariableWithType implements FuncDef
         ];
     }
 
+    public function typedArray(Evaluator $evaluator, Variable $variable, ArrayInitialisation $initialisation)
+    {
+        return new TypedVariable(
+            $variable->getIdentifier(),
+            $initialisation->getAsType()
+        );
+    }
+
+    public function typed(Evaluator $evaluator, Variable $variable, TypeIdentifier $type)
+    {
+        return new TypedVariable(
+            $variable->getIdentifier(),
+            $evaluator->getContext()->getTypeRepository()->getTypeByName($type->getIdentifier()),
+            $type
+        );
+    }
+
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         /** @var Variable $var */

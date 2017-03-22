@@ -17,6 +17,11 @@ class ArgList
         $this->args = $args;
     }
 
+    public function all()
+    {
+        return $this->args;
+    }
+
     /**
      * @param int $index
      *

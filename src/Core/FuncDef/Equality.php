@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\Type;
 use Ehimen\Jaslang\Core\Value\Boolean;
@@ -25,6 +26,10 @@ class Equality extends BinaryFunction
     }
 
     protected function performOperation(Value $left, Value $right)
+    {
+    }
+
+    public function equality(Evaluator $evaluator, Value $left, Value $right)
     {
         return new Boolean(($left instanceof $right) && ($right instanceof $left) && ($left->toString() === $right->toString()));
     }

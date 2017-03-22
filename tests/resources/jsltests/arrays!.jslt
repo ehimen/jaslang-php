@@ -21,3 +21,13 @@ print(nums)
 let nums : number[1];
 
 print(nums[0])
+
+!>set-element
+>>>EXPECTED
+hello
+>>>CODE
+let strs : string[1];
+
+strs[0] = "hello";
+
+print(strs[0]);

@@ -27,11 +27,14 @@ class IfDef implements FuncDef
         $do = $args->get(0);
         /** @var Routine $action */
         $action = $args->get(1);
-        
-        if ($do->getValue()) {
+    }
+
+    public function ifThen(Evaluator $evaluator, Value\Boolean $condition, Routine $action)
+    {
+        if ($condition->getValue()) {
             $action->getRoutine()->accept($evaluator);
         }
-        
-        return new Value\Boolean($do);
+
+        return new Value\Boolean($condition);
     }
 }

@@ -11,6 +11,7 @@ use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\TypedVariable;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Variable;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 class Assign implements FuncDef
@@ -38,6 +39,26 @@ class Assign implements FuncDef
             Parameter::variable(),
             Parameter::value(new Any()),
         ];
+    }
+
+    public function assign(Evaluator $evaluator, Variable $variable, Value $value)
+    {
+        $symbolTable = $evaluator->getContext()->getSymbolTable();
+        
+        $type     = $symbolTable->getValueType($variable->getIdentifier());
+        $typeName = $symbolTable->getValueTypeName($variable->getIdentifier());
+        
+        if (!($type instanceof ConcreteType)) {
+            throw new RuntimeException(sprintf('Illegal assignment. Expecting value of type "%s"', $typeName));
+        }
+        
+        if (!$type->appliesToValue($value)) {
+            throw static::typeMismatch($typeName, $value);
+        }
+        
+        $symbolTable->set($variable->getIdentifier(), $value);
+        
+        return $value;
     }
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)

@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Core\FuncDef;
 
 use Ehimen\Jaslang\Core\Type;
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\Value\Str;
 use Ehimen\Jaslang\Engine\Value\Value;
@@ -36,6 +37,11 @@ class Concatenate extends BinaryFunction
         /** @var Str $left */
         /** @var Str $right */
 
+        return new Str($left->getValue() . $right->getValue());
+    }
+
+    public function concatenate(Evaluator $evaluator, Str $left, Str $right)
+    {
         return new Str($left->getValue() . $right->getValue());
     }
 }

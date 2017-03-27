@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Core\FuncDef;
 
+use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\Type;
 use Ehimen\Jaslang\Core\Value\Num;
@@ -24,6 +25,10 @@ class GreaterThan extends BinaryFunction
     {
         /** @var Num $left */
         /** @var Num $right */
+    }
+
+    public function greaterThan(Evaluator $evaluator, Num $left, Num $right)
+    {
         return new Boolean($left->getValue() > $right->getValue());
     }
 }

@@ -18,11 +18,6 @@ class Parameter
     const TYPE_COLLECTION = 'collection';
 
     /**
-     * @var bool
-     */
-    private $optional;
-
-    /**
      * @var string
      */
     private $type;
@@ -34,10 +29,9 @@ class Parameter
      */
     private $parameterType;
 
-    protected function __construct($type, $optional = false)
+    protected function __construct($type)
     {
-        $this->type         = $type;
-        $this->optional     = $optional;
+        $this->type = $type;
     }
     
     /**
@@ -45,30 +39,30 @@ class Parameter
      * 
      * TODO: move to TypedParameter
      */
-    public static function value(Type $type, $optional = false)
+    public static function value(Type $type)
     {
-        return new TypedParameter(static::TYPE_VALUE, $type, $optional);
+        return new TypedParameter(static::TYPE_VALUE, $type);
     }
 
     /**
      * Denotes a parameter which expects to receive a type identifier.
      */
-    public static function type($optional = false)
+    public static function type()
     {
-        return new static(static::TYPE_TYPE, null, $optional);
+        return new static(static::TYPE_TYPE);
     }
 
     /**
      * Denotes a parameter which expects to receive a variable of a particular type.
      */
-    public static function variable($optional = false)
+    public static function variable()
     {
-        return new static(static::TYPE_VAR, null, $optional);
+        return new static(static::TYPE_VAR);
     }
 
-    public static function collection($parameterType, $optional = false)
+    public static function collection($parameterType)
     {
-        $collection = new static(static::TYPE_COLLECTION, null, $optional);
+        $collection = new static(static::TYPE_COLLECTION);
         
         $collection->parameterType = $parameterType;
         
@@ -78,14 +72,14 @@ class Parameter
     /**
      * Denotes a parameter which expects to receive executable statement(s).
      */
-    public static function routine($optional = false)
+    public static function routine()
     {
-        return new static(static::TYPE_ROUTINE, null, $optional);
+        return new static(static::TYPE_ROUTINE);
     }
 
-    public static function expression($optional = false)
+    public static function expression()
     {
-        return new static(static::TYPE_EXPRESSION, null, $optional);
+        return new static(static::TYPE_EXPRESSION);
     }
 
     public function isVariable()
@@ -117,6 +111,11 @@ class Parameter
     {
         return (static::TYPE_COLLECTION === $this->type);
     }
+    
+    public function isAny()
+    {
+        return (static::TYPE_ANY === $this->type);
+    }
 
     /**
      * For collection type parameters, what is the type expected in that collection?
@@ -124,10 +123,5 @@ class Parameter
     public function getParameterType()
     {
         return $this->parameterType;
-    }
-
-    public function isOptional()
-    {
-        return $this->optional;
     }
 }

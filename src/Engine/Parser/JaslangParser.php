@@ -9,8 +9,10 @@ use Ehimen\Jaslang\Engine\Ast\Node\Container;
 use Ehimen\Jaslang\Engine\Ast\Node\FunctionCall;
 use Ehimen\Jaslang\Engine\Ast\Node\Literal;
 use Ehimen\Jaslang\Engine\Ast\Node\ParentNode;
+use Ehimen\Jaslang\Engine\Ast\Node\PrecedenceRespectingNode;
 use Ehimen\Jaslang\Engine\Ast\Node\Root;
 use Ehimen\Jaslang\Engine\Ast\Node\Statement;
+use Ehimen\Jaslang\Engine\Ast\Node\Tuple;
 use Ehimen\Jaslang\Engine\Exception\LogicException;
 use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\Parser\Validator\Validator;
@@ -126,6 +128,10 @@ class JaslangParser implements Parser
             }
         }
         
+        // Close any operators that are expecting to be closed
+        // as this is the end of input.
+        $this->closeOperators();
+        
         $finalStatement = end($this->nodeStack);
         
         if ($finalStatement instanceof Statement) {
@@ -145,16 +151,16 @@ class JaslangParser implements Parser
         } catch (NotAcceptedException $e) {
             throw new UnexpectedEndOfInputException($input);
         }
-        
+
         $this->validator->validate($input, $this->ast);
-        
+
         return $this->ast;
     }
 
     private function getDfa()
     {
         $builder = new DfaBuilder();
-         
+
         $createNode = function () {
             $this->createNode();
         };
@@ -164,6 +170,8 @@ class JaslangParser implements Parser
         };
 
         $literalTokens = Lexer::LITERAL_TOKENS;
+        $tupleOpenTokens   = Lexer::TUPLE_OPEN_TOKENS;
+        $tupleCloseTokens   = Lexer::TUPLE_CLOSE_TOKENS;
 
         $start      = 0;
         $literal    = 'literal';
@@ -176,6 +184,8 @@ class JaslangParser implements Parser
         $stateTerm  = 'state-term';
         $blockOpen  = 'block-open';
         $blockClose = 'block-close';
+        $tupleOpen  = 'tuple-open';
+        $tupleClose = 'tuple-close';
 
         $builder
             ->addRule($start, Lexer::TOKEN_IDENTIFIER, $identifier)
@@ -183,6 +193,7 @@ class JaslangParser implements Parser
             ->addRule($start, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
             ->addRule($start, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($start, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($start, $tupleOpenTokens, $tupleOpen)
             ->addRule($literal, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($literal, Lexer::TOKEN_COMMA, $comma)
             ->addRule($literal, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -191,11 +202,13 @@ class JaslangParser implements Parser
             ->addRule($literal, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($literal, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($literal, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($literal, $tupleCloseTokens, $tupleClose)
             ->addRule($operator, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($operator, $literalTokens, $literal)
             ->addRule($operator, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($operator, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($operator, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            ->addRule($operator, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
             ->addRule($identifier, Lexer::TOKEN_LEFT_PAREN, $fnOpen)
             ->addRule($identifier, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($identifier, Lexer::TOKEN_OPERATOR, $operator)
@@ -203,6 +216,7 @@ class JaslangParser implements Parser
             ->addRule($identifier, Lexer::TOKEN_STATETERM, $stateTerm)
             ->addRule($identifier, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
             ->addRule($identifier, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
+            ->addRule($identifier, $tupleOpenTokens, $tupleOpen)
             ->addRule($fnOpen, Lexer::TOKEN_IDENTIFIER, $identifier)
             ->addRule($fnOpen, $literalTokens, $literal)
             ->addRule($fnOpen, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
@@ -243,7 +257,15 @@ class JaslangParser implements Parser
             ->addRule($blockClose, Lexer::TOKEN_RIGHT_BRACE, $blockClose)
             ->addRule($blockClose, Lexer::TOKEN_OPERATOR, $operator)
             ->addRule($blockClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
-            ->addRule($operator, Lexer::TOKEN_LEFT_BRACE, $blockOpen)
+            ->addRule($tupleOpen, $tupleOpenTokens, $tupleOpen)
+            ->addRule($tupleOpen, Lexer::TOKEN_LEFT_PAREN, $parenOpen)
+            ->addRule($tupleOpen, $literalTokens, $literal)
+            ->addRule($tupleOpen, $tupleCloseTokens, $tupleClose)
+            ->addRule($tupleClose, Lexer::TOKEN_STATETERM, $stateTerm)
+            ->addRule($tupleClose, $tupleCloseTokens, $tupleClose)
+            ->addRule($tupleClose, Lexer::TOKEN_OPERATOR, $operator)
+            ->addRule($tupleClose, Lexer::TOKEN_RIGHT_PAREN, $parenClose)
+            
             
             ->whenEntering($identifier, $createNode)
             ->whenEntering($literal, $createNode)
@@ -253,6 +275,9 @@ class JaslangParser implements Parser
             ->whenEntering($stateTerm, $closeNode)
             ->whenEntering($blockOpen, $createNode)
             ->whenEntering($blockClose, $closeNode)
+            ->whenEntering($tupleOpen, $createNode)
+            ->whenEntering($tupleClose, $closeNode)
+            ->whenEntering($comma, $closeNode)
             
             ->start($start)
             ->accept($literal)
@@ -261,6 +286,7 @@ class JaslangParser implements Parser
             ->accept($identifier)
             ->accept($blockClose)
             ->accept($stateTerm)
+            ->accept($tupleClose)
         ;
         
         return $builder->build();
@@ -313,11 +339,19 @@ class JaslangParser implements Parser
                 $node = new Identifier($this->currentToken->getValue());
             }
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_OPERATOR) {
-            $node = $this->createOperator($context);
+            $node = $this->adjustForPrecedence($context, new Operator(
+                $this->currentToken->getValue(),
+                $this->functionRepository->getOperatorSignature($this->currentToken->getValue())
+            ));
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_BRACE) {
             $node = new Block();
         } elseif ($this->currentToken->getType() === Lexer::TOKEN_LEFT_PAREN) {
             $node = new Container();
+        } elseif (in_array($this->currentToken->getType(), Lexer::TUPLE_OPEN_TOKENS, true)) {
+            $node = $this->adjustForPrecedence(
+                $context,
+                new Tuple($this->functionRepository->getListOperatorSignature($this->currentToken->getValue()))
+            );
         }
         
         if (!isset($node)) {
@@ -332,17 +366,24 @@ class JaslangParser implements Parser
             $observer->onNodeCreated($node, $this->currentToken);
         }
         
-        $context->addChild($node);
-        
-        // Creation of nodes can imply a closing of operator nodes.
-        // E.g. for the term "3 + 4", we'd close the operator on the
-        // final token, "4".
-        // This loop closes all operators that we can in case termination
-        // of this operator implies termination of other.e.g. "3 + 4 + 5".
-        // The "5" terminates both operator nodes.
-        while (($context instanceof Operator) && $context->canBeClosed()) {
-            $this->closeNode();
+        // TODO: Need to handle broken case, e.g. "print(subtract(13 + 24, 7 + 5))"
+        // We've removed the closing of node on creation and moved it to statement/block
+        // closing, but maybe we need to add this to when we encounter the next non-precedence
+        // respecting node; when we encounter that we can close operator that are hanging
+        // around. Note: we moved the closing from node creation because in array init,
+        // we had a problem where "nums : number[]" would mean ":" is closed off iteratively after
+        // "number" being encountered, so our "[]" could not override precendence and consume "number".
+
+        if (!($node instanceof ParentNode) && !($this->lastNode instanceof ParentNode)) {
+            $this->closeOperators(false);
             $context = end($this->nodeStack);
+        }
+
+        if ($context !== $node) {
+            // It may be that precedence readjustment means that our context has shifted
+            // to the node we've just created. Only add the child node if this is not
+            // the case.
+            $context->addChild($node);
         }
         
         if ($node instanceof ParentNode) {
@@ -364,29 +405,82 @@ class JaslangParser implements Parser
                 $node = end($this->nodeStack);
             }
         }
+
+        $this->lastNode = $node;
+    }
+
+    private $lastNode;
+
+    private function isHeadClosableOperator($failIfCantBeClosed = true)
+    {
+        $head = end($this->nodeStack);
+        
+        if ($head instanceof Operator) {
+            if ($head->canBeClosed()) {
+                return true;
+            } elseif ($failIfCantBeClosed) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+        }
+
+        return false;
+    }
+
+    private function closeOperators($failIfCantBeClosed = true)
+    {
+        $closed = 0;
+        
+        while ($this->isHeadClosableOperator($failIfCantBeClosed)) {
+            array_pop($this->nodeStack);
+            $closed++;
+        }
+        
+        return $closed;
+    }
+
+    private function closeStatements()
+    {
+        while ($this->isHeadClosableOperator() || end($this->nodeStack) instanceof Statement) {
+            array_pop($this->nodeStack);
+        }
     }
 
     private function closeNode()
     {
         $type = $this->currentToken->getType();
-        
+
         if ($type === Lexer::TOKEN_STATETERM) {
-            while (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
-            }
+            $this->closeStatements();
         } elseif ($type === Lexer::TOKEN_RIGHT_BRACE) {
             // State termination is optional in final statement of a block.
-            if (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
-            }
+            $this->closeStatements();
+            
             // Now close off our blocks.
             if (end($this->nodeStack) instanceof Block) {
                 array_pop($this->nodeStack);
             }
+            
             // Blocks don't need to be terminated explicitly, so close all statements.
-            while (end($this->nodeStack) instanceof Statement) {
-                array_pop($this->nodeStack);
+            $this->closeStatements();
+        } elseif (in_array($type, Lexer::TUPLE_CLOSE_TOKENS, true)) {
+            if (!(end($this->nodeStack) instanceof Tuple)) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
             }
+
+            array_pop($this->nodeStack);
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_COMMA) {
+            // A comma implies any operators prior to it are complete; close them.
+            $this->closeOperators();
+        } elseif ($this->currentToken->getType() === Lexer::TOKEN_RIGHT_PAREN) {
+            $this->closeOperators();
+            
+            $head = end($this->nodeStack);
+            
+            if (!($head instanceof Container) && !($head instanceof FunctionCall)) {
+                throw new UnexpectedTokenException($this->input, $this->currentToken);
+            }
+            
+            array_pop($this->nodeStack);
         } else {
             // How many nodes on the stack do we expect for valid
             // closing of a node. 2+ because root, the node we're closing
@@ -414,38 +508,55 @@ class JaslangParser implements Parser
      *
      * @param ParentNode $context
      *
-     * @return Operator
+     * @return PrecedenceRespectingNode
      */
-    private function createOperator(ParentNode &$context)
+    private function adjustForPrecedence(ParentNode &$context, PrecedenceRespectingNode $current)
     {
-        $signature = $this->functionRepository->getOperatorSignature($this->currentToken->getValue());
-        $node      = new Operator($this->currentToken->getValue(), $signature);
-        $children  = [];
+        $signature = $current->getSignature();
 
-        for ($i = 0; $i < $signature->getLeftArgs(); $i++) {
-            $lastChild = $context->getLastChild();
+        if ($signature->hasLeftArg() && ($context instanceof PrecedenceRespectingNode)) {
 
-            if ($lastChild instanceof Operator) {
-                $previousSignature = $this->functionRepository->getOperatorSignature($lastChild->getOperator());
+            while (true) {
+                $parentOfContext = isset($this->nodeStack[count($this->nodeStack) - 2])
+                    ? $this->nodeStack[count($this->nodeStack) - 2]
+                    : null;
 
-                if ($signature->takesPrecedenceOver($previousSignature)) {
-                    array_unshift($children, $lastChild->getLastChild());
-                    $lastChild->removeLastChild();
-                    $context = $lastChild;
-                    array_push($this->nodeStack, $context);
-                    continue;
+                if ($parentOfContext instanceof PrecedenceRespectingNode && !$signature->takesPrecedenceOver($parentOfContext->getSignature())) {
+                    array_pop($this->nodeStack);
+                    $context = end($this->nodeStack);
+                } else {
+                    break;
                 }
             }
 
-            $context->removeLastChild();
-            array_unshift($children, $lastChild);
+            if ($context instanceof PrecedenceRespectingNode) {
+                if ($signature->takesPrecedenceOver($context->getSignature())) {
+                    // This token has greater precedence, which means it should
+                    // appear lower down in the AST. Simply take the last
+                    // child from the context and add it as a child of this
+                    // node. This node will be added to context later.
+                    $current->addChild($context->getLastChild());
+                    $context->removeLastChild();
+                } else {
+                    // This token has less precedence, which means it should
+                    // appear higher up the AST. Replace context with this
+                    // node and add the old context as a child of this node.
+                    array_pop($this->nodeStack);
+                    $current->addChild($context);
+                    $context = end($this->nodeStack);
+                    $context->removeLastChild();
+                }
+            }
+        } elseif (!($context instanceof PrecedenceRespectingNode)) {
+            // TODO: wtf is this case?
+            if ($signature->hasLeftArg()) {
+                $child = $context->getLastChild();
+                $context->removeLastChild();
+                $current->addChild($child);
+            }
         }
 
-        foreach ($children as $child) {
-            $node->addChild($child);
-        }
-        
-        return $node;
+        return $current;
     }
 
     /**

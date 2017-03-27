@@ -6,7 +6,14 @@ use Ehimen\Jaslang\Engine\Exception\InvalidArgumentException;
 use Ehimen\Jaslang\Engine\Exception\OutOfBoundsException;
 
 /**
- * TODO: Type-hinting here on BinaryFunction will be limiting. Need more general OperatorFunction?
+ * Repository for all native constructs provided by a language.
+ * 
+ * This includes functions, operators and list operators, which all
+ * FuncDefs, just take different forms.
+ * 
+ * A function is an identifier, invoked when followed by an arg list, e.g. foo(arg1, arg2).
+ * An operator is a token or keyword, which take zero or mode operands on either side, e.g. operand1 + operand2.
+ * List operations are enclosing structures around a variable-length of element, e.g. [element1, element2].
  */
 class FunctionRepository
 {
@@ -16,14 +23,24 @@ class FunctionRepository
     private $functions = [];
 
     /**
-     * @var BinaryFunction[]
+     * @var FuncDef[]
      */
     private $operators = [];
+
+    /**
+     * @var FuncDef[]
+     */
+    private $listOperators = [];
 
     /**
      * @var OperatorSignature[]
      */
     private $operatorSignatures = [];
+
+    /**
+     * @var ListOperatorSignature[]
+     */
+    private $listOperatorSignatures = [];
 
     public function registerFunction($identifier, FuncDef $func)
     {
@@ -62,6 +79,14 @@ class FunctionRepository
         $this->operators[$identifier]          = $operator;
     }
 
+    public function registerListOperation(FuncDef $operation, ListOperatorSignature $signature)
+    {
+        $open = $signature->getEnclosureStart();
+
+        $this->listOperators[$open]          = $operation;
+        $this->listOperatorSignatures[$open] = $signature;
+    }
+
     /**
      * @return string[]
      */
@@ -73,12 +98,12 @@ class FunctionRepository
     /**
      * @param $identifier
      *
-     * @return BinaryFunction
+     * @return FuncDef
      */
     public function getOperator($identifier)
     {
         if (!isset($this->operators[$identifier])) {
-            throw new OutOfBoundsException('Operator with identifier "%s" not found');
+            throw new OutOfBoundsException(sprintf('Operator with identifier "%s" not found', $identifier));
         }
 
         return $this->operators[$identifier];
@@ -92,9 +117,27 @@ class FunctionRepository
     public function getOperatorSignature($identifier)
     {
         if (!isset($this->operatorSignatures[$identifier])) {
-            throw new OutOfBoundsException('Operator signature with identifier "%s" not found');
+            throw new OutOfBoundsException(sprintf('Operator signature with identifier "%s" not found', $identifier));
         }
 
         return $this->operatorSignatures[$identifier];
+    }
+
+    public function getListOperation($open)
+    {
+        if (!isset($this->listOperators[$open])) {
+            throw new OutOfBoundsException(sprintf('List operation opening with "%s" not found', $open));
+        }
+        
+        return $this->listOperators[$open];
+    }
+
+    public function getListOperatorSignature($open)
+    {
+        if (!isset($this->listOperatorSignatures[$open])) {
+            throw new OutOfBoundsException(sprintf('List operation opening with %s not found', $open));
+        }
+
+        return $this->listOperatorSignatures[$open];
     }
 }

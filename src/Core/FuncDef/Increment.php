@@ -26,10 +26,17 @@ class Increment implements FuncDef
         $var = $args->get(0);
         
         /** @var Value\Num $value */
-        $value = $context->getVariableOfTypeOrThrow($var->getIdentifier(), new Type\Num());
+    }
+
+    public function increment(Evaluator $evaluator, Variable $variable)
+    {
+        $context = $evaluator->getContext();
         
-        $context->getSymbolTable()->set($var->getIdentifier(), new Value\Num($value->getValue() + 1));
-        
+        /** @var Value\Num $value */
+        $value = $context->getVariableOfTypeOrThrow($variable->getIdentifier(), new Type\Num());
+
+        $context->getSymbolTable()->set($variable->getIdentifier(), new Value\Num($value->getValue() + 1));
+
         return $value;
     }
 }

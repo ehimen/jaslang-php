@@ -17,6 +17,11 @@ class ArgList
         $this->args = $args;
     }
 
+    public function all()
+    {
+        return $this->args;
+    }
+
     /**
      * @param int $index
      *
@@ -43,5 +48,18 @@ class ArgList
     public function count()
     {
         return count($this->args);
+    }
+
+    public function slice($amount)
+    {
+        return new static(array_slice($this->args, 0, $amount));
+    }
+
+    /**
+     * @return Argument|null
+     */
+    public function getLast()
+    {
+        return $this->get(count($this->args) - 1);
     }
 }

@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Engine\Type;
 
 use Ehimen\Jaslang\Engine\Lexer\Token;
+use Ehimen\Jaslang\Engine\Value\Datum;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
@@ -12,6 +13,8 @@ interface ConcreteType extends Type
 {
     /**
      * @param $value
+     * 
+     * TODO: only applies to literals? Don't need for lambda, arrays etc.
      *
      * @return Value
      */
@@ -43,6 +46,8 @@ interface ConcreteType extends Type
      * Describes the value as would be interpreted by the type.
      *
      * Used for debugging/error reporting.
+     *
+     * TODO: only applies to literals? Don't need for lambda, arrays etc.
      *
      * @param mixed $value
      *

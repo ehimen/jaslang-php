@@ -10,6 +10,7 @@ namespace Ehimen\Jaslang\Engine\FuncDef\Arg;
  * - Type identifier
  * - Variable
  * - Value
+ * And more, since this got more complicated.
  */
 interface Argument
 {

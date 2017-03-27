@@ -26,4 +26,9 @@ class Negate implements FuncDef
         
         return new Value\Boolean(!$value->getValue());
     }
+
+    public function negate(Evaluator $evaluator, Value\Boolean $value)
+    {
+        return new Value\Boolean(!$value->getValue());
+    }
 }

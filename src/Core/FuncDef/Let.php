@@ -24,22 +24,18 @@ class Let implements FuncDef
 
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
-        /** @var Expression $expression */
-        $expression = $args->get(0);
-        
-        $expression->getExpression()->accept($evaluator);
-        
-        $result = $evaluator->getResult();
-        
+    }
+
+    public function let(Evaluator $evaluator, Expression $expression)
+    {
+        $result = $evaluator->evaluateInIsolation($expression->getExpression());
+
         if (!($result instanceof TypedVariable)) {
             throw new TypeErrorException('Excepted variable with type');
         }
-        
-        // TODO: try, catch and throw??
-        $type = $context->getTypeRepository()->getTypeByName($result->getType()->getIdentifier());
-        
-        $context->getSymbolTable()->set($result->getIdentifier(), $type->createEmptyValue());
-        
+
+        $evaluator->getContext()->getSymbolTable()->set($result->getIdentifier(), $result->getType()->createEmptyValue());
+
         return $result;
     }
 }

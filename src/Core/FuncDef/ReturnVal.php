@@ -9,6 +9,7 @@ use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\ArgList;
 use Ehimen\Jaslang\Engine\FuncDef\Arg\Expected\Parameter;
 use Ehimen\Jaslang\Engine\FuncDef\FuncDef;
+use Ehimen\Jaslang\Engine\Value\Value;
 
 /**
  * Operator which simply wraps its sole argument in a special value.
@@ -28,5 +29,10 @@ class ReturnVal implements FuncDef
     public function invoke(ArgList $args, EvaluationContext $context, Evaluator $evaluator)
     {
         return new ExplicitReturn($args->get(0));
+    }
+
+    public function returnValue(Evaluator $evaluator, Value $value)
+    {
+        return new ExplicitReturn($value);
     }
 }

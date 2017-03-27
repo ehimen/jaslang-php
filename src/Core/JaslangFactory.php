@@ -2,6 +2,7 @@
 
 namespace Ehimen\Jaslang\Core;
 
+use Ehimen\Jaslang\Core\FuncDef\ArrayAccess;
 use Ehimen\Jaslang\Core\FuncDef\Assign;
 use Ehimen\Jaslang\Core\FuncDef\Concatenate;
 use Ehimen\Jaslang\Core\FuncDef\GreaterThan;
@@ -17,12 +18,16 @@ use Ehimen\Jaslang\Core\FuncDef\PrintLine;
 use Ehimen\Jaslang\Core\FuncDef\ReturnVal;
 use Ehimen\Jaslang\Core\FuncDef\VariableWithType;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
-use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
+use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextStack;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
+use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
+use Ehimen\Jaslang\Engine\FuncDef\ListOperatorSignature;
 use Ehimen\Jaslang\Engine\Interpreter\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\FuncDef\Equality;
@@ -53,11 +58,8 @@ class JaslangFactory
      */
     private $functionRepository;
 
-    /**
-     * @var TypeRepository
-     */
     private $typeRepository;
-    
+
     public function registerFunction($identifier, FuncDef $function)
     {
         // TODO: validate identifier against language.
@@ -81,7 +83,6 @@ class JaslangFactory
     public function create()
     {
         $fnRepo = $this->getFunctionRepository();
-        $typeRepo = $this->getTypeRepository();
 
         // Core functions.
         $fnRepo->registerFunction('sum', $sum = new Sum());
@@ -93,31 +94,35 @@ class JaslangFactory
 
         // Core operators.
         $fnRepo->registerOperator('=>', new Lambda(), OperatorSignature::binary(75));      // Higher than assignment (should be evaluated before assignment; lower in the AST).
-        $fnRepo->registerOperator('++', new Increment(), new OperatorSignature(1, 0, 75)); // Higher than assignment.
+        $fnRepo->registerOperator('++', new Increment(), OperatorSignature::arbitrary(true, 0, 75)); // Higher than assignment.
         $fnRepo->registerOperator('+', $sum, OperatorSignature::binary());
         $fnRepo->registerOperator('-', $sub, OperatorSignature::binary());
         $fnRepo->registerOperator('==', new Equality(), OperatorSignature::binary());
-        $fnRepo->registerOperator('let', new Let(), new OperatorSignature(0, 1, 100));
+        $fnRepo->registerOperator('let', new Let(), OperatorSignature::arbitrary(false, 1, 100));
         $fnRepo->registerOperator('=', new Assign(), OperatorSignature::binary(50));
         $fnRepo->registerOperator('*', new Multiply(), OperatorSignature::binary());
-        $fnRepo->registerOperator('!', new Negate(), new OperatorSignature(0, 1));
-        $fnRepo->registerOperator('if', new IfDef(), new OperatorSignature(0, 2));
-        $fnRepo->registerOperator('while', new WhileDef(), new OperatorSignature(0, 2));
+        $fnRepo->registerOperator('!', new Negate(), OperatorSignature::arbitrary(false, 1));
+        $fnRepo->registerOperator('if', new IfDef(), OperatorSignature::arbitrary(false, 2));
+        $fnRepo->registerOperator('while', new WhileDef(), OperatorSignature::arbitrary(false, 2));
         $fnRepo->registerOperator('<', new LessThan(), OperatorSignature::binary());
         $fnRepo->registerOperator('>', new GreaterThan(), OperatorSignature::binary());
-        $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::binary(150));
-        $fnRepo->registerOperator('return', new ReturnVal(), new OperatorSignature(0, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
+        $fnRepo->registerOperator(':', new VariableWithType(), OperatorSignature::arbitrary(true, 1, 150));
+        $fnRepo->registerOperator('return', new ReturnVal(), OperatorSignature::arbitrary(false, 1, -10));     // Low priority; this is the last thing that should be evaluated (higher in the AST).
         $fnRepo->registerOperator('.', new Concatenate(), OperatorSignature::binary());
+        
+        // List operations.
+        $fnRepo->registerListOperation(new ArrayAccess(), ListOperatorSignature::create('[', ']', true, 0, 200));
+        
+        $typeRepo = $this->getTypeRepository();
         
         $typeRepo->registerType('any', new TypeDef\Any());
         $typeRepo->registerType('string', new TypeDef\Str());
         $typeRepo->registerType('number', new TypeDef\Num());
         $typeRepo->registerType('boolean', new TypeDef\Boolean());
         $typeRepo->registerType('lambda', new TypeDef\Lambda());
-        $typeRepo->registerType('lambda', new TypeDef\Lambda());
 
-        $contextFactory = new JaslangContextFactory($typeRepo);
-        $invoker        = new JaslangInvoker($typeRepo);
+        $contextFactory = new JaslangContextStack(SymbolTable::fromTypeRepository($typeRepo), new OutputBuffer());
+        $invoker        = new JaslangInvoker();
         $parser         = new JaslangParser(
             new JaslangLexer(
                 $fnRepo->getRegisteredOperatorIdentifiers(),
@@ -130,7 +135,7 @@ class JaslangFactory
         
         $parser->registerNodeCreationObserver($validator);
 
-        $evaluator = new Interpreter(
+        $interpreter = new Interpreter(
             $parser,
             new Evaluator($invoker, $fnRepo, $contextFactory)
         );
@@ -139,7 +144,7 @@ class JaslangFactory
         $this->functionRepository = null;
         $this->typeRepository     = null;
 
-        return $evaluator;
+        return $interpreter;
     }
 
     private function getFunctionRepository()

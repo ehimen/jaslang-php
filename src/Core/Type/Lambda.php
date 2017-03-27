@@ -32,8 +32,7 @@ class Lambda extends BaseType implements ConcreteType
 
     public function getStringForValue($value)
     {
-        // TODO: is this right?
-        return $this->createEmptyValue()->toString();
+        return '';
     }
 
     public function getLiteralPattern()

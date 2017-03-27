@@ -18,11 +18,6 @@ class NullContext implements EvaluationContext
     {
         return new SymbolTable();
     }
-
-    public function getTypeRepository()
-    {
-        return new TypeRepository();
-    }
     
     public function getVariableOfTypeOrThrow($name, Type $type)
     {

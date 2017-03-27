@@ -36,4 +36,15 @@ class Lambda implements FuncDef
         
         return new LambdaExpression($parameters, $block);
     }
+
+    public function evaluate(Evaluator $evaluator, Collection $parameters, Routine $body)
+    {
+        $resolvedParams = [];
+
+        foreach ($parameters->getExpressions() as $parameter) {
+            $resolvedParams[] = $evaluator->evaluateInIsolation($parameter->getExpression());
+        }
+        
+        return new LambdaExpression($resolvedParams, $body);
+    }
 }

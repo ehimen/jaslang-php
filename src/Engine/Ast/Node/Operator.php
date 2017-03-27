@@ -3,9 +3,10 @@
 namespace Ehimen\Jaslang\Engine\Ast\Node;
 
 use Ehimen\Jaslang\Engine\Ast\Visitor;
+use Ehimen\Jaslang\Engine\FuncDef\FunctionRepository;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 
-class Operator extends UnlimitedChildrenParentNode implements Expression
+class Operator extends UnlimitedChildrenParentNode implements Expression, PrecedenceRespectingNode
 {
     private $operator;
 
@@ -40,7 +41,7 @@ class Operator extends UnlimitedChildrenParentNode implements Expression
             }
         }
 
-        // TODO: should be exactly equal? Should to isValid() or something?
+        // TODO: should be exactly equal? Should be isValid() or something?
         return count($this->getChildren()) >= $this->getExpectedArgCount();
     }
 
@@ -50,10 +51,10 @@ class Operator extends UnlimitedChildrenParentNode implements Expression
         $rightParts = [];
 
         foreach ($this->getChildren() as $i => $child) {
-            if ($i >= $this->getSignature()->getLeftArgs()) {
-                $rightParts[] = $child->debug();
-            } else {
+            if (($i === 0) && $this->getSignature()->hasLeftArg()) {
                 $leftParts[] = $child->debug();
+            } else {
+                $rightParts[] = $child->debug();
             }
         }
 
@@ -72,12 +73,17 @@ class Operator extends UnlimitedChildrenParentNode implements Expression
      */
     private function getExpectedArgCount()
     {
-        return $this->signature->getLeftArgs() + $this->signature->getRightArgs();
+        return $this->signature->hasLeftArg() + $this->signature->getRightArgs();
     }
 
 
     public function accept(Visitor $visitor)
     {
         $visitor->visitOperator($this);
+    }
+
+    public function jsonSerialize()
+    {
+        return ['operator' => $this->operator] + parent::jsonSerialize();
     }
 }

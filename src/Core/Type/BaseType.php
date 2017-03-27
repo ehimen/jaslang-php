@@ -17,4 +17,9 @@ class BaseType implements Type
         
         return ($other instanceof static);
     }
+
+    public function toString()
+    {
+        return (new \ReflectionClass($this))->getShortName();
+    }
 }

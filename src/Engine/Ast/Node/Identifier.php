@@ -35,4 +35,12 @@ class Identifier implements Expression
     {
         $visitor->visitIdentifier($this);
     }
+
+    public function jsonSerialize()
+    {
+        return [
+            'type'       => static::class,
+            'identifier' => $this->name,
+        ];
+    }
 }

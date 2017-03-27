@@ -1,0 +1,33 @@
+!>define-empty-array!
+>>>EXPECTED
+[]
+>>>CODE
+let nums : number[];
+
+print(nums)
+
+!>define-array
+>>>EXPECTED
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+>>>CODE
+let nums : number[10];
+
+print(nums)
+
+!>get-element
+>>>EXPECTED
+0
+>>>CODE
+let nums : number[1];
+
+print(nums[0])
+
+!>set-element
+>>>EXPECTED
+hello
+>>>CODE
+let strs : string[1];
+
+strs[0] = "hello";
+
+print(strs[0]);

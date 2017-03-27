@@ -191,6 +191,10 @@ class JaslangLexer implements Lexer
             $this->token(Lexer::TOKEN_LITERAL);
         } elseif (ctype_alpha($value[0])) {     // If starting with a letter, it's an identifier.
             $this->token(Lexer::TOKEN_IDENTIFIER);
+        } elseif ('[' === $value) {
+            $this->token(Lexer::TOKEN_LEFT_BRACKET);
+        } elseif (']' === $value) {
+            $this->token(Lexer::TOKEN_RIGHT_BRACKET);
         } else {
             $this->token(Lexer::TOKEN_UNKNOWN);
         }

@@ -33,17 +33,23 @@ class WhileDef implements FuncDef
         
         while (true) {
             $result = $evaluator->evaluateInIsolation($while->getExpression());
+        }
+    }
+
+    public function whileDo(Evaluator $evaluator, Expression $condition, Routine $body)
+    {
+        while (true) {
+            $result = $evaluator->evaluateInIsolation($condition->getExpression());
             
             if (!($result instanceof Value\Boolean)) {
                 throw TypeErrorException::evaluationResultTypeMismatch('boolean', $result);
             }
-            
+
             if ($result->getValue()) {
-                $do->getRoutine()->accept($evaluator);
+                $body->getRoutine()->accept($evaluator);
             } else {
                 break;
             }
         }
-        
     }
 }

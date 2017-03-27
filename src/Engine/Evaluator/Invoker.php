@@ -18,7 +18,7 @@ interface Invoker
     /**
      * @return Value
      */
-    public function invokeFunction(FuncDef $function, ArgList $args, EvaluationContext $context, Evaluator $evaluator);
+    public function invokeFunction(FuncDef $function, ArgList $args, Evaluator $evaluator);
 
     /**
      * TODO: could merge this and invokeFunction(). Create interface for something that is invokable, whether it

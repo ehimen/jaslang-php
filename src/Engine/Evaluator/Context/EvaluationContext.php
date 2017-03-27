@@ -23,11 +23,6 @@ interface EvaluationContext
      * @return SymbolTable
      */
     public function getSymbolTable();
-
-    /**
-     * @return TypeRepository
-     */
-    public function getTypeRepository();
     
 
     /**

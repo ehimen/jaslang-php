@@ -18,13 +18,16 @@ use Ehimen\Jaslang\Core\FuncDef\PrintLine;
 use Ehimen\Jaslang\Core\FuncDef\ReturnVal;
 use Ehimen\Jaslang\Core\FuncDef\VariableWithType;
 use Ehimen\Jaslang\Core\FuncDef\WhileDef;
-use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextFactory;
+use Ehimen\Jaslang\Engine\Evaluator\Context\JaslangContextStack;
 use Ehimen\Jaslang\Engine\Evaluator\Evaluator;
+use Ehimen\Jaslang\Engine\Evaluator\OutputBuffer;
+use Ehimen\Jaslang\Engine\Evaluator\SymbolTable\SymbolTable;
 use Ehimen\Jaslang\Engine\FuncDef\ListOperatorSignature;
 use Ehimen\Jaslang\Engine\Interpreter\Interpreter;
 use Ehimen\Jaslang\Engine\Evaluator\JaslangInvoker;
 use Ehimen\Jaslang\Engine\FuncDef\OperatorSignature;
 use Ehimen\Jaslang\Engine\Parser\Validator\JaslangValidator;
+use Ehimen\Jaslang\Engine\Type\ConcreteType;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 use Ehimen\Jaslang\Engine\FuncDef\BinaryFunction;
 use Ehimen\Jaslang\Core\FuncDef\Equality;
@@ -55,11 +58,8 @@ class JaslangFactory
      */
     private $functionRepository;
 
-    /**
-     * @var TypeRepository
-     */
     private $typeRepository;
-    
+
     public function registerFunction($identifier, FuncDef $function)
     {
         // TODO: validate identifier against language.
@@ -83,7 +83,6 @@ class JaslangFactory
     public function create()
     {
         $fnRepo = $this->getFunctionRepository();
-        $typeRepo = $this->getTypeRepository();
 
         // Core functions.
         $fnRepo->registerFunction('sum', $sum = new Sum());
@@ -114,14 +113,16 @@ class JaslangFactory
         // List operations.
         $fnRepo->registerListOperation(new ArrayAccess(), ListOperatorSignature::create('[', ']', true, 0, 200));
         
+        $typeRepo = $this->getTypeRepository();
+        
         $typeRepo->registerType('any', new TypeDef\Any());
         $typeRepo->registerType('string', new TypeDef\Str());
         $typeRepo->registerType('number', new TypeDef\Num());
         $typeRepo->registerType('boolean', new TypeDef\Boolean());
         $typeRepo->registerType('lambda', new TypeDef\Lambda());
 
-        $contextFactory = new JaslangContextFactory($typeRepo);
-        $invoker        = new JaslangInvoker($typeRepo);
+        $contextFactory = new JaslangContextStack(SymbolTable::fromTypeRepository($typeRepo), new OutputBuffer());
+        $invoker        = new JaslangInvoker();
         $parser         = new JaslangParser(
             new JaslangLexer(
                 $fnRepo->getRegisteredOperatorIdentifiers(),
@@ -134,7 +135,7 @@ class JaslangFactory
         
         $parser->registerNodeCreationObserver($validator);
 
-        $evaluator = new Interpreter(
+        $interpreter = new Interpreter(
             $parser,
             new Evaluator($invoker, $fnRepo, $contextFactory)
         );
@@ -143,7 +144,7 @@ class JaslangFactory
         $this->functionRepository = null;
         $this->typeRepository     = null;
 
-        return $evaluator;
+        return $interpreter;
     }
 
     private function getFunctionRepository()

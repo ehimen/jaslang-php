@@ -10,6 +10,9 @@ use Ehimen\Jaslang\Engine\Value\Value;
  */
 class TypeRepository
 {
+    /**
+     * @var Type[]
+     */
     private $types = [];
     
     public function registerType($name, Type $type)
@@ -92,5 +95,10 @@ class TypeRepository
     public function hasTypeByName($name)
     {
         return isset($this->types[$name]);
+    }
+
+    public function all()
+    {
+        return $this->types;
     }
 }

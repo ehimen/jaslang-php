@@ -1,4 +1,4 @@
-!>define-empty-array
+!>define-empty-array!
 >>>EXPECTED
 []
 >>>CODE

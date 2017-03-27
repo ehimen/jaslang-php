@@ -2,8 +2,10 @@
 
 namespace Ehimen\Jaslang\Engine\Type;
 
+use Ehimen\Jaslang\Engine\Value\Value;
+
 /**
- * A Jaslang native type.
+ * A Jaslang type.
  *
  * This interface describes only "virtual" types, who only exist
  * to group other types.
@@ -13,7 +15,7 @@ namespace Ehimen\Jaslang\Engine\Type;
  *
  * @see ConcreteType for types that can be constructed.
  */
-interface Type
+interface Type extends Value
 {
     /**
      * Returns true if this type is satisfied by other.

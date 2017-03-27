@@ -3,6 +3,7 @@
 namespace Ehimen\Jaslang\Engine\Type;
 
 use Ehimen\Jaslang\Engine\Lexer\Token;
+use Ehimen\Jaslang\Engine\Value\Datum;
 use Ehimen\Jaslang\Engine\Value\Value;
 
 /**

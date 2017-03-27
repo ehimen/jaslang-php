@@ -9,7 +9,7 @@ use Ehimen\Jaslang\Engine\Type\Type;
 use Ehimen\Jaslang\Engine\Type\TypeRepository;
 
 /**
- * Value to inidicate array initialisation from ArrayAccess funcdef.
+ * Value to indicate array initialisation from ArrayAccess funcdef.
  * 
  * This represents the modification of a type to its array counterpart.
  */

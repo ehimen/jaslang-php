@@ -35,7 +35,7 @@ class ArrayAccess implements VariableArgFuncDef
     public function access(Evaluator $evaluator, Variable $variable, Value\Num $index)
     {
         /** @var Value\Arr $array */
-        $array = $evaluator->getContext()->getSymbolTable()->get($variable->getIdentifier());
+        $array = $evaluator->getContext()->getSymbolTable()->get($variable->getIdentifier())->getDatum();
 
         return $array->get($index->getValue());
     }

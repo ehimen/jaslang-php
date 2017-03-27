@@ -44,7 +44,7 @@ class VariableWithType implements FuncDef
     {
         return new TypedVariable(
             $variable->getIdentifier(),
-            $evaluator->getContext()->getTypeRepository()->getTypeByName($type->getIdentifier()),
+            $evaluator->getContext()->getSymbolTable()->getType($type->getIdentifier()),
             $type
         );
     }

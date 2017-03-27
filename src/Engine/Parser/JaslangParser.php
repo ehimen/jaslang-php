@@ -557,39 +557,6 @@ class JaslangParser implements Parser
         }
 
         return $current;
-
-        for ($i = 0; $i < $signature->hasLeftArg(); $i++) {
-            $lastChild = $context->getLastChild();
-
-            if ($lastChild instanceof PrecedenceRespectingNode) {
-                $previousSignature = $lastChild->getSignature();
-
-                // TODO: We have two cases here.
-                // 1: 3 - 1 + 2
-                // "3 - 1", + wants to overwrite the - as parent, to result in (3 - 1) + 1 to ensure 3 - 1 is evaluated first.
-                // 2: nums : number[]
-                // [] wants to overwrite number as the second child of :, to result in nums : (number[])
-                // Could we interrogate expected parameter count of current node an only overwrite parent
-                // if we expected >1 parameters (covers + case), else only consume last child if expected parameter
-                // count === 1 (covers [] case).
-                if ($signature->takesPrecedenceOver($previousSignature)) {
-                    array_unshift($children, $lastChild->getLastChild());
-                    $lastChild->removeLastChild();
-                    $context = $lastChild;
-                    array_push($this->nodeStack, $context);
-                    continue;
-                }
-            }
-
-            $context->removeLastChild();
-            array_unshift($children, $lastChild);
-        }
-
-        foreach ($children as $child) {
-            $current->addChild($child);
-        }
-        
-        return $current;
     }
 
     /**

@@ -19,19 +19,13 @@ class JaslangContext implements EvaluationContext
     private $symbolTable;
 
     /**
-     * @var TypeRepository
-     */
-    private $typeRepository;
-
-    /**
      * @var OutputBuffer
      */
     private $outputBuffer;
     
-    public function __construct(SymbolTable $symbolTable, TypeRepository $typeRepository, OutputBuffer $outputBuffer)
+    public function __construct(SymbolTable $symbolTable, OutputBuffer $outputBuffer)
     {
         $this->symbolTable    = $symbolTable;
-        $this->typeRepository = $typeRepository;
         $this->outputBuffer   = $outputBuffer;
     }
 
@@ -46,14 +40,6 @@ class JaslangContext implements EvaluationContext
     /**
      * @inheritdoc
      */
-    public function getTypeRepository()
-    {
-        return $this->typeRepository;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function getVariableOfTypeOrThrow($name, Type $type)
     {
         try {
@@ -62,12 +48,12 @@ class JaslangContext implements EvaluationContext
             throw new UndefinedSymbolException($name);
         }
         
-        $valueType = $this->typeRepository->getTypeByValue($value);
+        $valueType = $this->symbolTable->getTypeByValue($value);
         
         if (!$valueType->isA($type)) {
             throw TypeErrorException::valueTypeMismatch(
-                $this->typeRepository->getTypeName($type),
-                $this->typeRepository->getTypeName($valueType),
+                $this->getSymbolTable()->getTypeName($type),
+                $this->getSymbolTable()->getTypeName($valueType),
                 $value
             );
         }

@@ -81,4 +81,9 @@ class Operator extends UnlimitedChildrenParentNode implements Expression, Preced
     {
         $visitor->visitOperator($this);
     }
+
+    public function jsonSerialize()
+    {
+        return ['operator' => $this->operator] + parent::jsonSerialize();
+    }
 }

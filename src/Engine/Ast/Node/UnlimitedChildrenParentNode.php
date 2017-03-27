@@ -54,4 +54,12 @@ abstract class UnlimitedChildrenParentNode implements ParentNode
     {
         array_pop($this->children);
     }
+
+    public function jsonSerialize()
+    {
+        return [
+            'type' => static::class,
+            'children' => $this->children,
+        ];
+    }
 }

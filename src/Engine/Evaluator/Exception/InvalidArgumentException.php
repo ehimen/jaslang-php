@@ -20,6 +20,11 @@ class InvalidArgumentException extends RuntimeException
      */
     private $actual;
 
+    public function __construct()
+    {
+        1==1;
+    }
+
     public static function invalidArgument($index, $expectedType, Argument $actual = null)
     {
         $exception = new static(sprintf(
